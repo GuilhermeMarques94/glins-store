@@ -1,6 +1,14 @@
 from django.contrib import admin
-from .models import Category, Product
+from .models import Category, Product, ProductImage  # ← adiciona ProductImage
 
+# ── Inline de imagens ──────────────────────────────────────────
+class ProductImageInline(admin.TabularInline):
+    model   = ProductImage
+    extra   = 3        # abre 3 campos vazios por padrão
+    fields  = ('image_url', 'order')
+    ordering = ('order',)
+
+# ── Category ───────────────────────────────────────────────────
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display        = ('name', 'slug', 'icon')
@@ -8,6 +16,7 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 
+# ── Product ────────────────────────────────────────────────────
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display        = ('name', 'category', 'price', 'stock', 'in_stock', 'is_active', 'created_at')
@@ -17,6 +26,7 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields     = ('created_at', 'updated_at', 'in_stock')
     ordering            = ('-created_at',)
+    inlines             = [ProductImageInline]  # ← adiciona aqui
 
     fieldsets = (
         ('📦 Produto',    {'fields': ('category', 'name', 'slug', 'description', 'image_url')}),
