@@ -6,17 +6,17 @@ from django.shortcuts import get_object_or_404
 
 from .models import CartItem
 from .serializers import CartItemSerializer
-from products.models import Product
+from apps.products.models import Product
 
 
 class CartView(APIView):
     permission_classes = [IsAuthenticated]
 
     def _cart_response(self, user):
-        items = CartItem.objects.filter(user=user).select_related('product__category')
+        items      = CartItem.objects.filter(user=user).select_related('product__category')
         serialized = CartItemSerializer(items, many=True)
-        total    = sum(i.subtotal for i in items)
-        quantity = sum(i.quantity for i in items)
+        total      = sum(i.subtotal for i in items)
+        quantity   = sum(i.quantity for i in items)
         return Response({
             'items':    serialized.data,
             'total':    total,

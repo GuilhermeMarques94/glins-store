@@ -7,7 +7,7 @@ from django.db import transaction
 
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, CreateOrderSerializer
-from cart.models import CartItem
+from apps.cart.models import CartItem
 
 
 class OrderListView(APIView):
@@ -86,7 +86,7 @@ class OrderDetailView(generics.RetrieveAPIView):
         ).prefetch_related('items')
 
 
-# ── Admin Views ───────────────────────────────────────────────────────────────
+# ── Admin Views ────────────────────────────────────────────────────────────────
 class AdminOrderListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -112,9 +112,9 @@ class AdminOrderUpdateView(APIView):
         if not request.user.is_admin:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        order = get_object_or_404(Order, pk=pk)
-        new_status     = request.data.get('status')
-        tracking_code  = request.data.get('tracking_code')
+        order         = get_object_or_404(Order, pk=pk)
+        new_status    = request.data.get('status')
+        tracking_code = request.data.get('tracking_code')
 
         if new_status:
             valid = [s[0] for s in Order.STATUS]
