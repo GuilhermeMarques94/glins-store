@@ -2,7 +2,7 @@
    GLINS STORE — API CLIENT
 ═══════════════════════════════════════ */
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = 'https://glins-store-api.onrender.com/api';
 
 // ── Token helpers ──────────────────────
 const Auth = {
