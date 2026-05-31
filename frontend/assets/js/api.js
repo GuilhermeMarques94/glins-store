@@ -80,14 +80,19 @@ const API = {
   products: {
     list:       (params = {}) => apiFetch('/products/?' + new URLSearchParams(params)),
     detail:     (id)          => apiFetch(`/products/${id}/`),
-    create:     (data)        => apiFetch('/products/',     { method: 'POST', body: JSON.stringify(data) }),
-    update:     (id, data)    => apiFetch(`/products/${id}/`, { method: 'PUT', body: JSON.stringify(data) }),
+    create:     (data)        => apiFetch('/products/',       { method: 'POST', body: JSON.stringify(data) }),
+    update:     (id, data)    => apiFetch(`/products/${id}/`, { method: 'PUT',  body: JSON.stringify(data) }),
     delete:     (id)          => apiFetch(`/products/${id}/`, { method: 'DELETE' }),
     adminList:  ()            => apiFetch('/products/admin/all/'),
-    uploadImage(id, file) {
+
+    // Galeria de imagens
+    getImages:    (id)         => apiFetch(`/products/${id}/images/`),
+    deleteImage:  (id, imgId)  => apiFetch(`/products/${id}/images/${imgId}/`, { method: 'DELETE' }),
+    uploadImage(id, file, order = 0) {
       const form = new FormData();
       form.append('image', file);
-      return apiFetch(`/products/${id}/upload-image/`, {
+      form.append('order', order);
+      return apiFetch(`/products/${id}/images/`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${Auth.getAccess()}` },
         body: form

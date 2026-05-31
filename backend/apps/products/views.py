@@ -1,20 +1,23 @@
 from rest_framework import generics, status, filters
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
-from django.db.models import Count
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.db.models import Count, Q
 from django.utils.text import slugify
 from django.conf import settings
 from supabase import create_client
-import uuid, os
+import uuid
 
-from .models import Product, Category
-from .serializers import CategorySerializer, ProductSerializer, ProductImageSerializer
+from .models import Product, Category, ProductImage
+from .serializers import (
+    CategorySerializer, ProductSerializer,
+    ProductImageSerializer, ProductImageUploadSerializer
+)
 
 
 # ── Supabase Storage helper ──────────────────────────────────────────────────
 def upload_image_to_supabase(file) -> str:
-    sb = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+    sb       = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
     ext      = file.name.split('.')[-1]
     filename = f"{uuid.uuid4()}.{ext}"
     content  = file.read()
@@ -24,9 +27,7 @@ def upload_image_to_supabase(file) -> str:
         file=content,
         file_options={"content-type": file.content_type}
     )
-
-    public_url = sb.storage.from_(settings.SUPABASE_BUCKET).get_public_url(filename)
-    return public_url
+    return sb.storage.from_(settings.SUPABASE_BUCKET).get_public_url(filename)
 
 
 # ── Categories ───────────────────────────────────────────────────────────────
@@ -39,7 +40,9 @@ class CategoryListView(generics.ListCreateAPIView):
         return [IsAuthenticated()]
 
     def get_queryset(self):
-        return Category.objects.annotate(product_count=Count('products'))
+        return Category.objects.annotate(
+            product_count=Count('products', filter=Q(products__is_active=True))
+        )
 
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -66,9 +69,12 @@ class ProductListView(generics.ListCreateAPIView):
         return [IsAuthenticated()]
 
     def get_queryset(self):
-        qs = Product.objects.filter(is_active=True).select_related('category')
+        qs = (Product.objects
+              .filter(is_active=True)
+              .select_related('category')
+              .prefetch_related('images'))   # ← prefetch das imagens
 
-        category = self.request.query_params.get('category')
+        category  = self.request.query_params.get('category')
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
         in_stock  = self.request.query_params.get('in_stock')
@@ -98,31 +104,64 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
         return [IsAuthenticated()]
 
     def get_queryset(self):
-        return Product.objects.filter(is_active=True)
+        return (Product.objects
+                .filter(is_active=True)
+                .select_related('category')
+                .prefetch_related('images'))
 
 
-class ProductImageUploadView(APIView):
-    permission_classes = [IsAuthenticated]
+# ── Imagens do Produto ────────────────────────────────────────────────────────
+class ProductImageListView(APIView):
+    """
+    GET  /products/<pk>/images/  → lista imagens do produto
+    POST /products/<pk>/images/  → faz upload de uma nova imagem
+    """
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get(self, request, pk):
+        images = ProductImage.objects.filter(product_id=pk)
+        return Response(ProductImageSerializer(images, many=True).data)
 
     def post(self, request, pk):
-        product = Product.objects.get(pk=pk)
-        serializer = ProductImageSerializer(data=request.FILES)
+        product    = Product.objects.get(pk=pk)
+        serializer = ProductImageUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        url = upload_image_to_supabase(request.FILES['image'])
-        product.image_url = url
-        product.save()
+        url   = upload_image_to_supabase(request.FILES['image'])
+        order = serializer.validated_data.get('order', 0)
+        img   = ProductImage.objects.create(product=product, image_url=url, order=order)
 
-        return Response({'image_url': url}, status=status.HTTP_200_OK)
+        # Se for order=0 (principal), sincroniza com image_url legado
+        if order == 0:
+            product.image_url = url
+            product.save(update_fields=['image_url'])
+
+        return Response(ProductImageSerializer(img).data, status=status.HTTP_201_CREATED)
 
 
+class ProductImageDeleteView(APIView):
+    """DELETE /products/<pk>/images/<img_id>/"""
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk, img_id):
+        img = ProductImage.objects.get(pk=img_id, product_id=pk)
+        img.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Admin ────────────────────────────────────────────────────────────────────
 class AdminProductListView(generics.ListAPIView):
-    """Lista todos os produtos para o admin (incluindo inativos)"""
     serializer_class   = ProductSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         if not self.request.user.is_admin:
             return Product.objects.none()
-        return Product.objects.all().select_related('category').order_by('-created_at')
-
+        return (Product.objects.all()
+                .select_related('category')
+                .prefetch_related('images')
+                .order_by('-created_at'))
