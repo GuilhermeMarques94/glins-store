@@ -125,3 +125,4 @@ class AdminProductListView(generics.ListAPIView):
         if not self.request.user.is_admin:
             return Product.objects.none()
         return Product.objects.all().select_related('category').order_by('-created_at')
+
