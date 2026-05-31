@@ -66,7 +66,18 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
-    DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
+    DATABASES = {
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True,        # Supabase exige SSL
+        )
+    }
+    # Força IPv4 — evita falha de rede com IPv6 no Render
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS']['host'] = \
+        DATABASES['default'].get('HOST', '')
 else:
     DATABASES = {'default': {
         'ENGINE': 'django.db.backends.sqlite3',
