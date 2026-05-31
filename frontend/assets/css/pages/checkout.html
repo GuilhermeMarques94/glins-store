@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checkout — Glins Store</title>
+  <link rel="stylesheet" href="/assets/css/global.css"/>
+  <style>
+    .page-wrap { padding: 80px 0; }
+    .checkout-layout { display: grid; grid-template-columns: 1fr 360px; gap: 32px; align-items: start; }
+    .section-title { font-family: var(--font-title); font-size: 1rem; color: var(--primary); letter-spacing: 0.08em; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .order-summary-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+    .order-summary-item:last-child { border: none; }
+    .summary-total { display: flex; justify-content: space-between; font-family: var(--font-title); font-size: 1.2rem; color: var(--primary); padding-top: 16px; }
+    .payment-placeholder { background: var(--bg-surface); border: 1px dashed var(--border-gold); border-radius: var(--radius); padding: 24px; text-align: center; color: var(--text-muted); margin-top: 16px; }
+    @media (max-width: 768px) { .checkout-layout { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="page-wrap">
+  <div class="container">
+    <h1 style="font-size:2rem; margin-bottom:32px">🗡️ Finalizar Compra</h1>
+
+    <div class="checkout-layout">
+      <!-- Formulário -->
+      <div>
+        <form id="checkoutForm">
+          <div class="card mb-3">
+            <div class="section-title">📍 Endereço de Entrega</div>
+            <div class="form-group">
+              <label>CEP</label>
+              <input type="text" id="zipcode" class="form-control" placeholder="00000-000" maxlength="9" required/>
+            </div>
+            <div class="grid-2">
+              <div class="form-group" style="grid-column:1/-1">
+                <label>Rua</label>
+                <input type="text" id="street" class="form-control" required/>
+              </div>
+              <div class="form-group">
+                <label>Número</label>
+                <input type="text" id="number" class="form-control" required/>
+              </div>
+              <div class="form-group">
+                <label>Complemento</label>
+                <input type="text" id="complement" class="form-control"/>
+              </div>
+              <div class="form-group">
+                <label>Cidade</label>
+                <input type="text" id="city" class="form-control" required/>
+              </div>
+              <div class="form-group">
+                <label>Estado</label>
+                <input type="text" id="state" class="form-control" maxlength="2" placeholder="MG" required/>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">💳 Pagamento</div>
+            <div class="payment-placeholder">
+              <div style="font-size:2rem;margin-bottom:8px">🏗️</div>
+              <strong>Integração com Mercado Pago</strong><br/>
+              <small>Em breve — será integrado na próxima fase</small>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg btn-block mt-3" id="submitBtn">
+            ⚔️ Confirmar Pedido
+          </button>
+        </form>
+      </div>
+
+      <!-- Resumo -->
+      <div class="card" style="position:sticky;top:80px">
+        <h3 style="margin-bottom:16px">📜 Resumo do Pedido</h3>
+        <div id="order-summary"><div class="loader"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/navbar.js"></script>
+<script>
+  if (!requireAuth()) {}
+
+  let cartData = null;
+
+  async function init() {
+    // Preenche endereço salvo
+    try {
+      const user = await API.auth.profile();
+      if (user.street) {
+        document.getElementById('zipcode').value    = user.zipcode    || '';
+        document.getElementById('street').value     = user.street     || '';
+        document.getElementById('number').value     = user.number     || '';
+        document.getElementById('complement').value = user.complement || '';
+        document.getElementById('city').value       = user.city       || '';
+        document.getElementById('state').value      = user.state      || '';
+      }
+    } catch (_) {}
+
+    // Carrega resumo do carrinho
+    try {
+      cartData = await API.cart.get();
+      if (!cartData.items.length) {
+        window.location.href = '/pages/cart.html';
+        return;
+      }
+
+      const summaryEl = document.getElementById('order-summary');
+      summaryEl.innerHTML = `
+        ${cartData.items.map(i => `
+          <div class="order-summary-item">
+            <span>${i.product.name} × ${i.quantity}</span>
+            <span>${formatPrice(i.subtotal)}</span>
+          </div>
+        `).join('')}
+        <div class="order-summary-item">
+          <span class="text-muted">Frete</span>
+          <span class="text-muted">A calcular</span>
+        </div>
+        <div class="summary-total">
+          <span>Total</span>
+          <span>${formatPrice(cartData.total)}</span>
+        </div>
+      `;
+    } catch (_) {}
+  }
+
+  document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Processando...';
+
+    try {
+      const order = await API.orders.create({
+        zipcode:    document.getElementById('zipcode').value,
+        street:     document.getElementById('street').value,
+        number:     document.getElementById('number').value,
+        complement: document.getElementById('complement').value,
+        city:       document.getElementById('city').value,
+        state:      document.getElementById('state').value,
+      });
+
+      showToast('Pedido realizado com sucesso! ⚔️', 'success');
+      setTimeout(() => window.location.href = '/pages/profile.html', 1200);
+    } catch (err) {
+      showToast(err.error || 'Erro ao criar pedido', 'error');
+      btn.disabled = false;
+      btn.textContent = '⚔️ Confirmar Pedido';
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>

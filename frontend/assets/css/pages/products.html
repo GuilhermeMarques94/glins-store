@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Produtos — Glins Store</title>
+  <link rel="stylesheet" href="/assets/css/global.css"/>
+  <style>
+    .page-hero {
+      padding: 60px 0 40px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-hero h1 { font-size: 2.2rem; margin-bottom: 8px; }
+    .page-hero p  { color: var(--text-muted); }
+
+    .products-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 32px;
+      padding: 40px 0 80px;
+    }
+
+    /* Sidebar filtros */
+    .filters { position: sticky; top: 80px; height: fit-content; }
+    .filters h3 {
+      font-family: var(--font-title);
+      font-size: 0.85rem;
+      color: var(--primary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .filter-section { margin-bottom: 24px; }
+    .filter-section label { font-size: 0.82rem; color: var(--text-muted); display: block; margin-bottom: 8px; }
+    .price-range { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .cat-filter-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-light);
+      font-size: 0.88rem;
+    }
+    .cat-filter-item:hover  { background: rgba(201,162,39,0.08); color: var(--primary); }
+    .cat-filter-item.active { background: rgba(201,162,39,0.12); color: var(--primary); border-left: 2px solid var(--primary); }
+
+    /* Toolbar */
+    .products-toolbar {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+    }
+    .search-box {
+      display: flex; gap: 8px; flex: 1; max-width: 360px;
+    }
+    .products-count { color: var(--text-muted); font-size: 0.88rem; }
+
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+
+    /* Product card (same as index) */
+    .product-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: var(--transition); cursor: pointer; display: flex; flex-direction: column; }
+    .product-card:hover { border-color: var(--primary-dark); transform: translateY(-4px); box-shadow: var(--shadow-gold); }
+    .product-img-wrap { height: 200px; overflow: hidden; background: var(--bg-surface); position: relative; }
+    .product-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+    .product-card:hover .product-img { transform: scale(1.05); }
+    .product-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--border-gold); }
+    .out-of-stock-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; font-family: var(--font-title); color: var(--danger); font-size: 0.85rem; letter-spacing: 0.1em; }
+    .product-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
+    .product-category { font-size: 0.7rem; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+    .product-name { font-family: var(--font-title); font-size: 0.92rem; color: var(--text-light); margin-bottom: 8px; flex: 1; }
+    .product-price { font-family: var(--font-title); font-size: 1.1rem; color: var(--primary); margin-bottom: 12px; }
+
+    /* Pagination */
+    .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 40px; }
+    .page-btn { padding: 8px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-light); cursor: pointer; font-family: var(--font-title); font-size: 0.82rem; transition: var(--transition); }
+    .page-btn:hover, .page-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(201,162,39,0.08); }
+
+    @media (max-width: 900px) {
+      .products-layout { grid-template-columns: 1fr; }
+      .filters { position: static; }
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="page-hero">
+  <div class="container">
+    <h1>⚔️ Arsenal Completo</h1>
+    <p>Todos os artefatos do reino Glins</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="products-layout">
+
+    <!-- ── Filtros ── -->
+    <aside class="filters card">
+      <h3>⚔️ Filtros</h3>
+
+      <div class="filter-section">
+        <label>📂 Categoria</label>
+        <div id="cat-filters">
+          <div class="cat-filter-item active" data-slug="" onclick="setCategory('')">
+            <span>🏰 Todos</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <label>💰 Faixa de Preço</label>
+        <div class="price-range">
+          <input type="number" id="minPrice" class="form-control" placeholder="Mín"/>
+          <input type="number" id="maxPrice" class="form-control" placeholder="Máx"/>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <label>
+          <input type="checkbox" id="inStockOnly" style="margin-right:6px"/>
+          Apenas em estoque
+        </label>
+      </div>
+
+      <button class="btn btn-primary btn-block" onclick="applyFilters()">Filtrar</button>
+      <button class="btn btn-outline btn-block mt-1" onclick="clearFilters()">Limpar</button>
+    </aside>
+
+    <!-- ── Produtos ── -->
+    <div>
+      <div class="products-toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" class="form-control" placeholder="🔍 Buscar produtos..."/>
+          <button class="btn btn-primary" onclick="applyFilters()">Buscar</button>
+        </div>
+        <div class="flex-between gap-2">
+          <span class="products-count" id="productsCount"></span>
+          <select class="form-control" id="ordering" onchange="applyFilters()" style="width:auto">
+            <option value="-created_at">Mais recentes</option>
+            <option value="price">Menor preço</option>
+            <option value="-price">Maior preço</option>
+            <option value="name">A-Z</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="products-grid" class="products-grid">
+        <div class="loader"></div>
+      </div>
+
+      <div id="pagination" class="pagination"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/navbar.js"></script>
+<script>
+  let currentCategory = new URLSearchParams(location.search).get('category') || '';
+
+  async function loadCategories() {
+    const el = document.getElementById('cat-filters');
+    try {
+      const cats = await API.categories.list();
+      cats.forEach(c => {
+        const item = document.createElement('div');
+        item.className = `cat-filter-item ${currentCategory === c.slug ? 'active' : ''}`;
+        item.dataset.slug = c.slug;
+        item.innerHTML = `<span>${c.icon || '🏷️'} ${c.name}</span><span class="badge badge-muted">${c.product_count}</span>`;
+        item.onclick = () => setCategory(c.slug);
+        el.appendChild(item);
+      });
+    } catch (_) {}
+  }
+
+  function setCategory(slug) {
+    currentCategory = slug;
+    document.querySelectorAll('.cat-filter-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.slug === slug);
+    });
+    applyFilters();
+  }
+
+  async function applyFilters() {
+    const grid = document.getElementById('products-grid');
+    grid.innerHTML = '<div class="loader"></div>';
+
+    const params = {
+      search:   document.getElementById('searchInput').value,
+      ordering: document.getElementById('ordering').value,
+    };
+    if (currentCategory)  params.category  = currentCategory;
+    if (document.getElementById('minPrice').value) params.min_price = document.getElementById('minPrice').value;
+    if (document.getElementById('maxPrice').value) params.max_price = document.getElementById('maxPrice').value;
+    if (document.getElementById('inStockOnly').checked) params.in_stock = 'true';
+
+    try {
+      const data     = await API.products.list(params);
+      const products = data.results || data;
+      document.getElementById('productsCount').textContent = `${products.length} produto(s)`;
+
+      if (!products.length) {
+        grid.innerHTML = `<div class="text-muted text-center" style="grid-column:1/-1; padding:60px 0">
+          🔍 Nenhum produto encontrado.
+        </div>`;
+        return;
+      }
+      grid.innerHTML = products.map(p => productCard(p)).join('');
+    } catch (_) {
+      grid.innerHTML = '<p class="text-muted text-center">Erro ao carregar produtos.</p>';
+    }
+  }
+
+  function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('minPrice').value    = '';
+    document.getElementById('maxPrice').value    = '';
+    document.getElementById('inStockOnly').checked = false;
+    setCategory('');
+  }
+
+  function productCard(p) {
+    return `
+      <div class="product-card" onclick="window.location='/pages/product-detail.html?id=${p.id}'">
+        <div class="product-img-wrap">
+          ${p.image_url ? `<img class="product-img" src="${p.image_url}" alt="${p.name}" loading="lazy"/>` : `<div class="product-img-placeholder">🏺</div>`}
+          ${!p.in_stock ? '<div class="out-of-stock-overlay">ESGOTADO</div>' : ''}
+        </div>
+        <div class="product-body">
+          <div class="product-category">${p.category_name || ''}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-price">${formatPrice(p.price)}</div>
+          <button class="btn btn-primary btn-sm btn-block"
+            onclick="event.stopPropagation(); addToCart(${p.id})"
+            ${!p.in_stock ? 'disabled' : ''}>
+            🛒 ${p.in_stock ? 'Adicionar' : 'Esgotado'}
+          </button>
+        </div>
+      </div>`;
+  }
+
+  async function addToCart(id) {
+    if (!Auth.isLogged()) { window.location.href = '/pages/login.html'; return; }
+    try {
+      await API.cart.add({ product_id: id, quantity: 1 });
+      showToast('Adicionado ao carrinho! 🛒', 'success');
+      updateCartBadge();
+    } catch (err) {
+      showToast(err.error || 'Erro ao adicionar', 'error');
+    }
+  }
+
+  // Enter na busca
+  document.getElementById('searchInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') applyFilters();
+  });
+
+  loadCategories();
+  applyFilters();
+</script>
+</body>
+</html>

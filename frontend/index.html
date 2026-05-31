@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Glins Store — Loja Nerd Medieval</title>
+  <link rel="stylesheet" href="/assets/css/global.css"/>
+  <style>
+    /* ── Hero ── */
+    .hero {
+      min-height: 92vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 60px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at center, rgba(201,162,39,0.08) 0%, transparent 70%),
+        url('/assets/images/hero-bg.jpg') center/cover no-repeat;
+      opacity: 0.3;
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 700px; }
+    .hero-badge {
+      display: inline-block;
+      padding: 6px 20px;
+      border: 1px solid var(--primary-dark);
+      border-radius: 20px;
+      color: var(--primary);
+      font-family: var(--font-title);
+      font-size: 0.78rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      background: rgba(201,162,39,0.08);
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 6vw, 4rem);
+      margin-bottom: 20px;
+      text-shadow: 0 0 40px rgba(201,162,39,0.4);
+    }
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 36px;
+      line-height: 1.8;
+    }
+    .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .hero-ornament {
+      margin: 24px auto 0;
+      color: var(--primary-dark);
+      font-size: 1.4rem;
+      letter-spacing: 12px;
+    }
+
+    /* ── Section ── */
+    .section { padding: 80px 0; }
+    .section-header { text-align: center; margin-bottom: 48px; }
+    .section-header h2 { font-size: 2rem; margin-bottom: 12px; }
+    .section-header p  { color: var(--text-muted); }
+
+    /* ── Categories ── */
+    .categories-grid {
+      display: flex; gap: 16px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .category-pill {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 22px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-light);
+      font-family: var(--font-title);
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+    }
+    .category-pill:hover, .category-pill.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(201,162,39,0.08);
+      box-shadow: var(--shadow-gold);
+    }
+    .category-pill .cat-icon { font-size: 1.1rem; }
+
+    /* ── Product Card ── */
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
+    .product-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: var(--transition);
+      cursor: pointer;
+      display: flex; flex-direction: column;
+    }
+    .product-card:hover {
+      border-color: var(--primary-dark);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-gold);
+    }
+    .product-card:hover .product-img { transform: scale(1.05); }
+    .product-img-wrap {
+      height: 220px; overflow: hidden;
+      background: var(--bg-surface);
+      position: relative;
+    }
+    .product-img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+    .product-img-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.5rem; color: var(--border-gold);
+    }
+    .out-of-stock-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-title);
+      color: var(--danger);
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+    }
+    .product-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+    .product-category {
+      font-size: 0.72rem; color: var(--primary-dark);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+    .product-name {
+      font-family: var(--font-title);
+      font-size: 1rem; color: var(--text-light);
+      margin-bottom: 10px;
+      flex: 1;
+    }
+    .product-price {
+      font-family: var(--font-title);
+      font-size: 1.2rem; color: var(--primary);
+      margin-bottom: 14px;
+    }
+    .product-price .old-price {
+      font-size: 0.8rem; color: var(--text-muted);
+      text-decoration: line-through; margin-right: 8px;
+    }
+
+    /* ── Features ── */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }
+    .feature-card { text-align: center; }
+    .feature-icon { font-size: 2.4rem; margin-bottom: 14px; }
+    .feature-card h3 { font-size: 1rem; margin-bottom: 8px; }
+    .feature-card p  { font-size: 0.88rem; color: var(--text-muted); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0 24px;
+      margin-top: 40px;
+    }
+    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; margin-bottom: 32px; }
+    .footer-brand h3 { margin-bottom: 10px; }
+    .footer-brand p  { color: var(--text-muted); font-size: 0.88rem; line-height: 1.7; }
+    .footer-links h4 { font-family: var(--font-title); color: var(--primary); font-size: 0.85rem; margin-bottom: 14px; letter-spacing: 0.08em; }
+    .footer-links ul { list-style: none; }
+    .footer-links li { margin-bottom: 8px; }
+    .footer-links a  { color: var(--text-muted); font-size: 0.88rem; transition: var(--transition); }
+    .footer-links a:hover { color: var(--primary); }
+    .footer-bottom { text-align: center; color: var(--text-muted); font-size: 0.82rem; padding-top: 24px; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- Navbar injetada via JS -->
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">⚔️ Loja Nerd Medieval ⚔️</div>
+    <h1>Bem-vindo à<br/>Glins Store</h1>
+    <p>Artefatos, relíquias e tesouros do mundo nerd.<br/>
+       Forjados com honra, entregues com velocidade.</p>
+    <div class="hero-buttons">
+      <a href="/pages/products.html" class="btn btn-primary btn-lg">⚔️ Ver Produtos</a>
+      <a href="/pages/register.html" class="btn btn-outline btn-lg">📜 Criar Conta</a>
+    </div>
+    <div class="hero-ornament">✦ ✦ ✦</div>
+  </div>
+</section>
+
+<!-- ═══ CATEGORIAS ═══ -->
+<section class="section" style="padding-top: 40px; padding-bottom: 40px;">
+  <div class="container">
+    <div id="categories-list" class="categories-grid">
+      <div class="loader"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRODUTOS EM DESTAQUE ═══ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>⚔️ Produtos em Destaque</h2>
+      <p>Os artefatos mais cobiçados do reino</p>
+    </div>
+    <div id="products-grid" class="products-grid">
+      <div class="loader"></div>
+    </div>
+    <div class="text-center mt-3">
+      <a href="/pages/products.html" class="btn btn-outline btn-lg">Ver todos os produtos →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="section" style="background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="features-grid">
+      <div class="feature-card card">
+        <div class="feature-icon">🛡️</div>
+        <h3>Compra Segura</h3>
+        <p>Pagamento protegido e dados criptografados</p>
+      </div>
+      <div class="feature-card card">
+        <div class="feature-icon">🚚</div>
+        <h3>Entrega Rápida</h3>
+        <p>Enviamos para todo o reino brasileiro</p>
+      </div>
+      <div class="feature-card card">
+        <div class="feature-icon">⚔️</div>
+        <h3>Produtos Originais</h3>
+        <p>Itens autênticos do universo nerd</p>
+      </div>
+      <div class="feature-card card">
+        <div class="feature-icon">📜</div>
+        <h3>Troca Fácil</h3>
+        <p>Política de troca em até 7 dias</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3>⚔️ Glins Store</h3>
+        <p>Sua loja nerd com tema medieval. Produtos colecionáveis, games, animes e muito mais.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Navegação</h4>
+        <ul>
+          <li><a href="/index.html">Início</a></li>
+          <li><a href="/pages/products.html">Produtos</a></li>
+          <li><a href="/pages/cart.html">Carrinho</a></li>
+          <li><a href="/pages/profile.html">Minha Conta</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Atendimento</h4>
+        <ul>
+          <li><a href="#">Dúvidas Frequentes</a></li>
+          <li><a href="#">Política de Troca</a></li>
+          <li><a href="#">Rastrear Pedido</a></li>
+          <li><a href="#">Contato</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>⚔️ © 2024 Glins Store — Todos os direitos reservados. Forjado com honra em Uberlândia, MG.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/navbar.js"></script>
+<script>
+  // ── Carregar categorias ──
+  async function loadCategories() {
+    const el = document.getElementById('categories-list');
+    try {
+      const cats = await API.categories.list();
+      if (!cats.length) { el.innerHTML = ''; return; }
+      el.innerHTML = cats.map(c => `
+        <div class="category-pill" onclick="window.location='/pages/products.html?category=${c.slug}'">
+          <span class="cat-icon">${c.icon || '🏷️'}</span>
+          <span>${c.name}</span>
+          <span class="badge badge-muted">${c.product_count}</span>
+        </div>
+      `).join('');
+    } catch (_) { el.innerHTML = ''; }
+  }
+
+  // ── Carregar produtos destaque ──
+  async function loadFeaturedProducts() {
+    const el = document.getElementById('products-grid');
+    try {
+      const data = await API.products.list({ ordering: '-created_at' });
+      const products = data.results || data;
+      const featured = products.slice(0, 8);
+
+      if (!featured.length) {
+        el.innerHTML = '<p class="text-muted text-center">Nenhum produto cadastrado ainda.</p>';
+        return;
+      }
+
+      el.innerHTML = featured.map(p => productCard(p)).join('');
+    } catch (_) {
+      el.innerHTML = '<p class="text-muted text-center">Erro ao carregar produtos.</p>';
+    }
+  }
+
+  function productCard(p) {
+    return `
+      <div class="product-card" onclick="window.location='/pages/product-detail.html?id=${p.id}'">
+        <div class="product-img-wrap">
+          ${p.image_url
+            ? `<img class="product-img" src="${p.image_url}" alt="${p.name}" loading="lazy"/>`
+            : `<div class="product-img-placeholder">🏺</div>`
+          }
+          ${!p.in_stock ? '<div class="out-of-stock-overlay">ESGOTADO</div>' : ''}
+        </div>
+        <div class="product-body">
+          <div class="product-category">${p.category_name || 'Sem categoria'}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-price">${formatPrice(p.price)}</div>
+          <button class="btn btn-primary btn-sm btn-block"
+            onclick="event.stopPropagation(); addToCart(${p.id})"
+            ${!p.in_stock ? 'disabled' : ''}>
+            🛒 ${p.in_stock ? 'Adicionar' : 'Esgotado'}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function addToCart(productId) {
+    if (!Auth.isLogged()) {
+      window.location.href = '/pages/login.html';
+      return;
+    }
+    try {
+      await API.cart.add({ product_id: productId, quantity: 1 });
+      showToast('Item adicionado ao carrinho! 🛒', 'success');
+      updateCartBadge();
+    } catch (err) {
+      showToast(err.error || 'Erro ao adicionar item', 'error');
+    }
+  }
+
+  loadCategories();
+  loadFeaturedProducts();
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro — Glins Store</title>
+  <link rel="stylesheet" href="/assets/css/global.css"/>
+  <style>
+    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 80px 20px 40px; }
+    .auth-box  { width: 100%; max-width: 480px; }
+    .auth-header { text-align: center; margin-bottom: 32px; }
+    .auth-header h1 { font-size: 1.8rem; }
+    .auth-header p  { color: var(--text-muted); margin-top: 8px; }
+    .auth-footer { text-align: center; margin-top: 20px; color: var(--text-muted); font-size: 0.9rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-header">
+      <h1>📜 Criar Conta</h1>
+      <p>Junte-se à Glins Store</p>
+    </div>
+
+    <div class="card">
+      <form id="registerForm">
+        <div class="form-group">
+          <label>🧙 Nome completo</label>
+          <input type="text" id="name" class="form-control" placeholder="Seu nome" required/>
+        </div>
+        <div class="form-group">
+          <label>📧 E-mail</label>
+          <input type="email" id="email" class="form-control" placeholder="seu@email.com" required/>
+        </div>
+        <div class="form-group">
+          <label>📱 Telefone</label>
+          <input type="tel" id="phone" class="form-control" placeholder="(34) 99999-9999"/>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>🔑 Senha</label>
+            <input type="password" id="password" class="form-control" placeholder="mín. 6 caracteres" required/>
+          </div>
+          <div class="form-group">
+            <label>🔑 Confirmar Senha</label>
+            <input type="password" id="password2" class="form-control" placeholder="repita a senha" required/>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
+          📜 Criar Conta
+        </button>
+      </form>
+    </div>
+
+    <div class="auth-footer">
+      Já tem conta? <a href="/pages/login.html">Entrar →</a>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/navbar.js"></script>
+<script>
+  if (Auth.isLogged()) window.location.href = '/index.html';
+
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+
+    const password  = document.getElementById('password').value;
+    const password2 = document.getElementById('password2').value;
+
+    if (password !== password2) {
+      showToast('As senhas não coincidem', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Criando conta...';
+
+    try {
+      const data = await API.auth.register({
+        name:     document.getElementById('name').value,
+        email:    document.getElementById('email').value,
+        phone:    document.getElementById('phone').value,
+        password,
+      });
+      Auth.save(data);
+      showToast('Conta criada! Bem-vindo ao reino! ⚔️', 'success');
+      setTimeout(() => window.location.href = '/index.html', 800);
+    } catch (err) {
+      const msg = err.email?.[0] || err.detail || 'Erro ao criar conta';
+      showToast(msg, 'error');
+      btn.disabled = false;
+      btn.textContent = '📜 Criar Conta';
+    }
+  });
+</script>
+</body>
+</html>

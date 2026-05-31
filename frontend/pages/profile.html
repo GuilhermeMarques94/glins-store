@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Minha Conta — Glins Store</title>
+  <link rel="stylesheet" href="/assets/css/global.css"/>
+  <style>
+    .page-wrap { padding: 80px 0; }
+    .profile-layout { display: grid; grid-template-columns: 240px 1fr; gap: 32px; }
+    .profile-sidebar .card { padding: 24px; text-align: center; }
+    .avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--bg-surface); border: 2px solid var(--primary-dark); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 12px; }
+    .profile-name { font-family: var(--font-title); font-size: 1.1rem; margin-bottom: 4px; }
+    .profile-email { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
+    .profile-nav { list-style: none; text-align: left; margin-top: 16px; }
+    .profile-nav li { margin-bottom: 4px; }
+    .profile-nav a { display: block; padding: 8px 12px; border-radius: var(--radius); color: var(--text-light); font-size: 0.88rem; transition: var(--transition); }
+    .profile-nav a:hover, .profile-nav a.active { background: rgba(201,162,39,0.1); color: var(--primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .order-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; transition: var(--transition); }
+    .order-card:hover { border-color: var(--border-gold); }
+    .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .order-id { font-family: var(--font-title); font-size: 0.9rem; }
+    .order-items-list { font-size: 0.85rem; color: var(--text-muted); }
+    .order-total { font-family: var(--font-title); color: var(--primary); margin-top: 8px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 768px) {
+      .profile-layout { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="page-wrap">
+  <div class="container">
+    <div class="profile-layout">
+
+      <!-- Sidebar -->
+      <div class="profile-sidebar">
+        <div class="card">
+          <div class="avatar">🧙</div>
+          <div class="profile-name" id="sidebarName">—</div>
+          <div class="profile-email" id="sidebarEmail">—</div>
+          <ul class="profile-nav">
+            <li><a href="#" class="active" onclick="showTab('orders', this)">📋 Meus Pedidos</a></li>
+            <li><a href="#" onclick="showTab('profile', this)">👤 Meus Dados</a></li>
+            <li><a href="#" onclick="showTab('address', this)">📍 Endereço</a></li>
+            <li><a href="#" onclick="showTab('password', this)">🔑 Senha</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Conteúdo -->
+      <div>
+        <!-- Pedidos -->
+        <div id="tab-orders" class="tab-content active">
+          <h2 class="mb-3">📋 Meus Pedidos</h2>
+          <div id="orders-list"><div class="loader"></div></div>
+        </div>
+
+        <!-- Dados -->
+        <div id="tab-profile" class="tab-content">
+          <h2 class="mb-3">👤 Meus Dados</h2>
+          <div class="card">
+            <form id="profileForm">
+              <div class="grid-2">
+                <div class="form-group">
+                  <label>Nome</label>
+                  <input type="text" id="pName" class="form-control"/>
+                </div>
+                <div class="form-group">
+                  <label>Telefone</label>
+                  <input type="tel" id="pPhone" class="form-control"/>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">💾 Salvar</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Endereço -->
+        <div id="tab-address" class="tab-content">
+          <h2 class="mb-3">📍 Endereço de Entrega</h2>
+          <div class="card">
+            <form id="addressForm">
+              <div class="grid-2">
+                <div class="form-group" style="grid-column:1/-1">
+                  <label>CEP</label>
+                  <input type="text" id="aZipcode" class="form-control" placeholder="00000-000" maxlength="9"/>
+                </div>
+                <div class="form-group" style="grid-column:1/-1">
+                  <label>Rua</label>
+                  <input type="text" id="aStreet" class="form-control"/>
+                </div>
+                <div class="form-group">
+                  <label>Número</label>
+                  <input type="text" id="aNumber" class="form-control"/>
+                </div>
+                <div class="form-group">
+                  <label>Complemento</label>
+                  <input type="text" id="aComplement" class="form-control"/>
+                </div>
+                <div class="form-group">
+                  <label>Cidade</label>
+                  <input type="text" id="aCity" class="form-control"/>
+                </div>
+                <div class="form-group">
+                  <label>Estado</label>
+                  <input type="text" id="aState" class="form-control" maxlength="2" placeholder="MG"/>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">💾 Salvar Endereço</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Senha -->
+        <div id="tab-password" class="tab-content">
+          <h2 class="mb-3">🔑 Alterar Senha</h2>
+          <div class="card" style="max-width:400px">
+            <form id="passwordForm">
+              <div class="form-group">
+                <label>Senha Atual</label>
+                <input type="password" id="oldPwd" class="form-control"/>
+              </div>
+              <div class="form-group">
+                <label>Nova Senha</label>
+                <input type="password" id="newPwd" class="form-control"/>
+              </div>
+              <div class="form-group">
+                <label>Confirmar Nova Senha</label>
+                <input type="password" id="newPwd2" class="form-control"/>
+              </div>
+              <button type="submit" class="btn btn-primary">🔑 Alterar Senha</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/navbar.js"></script>
+<script>
+  if (!requireAuth()) {}
+
+  let userData = null;
+
+  function showTab(tab, el) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.profile-nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    el?.classList.add('active');
+  }
+
+  async function init() {
+    userData = await API.auth.profile();
+    document.getElementById('sidebarName').textContent  = userData.name;
+    document.getElementById('sidebarEmail').textContent = userData.email;
+    document.getElementById('pName').value       = userData.name  || '';
+    document.getElementById('pPhone').value      = userData.phone || '';
+    document.getElementById('aZipcode').value    = userData.zipcode    || '';
+    document.getElementById('aStreet').value     = userData.street     || '';
+    document.getElementById('aNumber').value     = userData.number     || '';
+    document.getElementById('aComplement').value = userData.complement || '';
+    document.getElementById('aCity').value       = userData.city       || '';
+    document.getElementById('aState').value      = userData.state      || '';
+    loadOrders();
+  }
+
+  async function loadOrders() {
+    const el = document.getElementById('orders-list');
+    try {
+      const orders = await API.orders.list();
+      if (!orders.length) {
+        el.innerHTML = `<div class="text-muted text-center" style="padding:40px">
+          Você ainda não fez nenhum pedido.
+          <br/><a href="/pages/products.html" class="btn btn-primary mt-2">⚔️ Explorar Produtos</a>
+        </div>`;
+        return;
+      }
+      el.innerHTML = orders.map(o => `
+        <div class="order-card">
+          <div class="order-header">
+            <span class="order-id">Pedido #${o.id}</span>
+            ${statusBadge(o.status)}
+          </div>
+          <div class="order-items-list">
+            ${o.items.map(i => `${i.name} × ${i.quantity}`).join(' · ')}
+          </div>
+          ${o.tracking_code ? `<div class="mt-1" style="font-size:0.82rem;color:var(--text-muted)">📦 Rastreio: <strong>${o.tracking_code}</strong></div>` : ''}
+          <div class="order-total">${formatPrice(o.total)} · ${formatDate(o.created_at)}</div>
+        </div>
+      `).join('');
+    } catch (_) {
+      el.innerHTML = '<p class="text-muted">Erro ao carregar pedidos.</p>';
+    }
+  }
+
+  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await API.auth.updateProfile({
+        name:  document.getElementById('pName').value,
+        phone: document.getElementById('pPhone').value,
+      });
+      showToast('Dados atualizados! ✅', 'success');
+    } catch (_) { showToast('Erro ao salvar', 'error'); }
+  });
+
+  document.getElementById('addressForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await API.auth.updateProfile({
+        zipcode:    document.getElementById('aZipcode').value,
+        street:     document.getElementById('aStreet').value,
+        number:     document.getElementById('aNumber').value,
+        complement: document.getElementById('aComplement').value,
+        city:       document.getElementById('aCity').value,
+        state:      document.getElementById('aState').value,
+      });
+      showToast('Endereço salvo! ✅', 'success');
+    } catch (_) { showToast('Erro ao salvar', 'error'); }
+  });
+
+  document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (document.getElementById('newPwd').value !== document.getElementById('newPwd2').value) {
+      showToast('As senhas não coincidem', 'error'); return;
+    }
+    try {
+      await API.auth.changePassword({
+        old_password: document.getElementById('oldPwd').value,
+        new_password: document.getElementById('newPwd').value,
+      });
+      showToast('Senha alterada! 🔑', 'success');
+      document.getElementById('passwordForm').reset();
+    } catch (err) {
+      showToast(err.error || 'Erro ao alterar senha', 'error');
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>

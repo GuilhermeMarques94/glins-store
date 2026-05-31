@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Produto — Glins Store</title>
+  <link rel="stylesheet" href="/assets/css/global.css"/>
+  <style>
+    .page-wrap { padding: 80px 0; min-height: 80vh; }
+
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--text-muted); font-size: 0.85rem; margin-bottom: 32px;
+    }
+    .breadcrumb a { color: var(--text-muted); }
+    .breadcrumb a:hover { color: var(--primary); }
+    .breadcrumb span { color: var(--primary); }
+
+    .product-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    /* Galeria */
+    .product-gallery { position: sticky; top: 80px; }
+    .main-image {
+      width: 100%;
+      aspect-ratio: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 6rem; color: var(--border-gold);
+      margin-bottom: 12px;
+    }
+    .main-image img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    /* Info */
+    .product-category-label {
+      font-size: 0.78rem; color: var(--primary-dark);
+      text-transform: uppercase; letter-spacing: 0.15em;
+      margin-bottom: 10px;
+    }
+    .product-title {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      margin-bottom: 16px;
+    }
+    .product-price-block { margin-bottom: 24px; }
+    .price-main {
+      font-family: var(--font-title);
+      font-size: 2.2rem;
+      color: var(--primary);
+    }
+    .price-installments {
+      font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;
+    }
+
+    .stock-info {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 24px; font-size: 0.88rem;
+    }
+    .stock-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .stock-dot.in  { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .stock-dot.out { background: var(--danger);  box-shadow: 0 0 6px var(--danger); }
+
+    .qty-selector {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 24px;
+    }
+    .qty-selector label {
+      font-family: var(--font-title);
+      font-size: 0.82rem; color: var(--primary);
+      letter-spacing: 0.08em;
+    }
+    .qty-control {
+      display: flex; align-items: center; gap: 0;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .qty-btn {
+      width: 36px; height: 36px;
+      background: none; border: none;
+      color: var(--text-light);
+      font-size: 1.1rem; cursor: pointer;
+      transition: var(--transition);
+    }
+    .qty-btn:hover { background: rgba(201,162,39,0.1); color: var(--primary); }
+    .qty-input {
+      width: 48px; text-align: center;
+      background: none; border: none;
+      color: var(--text-light);
+      font-family: var(--font-title);
+      font-size: 1rem;
+    }
+    .qty-input:focus { outline: none; }
+
+    .action-buttons { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+
+    .product-meta {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+    .meta-row {
+      display: flex; gap: 12px;
+      font-size: 0.85rem; color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .meta-row strong { color: var(--text-light); min-width: 100px; }
+
+    .description-block {
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+    .description-block h3 {
+      font-size: 1rem; margin-bottom: 12px;
+    }
+    .description-block p {
+      color: var(--text-muted);
+      line-height: 1.8;
+      font-size: 0.92rem;
+    }
+
+    /* Relacionados */
+    .related-section { padding: 60px 0; border-top: 1px solid var(--border); margin-top: 60px; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+    .product-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: var(--transition); cursor: pointer; display: flex; flex-direction: column; }
+    .product-card:hover { border-color: var(--primary-dark); transform: translateY(-4px); box-shadow: var(--shadow-gold); }
+    .product-img-wrap { height: 180px; overflow: hidden; background: var(--bg-surface); }
+    .product-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+    .product-card:hover .product-img { transform: scale(1.05); }
+    .product-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--border-gold); }
+    .product-body { padding: 12px; flex: 1; display: flex; flex-direction: column; }
+    .product-name { font-family: var(--font-title); font-size: 0.88rem; color: var(--text-light); margin-bottom: 8px; flex: 1; }
+    .product-price { font-family: var(--font-title); font-size: 1rem; color: var(--primary); }
+
+    @media (max-width: 768px) {
+      .product-layout { grid-template-columns: 1fr; }
+      .product-gallery { position: static; }
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="page-wrap">
+  <div class="container">
+
+    <div class="breadcrumb">
+      <a href="/index.html">🏰 Início</a> /
+      <a href="/pages/products.html">⚔️ Produtos</a> /
+      <span id="bread-name">Carregando...</span>
+    </div>
+
+    <div id="product-content">
+      <div class="loader"></div>
+    </div>
+
+  </div>
+
+  <!-- Produtos Relacionados -->
+  <div class="container">
+    <div class="related-section hidden" id="related-section">
+      <div class="section-header" style="margin-bottom:28px">
+        <h2>⚔️ Você também pode gostar</h2>
+      </div>
+      <div id="related-grid" class="related-grid"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/navbar.js"></script>
+<script>
+  const productId = new URLSearchParams(location.search).get('id');
+  if (!productId) window.location.href = '/pages/products.html';
+
+  let currentProduct = null;
+  let quantity = 1;
+
+  async function loadProduct() {
+    const el = document.getElementById('product-content');
+    try {
+      const p = await API.products.detail(productId);
+      currentProduct = p;
+
+      document.title = `${p.name} — Glins Store`;
+      document.getElementById('bread-name').textContent = p.name;
+
+      const installments = (parseFloat(p.price) / 12).toFixed(2);
+
+      el.innerHTML = `
+        <div class="product-layout">
+
+          <!-- Galeria -->
+          <div class="product-gallery">
+            <div class="main-image" id="main-img">
+              ${p.image_url
+                ? `<img src="${p.image_url}" alt="${p.name}"/>`
+                : '🏺'
+              }
+            </div>
+          </div>
+
+          <!-- Informações -->
+          <div class="product-info">
+            <div class="product-category-label">
+              ${p.category_name ? `📂 ${p.category_name}` : ''}
+            </div>
+
+            <h1 class="product-title">${p.name}</h1>
+
+            <div class="product-price-block">
+              <div class="price-main">${formatPrice(p.price)}</div>
+              <div class="price-installments">
+                ou 12x de ${formatPrice(installments)} sem juros
+              </div>
+            </div>
+
+            <div class="stock-info">
+              <div class="stock-dot ${p.in_stock ? 'in' : 'out'}"></div>
+              <span>${p.in_stock
+                ? `Em estoque (${p.stock} disponíveis)`
+                : 'Produto esgotado'
+              }</span>
+            </div>
+
+            ${p.in_stock ? `
+            <div class="qty-selector">
+              <label>QUANTIDADE</label>
+              <div class="qty-control">
+                <button class="qty-btn" onclick="changeQty(-1)">−</button>
+                <input class="qty-input" id="qty-input" type="number" value="1" min="1" max="${p.stock}" readonly/>
+                <button class="qty-btn" onclick="changeQty(1)">+</button>
+              </div>
+            </div>
+            ` : ''}
+
+            <div class="action-buttons">
+              <button class="btn btn-primary btn-lg btn-block" id="addCartBtn"
+                onclick="addToCart()" ${!p.in_stock ? 'disabled' : ''}>
+                🛒 ${p.in_stock ? 'Adicionar ao Carrinho' : 'Produto Esgotado'}
+              </button>
+              ${p.in_stock ? `
+              <button class="btn btn-outline btn-lg btn-block" onclick="buyNow()">
+                ⚔️ Comprar Agora
+              </button>` : ''}
+            </div>
+
+            <div class="product-meta">
+              ${p.category_name ? `
+              <div class="meta-row">
+                <strong>Categoria</strong>
+                <span>${p.category_name}</span>
+              </div>` : ''}
+              <div class="meta-row">
+                <strong>Disponibilidade</strong>
+                <span>${p.in_stock ? '✅ Em estoque' : '❌ Esgotado'}</span>
+              </div>
+              <div class="meta-row">
+                <strong>Frete</strong>
+                <span>🚚 Calculado no checkout</span>
+              </div>
+              <div class="meta-row">
+                <strong>Garantia</strong>
+                <span>📜 7 dias para troca</span>
+              </div>
+            </div>
+
+            ${p.description ? `
+            <div class="description-block">
+              <h3>📜 Descrição do Produto</h3>
+              <p>${p.description}</p>
+            </div>` : ''}
+
+          </div>
+        </div>
+      `;
+
+      loadRelated(p.category, p.id);
+
+    } catch (_) {
+      el.innerHTML = `
+        <div class="text-center" style="padding:80px 0">
+          <div style="font-size:4rem;margin-bottom:16px">⚠️</div>
+          <h2>Produto não encontrado</h2>
+          <p class="text-muted mb-3">Este artefato não existe no reino.</p>
+          <a href="/pages/products.html" class="btn btn-primary">← Voltar aos Produtos</a>
+        </div>`;
+    }
+  }
+
+  function changeQty(delta) {
+    const input = document.getElementById('qty-input');
+    if (!input || !currentProduct) return;
+    const max = currentProduct.stock;
+    quantity = Math.min(max, Math.max(1, quantity + delta));
+    input.value = quantity;
+  }
+
+  async function addToCart() {
+    if (!Auth.isLogged()) {
+      window.location.href = '/pages/login.html';
+      return;
+    }
+    const btn = document.getElementById('addCartBtn');
+    btn.disabled = true;
+    btn.textContent = 'Adicionando...';
+    try {
+      await API.cart.add({ product_id: currentProduct.id, quantity });
+      showToast('Item adicionado ao carrinho! 🛒', 'success');
+      updateCartBadge();
+    } catch (err) {
+      showToast(err.error || 'Erro ao adicionar', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🛒 Adicionar ao Carrinho';
+    }
+  }
+
+  async function buyNow() {
+    if (!Auth.isLogged()) {
+      window.location.href = '/pages/login.html';
+      return;
+    }
+    try {
+      await API.cart.add({ product_id: currentProduct.id, quantity });
+      window.location.href = '/pages/checkout.html';
+    } catch (err) {
+      showToast(err.error || 'Erro', 'error');
+    }
+  }
+
+  async function loadRelated(categoryId, excludeId) {
+    if (!categoryId) return;
+    try {
+      const data = await API.products.list({ category: categoryId });
+      const products = (data.results || data).filter(p => p.id != excludeId).slice(0, 4);
+      if (!products.length) return;
+
+      document.getElementById('related-section').classList.remove('hidden');
+      document.getElementById('related-grid').innerHTML = products.map(p => `
+        <div class="product-card" onclick="window.location='/pages/product-detail.html?id=${p.id}'">
+          <div class="product-img-wrap">
+            ${p.image_url
+              ? `<img class="product-img" src="${p.image_url}" alt="${p.name}" loading="lazy"/>`
+              : `<div class="product-img-placeholder">🏺</div>`
+            }
+          </div>
+          <div class="product-body">
+            <div class="product-name">${p.name}</div>
+            <div class="product-price">${formatPrice(p.price)}</div>
+          </div>
+        </div>
+      `).join('');
+    } catch (_) {}
+  }
+
+  loadProduct();
+</script>
+</body>
+</html>
