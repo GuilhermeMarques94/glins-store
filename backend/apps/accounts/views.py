@@ -107,6 +107,7 @@ def create_superuser_temp(request):
     User = get_user_model()
     email    = os.environ.get('SUPERUSER_EMAIL', '')
     password = os.environ.get('SUPERUSER_PASSWORD', '')
+    name     = os.environ.get('SUPERUSER_NAME', 'Admin')  # ← adicionado
 
     if not email or not password:
         return JsonResponse({'error': 'Variáveis SUPERUSER_EMAIL e SUPERUSER_PASSWORD não configuradas'}, status=400)
@@ -114,5 +115,5 @@ def create_superuser_temp(request):
     if User.objects.filter(email=email).exists():
         return JsonResponse({'message': 'Superusuário já existe!'})
 
-    User.objects.create_superuser(email=email, password=password)
+    User.objects.create_superuser(email=email, name=name, password=password)  # ← name aqui
     return JsonResponse({'message': f'Superusuário {email} criado com sucesso!'})
