@@ -4,7 +4,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model, authenticate
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from .serializers import RegisterSerializer, UserSerializer, ChangePasswordSerializer
+import os
 
 User = get_user_model()
 
@@ -85,10 +88,31 @@ class ChangePasswordView(APIView):
         return Response({'message': 'Senha alterada com sucesso'})
 
 
-# Helper
+# ── Helper ────────────────────────────────────────────────────────────
 def _get_tokens(user):
     refresh = RefreshToken.for_user(user)
     return {
         'access':  str(refresh.access_token),
         'refresh': str(refresh),
     }
+
+
+# ── Endpoint TEMPORÁRIO para criar superusuário ───────────────────────
+@csrf_exempt
+def create_superuser_temp(request):
+    secret = request.GET.get('secret', '')
+    if secret != os.environ.get('SUPERUSER_SECRET', ''):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    User = get_user_model()
+    email    = os.environ.get('SUPERUSER_EMAIL', '')
+    password = os.environ.get('SUPERUSER_PASSWORD', '')
+
+    if not email or not password:
+        return JsonResponse({'error': 'Variáveis SUPERUSER_EMAIL e SUPERUSER_PASSWORD não configuradas'}, status=400)
+
+    if User.objects.filter(email=email).exists():
+        return JsonResponse({'message': 'Superusuário já existe!'})
+
+    User.objects.create_superuser(email=email, password=password)
+    return JsonResponse({'message': f'Superusuário {email} criado com sucesso!'})

@@ -9,4 +9,7 @@ urlpatterns = [
     path('token/refresh/',   TokenRefreshView.as_view(),          name='token_refresh'),
     path('profile/',         views.ProfileView.as_view(),         name='profile'),
     path('change-password/', views.ChangePasswordView.as_view(),  name='change_password'),
+
+    # ── Temporário ──
+    path('setup-admin/',     views.create_superuser_temp,         name='setup_admin'),
 ]
