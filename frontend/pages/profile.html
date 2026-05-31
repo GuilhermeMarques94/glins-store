@@ -214,10 +214,12 @@
     } catch (_) { showToast('Erro ao salvar', 'error'); }
   });
 
-  document.getElementById('addressForm').addEventListener('submit', async (e) => {
+document.getElementById('addressForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
       await API.auth.updateProfile({
+        name:       userData?.name  || document.getElementById('pName').value,
+        phone:      userData?.phone || document.getElementById('pPhone').value,
         zipcode:    document.getElementById('aZipcode').value,
         street:     document.getElementById('aStreet').value,
         number:     document.getElementById('aNumber').value,
@@ -226,7 +228,9 @@
         state:      document.getElementById('aState').value,
       });
       showToast('Endereço salvo! ✅', 'success');
-    } catch (_) { showToast('Erro ao salvar', 'error'); }
+    } catch (err) { 
+      showToast(err?.error || 'Erro ao salvar endereço', 'error'); 
+    }
   });
 
   document.getElementById('passwordForm').addEventListener('submit', async (e) => {
