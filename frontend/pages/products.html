@@ -167,8 +167,9 @@
   async function loadCategories() {
     const el = document.getElementById('cat-filters');
     try {
-      const cats = await API.categories.list();
-      cats.forEach(c => {
+        const res = await API.categories.list();
+        const cats = res.results ?? res; // ← extrai o array do objeto paginado
+        cats.forEach(c => {
         const item = document.createElement('div');
         item.className = `cat-filter-item ${currentCategory === c.slug ? 'active' : ''}`;
         item.dataset.slug = c.slug;

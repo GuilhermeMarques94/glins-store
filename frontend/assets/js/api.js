@@ -97,7 +97,7 @@ const API = {
 
   // Categories
   categories: {
-    list:   ()       => apiFetch('/products/categories/'),
+    list:   ()       => apiFetch('/products/categories/').then(r => r.results ?? r),
     create: (data)   => apiFetch('/products/categories/', { method: 'POST', body: JSON.stringify(data) }),
     update: (id, d)  => apiFetch(`/products/categories/${id}/`, { method: 'PUT', body: JSON.stringify(d) }),
     delete: (id)     => apiFetch(`/products/categories/${id}/`, { method: 'DELETE' }),
