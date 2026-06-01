@@ -126,3 +126,11 @@ USE_I18N      = True
 USE_TZ        = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Mercado Pago
+MP_ACCESS_TOKEN = os.environ.get('MP_ACCESS_TOKEN', '')
+
+# URL do frontend
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://glins-store.vercel.app')
+
+

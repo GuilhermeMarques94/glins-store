@@ -4,17 +4,37 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Checkout — Glins Store</title>
+
+  <!-- SDK Mercado Pago -->
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+
   <link rel="stylesheet" href="/assets/css/global.css"/>
   <style>
-    .page-wrap { padding: 80px 0; }
-    .checkout-layout { display: grid; grid-template-columns: 1fr 360px; gap: 32px; align-items: start; }
-    .section-title { font-family: var(--font-title); font-size: 1rem; color: var(--primary); letter-spacing: 0.08em; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .order-summary-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+    .page-wrap          { padding: 80px 0; }
+    .checkout-layout    { display: grid; grid-template-columns: 1fr 360px; gap: 32px; align-items: start; }
+    .section-title      { font-family: var(--font-title); font-size: 1rem; color: var(--primary);
+                          letter-spacing: .08em; margin-bottom: 16px; padding-bottom: 8px;
+                          border-bottom: 1px solid var(--border); }
+    .grid-2             { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .order-summary-item { display: flex; justify-content: space-between; padding: 8px 0;
+                          border-bottom: 1px solid var(--border); font-size: .88rem; }
     .order-summary-item:last-child { border: none; }
-    .summary-total { display: flex; justify-content: space-between; font-family: var(--font-title); font-size: 1.2rem; color: var(--primary); padding-top: 16px; }
-    .payment-placeholder { background: var(--bg-surface); border: 1px dashed var(--border-gold); border-radius: var(--radius); padding: 24px; text-align: center; color: var(--text-muted); margin-top: 16px; }
-    @media (max-width: 768px) { .checkout-layout { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+    .summary-total      { display: flex; justify-content: space-between;
+                          font-family: var(--font-title); font-size: 1.2rem;
+                          color: var(--primary); padding-top: 16px; }
+    .shipping-badge     { display: inline-block; padding: 4px 10px; border-radius: 20px;
+                          font-size: .8rem; font-weight: 600; }
+    .shipping-free      { background: #d4edda; color: #155724; }
+    .shipping-paid      { background: #fff3cd; color: #856404; }
+
+    /* Mercado Pago Brick */
+    #mp-payment-brick   { margin-top: 16px; min-height: 200px; }
+    .mp-loading         { text-align: center; padding: 32px; color: var(--text-muted); }
+
+    @media (max-width: 768px) {
+      .checkout-layout  { grid-template-columns: 1fr; }
+      .grid-2           { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -25,59 +45,73 @@
     <h1 style="font-size:2rem; margin-bottom:32px">🗡️ Finalizar Compra</h1>
 
     <div class="checkout-layout">
-      <!-- Formulário -->
+
+      <!-- ── Coluna Esquerda ────────────────── -->
       <div>
-        <form id="checkoutForm">
-          <div class="card mb-3">
-            <div class="section-title">📍 Endereço de Entrega</div>
+
+        <!-- Endereço -->
+        <div class="card mb-3">
+          <div class="section-title">📍 Endereço de Entrega</div>
+          <div class="form-group">
+            <label>CEP</label>
+            <input type="text" id="zipcode" class="form-control"
+                   placeholder="00000-000" maxlength="9" required/>
+          </div>
+          <div class="grid-2">
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Rua</label>
+              <input type="text" id="street" class="form-control" required/>
+            </div>
             <div class="form-group">
-              <label>CEP</label>
-              <input type="text" id="zipcode" class="form-control" placeholder="00000-000" maxlength="9" required/>
+              <label>Número</label>
+              <input type="text" id="number" class="form-control" required/>
             </div>
-            <div class="grid-2">
-              <div class="form-group" style="grid-column:1/-1">
-                <label>Rua</label>
-                <input type="text" id="street" class="form-control" required/>
-              </div>
-              <div class="form-group">
-                <label>Número</label>
-                <input type="text" id="number" class="form-control" required/>
-              </div>
-              <div class="form-group">
-                <label>Complemento</label>
-                <input type="text" id="complement" class="form-control"/>
-              </div>
-              <div class="form-group">
-                <label>Cidade</label>
-                <input type="text" id="city" class="form-control" required/>
-              </div>
-              <div class="form-group">
-                <label>Estado</label>
-                <input type="text" id="state" class="form-control" maxlength="2" placeholder="MG" required/>
-              </div>
+            <div class="form-group">
+              <label>Complemento</label>
+              <input type="text" id="complement" class="form-control"/>
+            </div>
+            <div class="form-group">
+              <label>Cidade</label>
+              <input type="text" id="city" class="form-control" required/>
+            </div>
+            <div class="form-group">
+              <label>Estado (UF)</label>
+              <input type="text" id="state" class="form-control"
+                     maxlength="2" placeholder="MG" required/>
             </div>
           </div>
 
-          <div class="card">
-            <div class="section-title">💳 Pagamento</div>
-            <div class="payment-placeholder">
-              <div style="font-size:2rem;margin-bottom:8px">🏗️</div>
-              <strong>Integração com Mercado Pago</strong><br/>
-              <small>Em breve — será integrado na próxima fase</small>
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-lg btn-block mt-3" id="submitBtn">
-            ⚔️ Confirmar Pedido
+          <!-- Botão calcular frete -->
+          <button type="button" class="btn btn-secondary" id="btnCalcShipping"
+                  style="margin-top:8px">
+            🚚 Calcular Frete
           </button>
-        </form>
+
+          <!-- Resultado do frete -->
+          <div id="shipping-result" style="margin-top:12px; display:none">
+            <span id="shipping-badge" class="shipping-badge"></span>
+            <span id="shipping-label" style="margin-left:8px; font-size:.9rem"></span>
+          </div>
+        </div>
+
+        <!-- Pagamento -->
+        <div class="card">
+          <div class="section-title">💳 Pagamento</div>
+          <div id="mp-payment-brick">
+            <div class="mp-loading">
+              ⚙️ Preencha o endereço e calcule o frete para liberar o pagamento
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Resumo -->
+      <!-- ── Resumo ─────────────────────────── -->
       <div class="card" style="position:sticky;top:80px">
         <h3 style="margin-bottom:16px">📜 Resumo do Pedido</h3>
         <div id="order-summary"><div class="loader"></div></div>
       </div>
+
     </div>
   </div>
 </div>
@@ -86,78 +120,236 @@
 <script src="/assets/js/utils.js"></script>
 <script src="/assets/js/navbar.js"></script>
 <script>
-  if (!requireAuth()) {}
+/* ═══════════════════════════════════════════
+   CHECKOUT — Glins Store
+═══════════════════════════════════════════ */
+if (!requireAuth()) {}
 
-  let cartData = null;
+const MP_PUBLIC_KEY = 'TEST-APP_USR-fc1a26c5-bfc3-45b0-a72c-6b51763ebc0c'; // ← sua PK de teste
 
-  async function init() {
-    // Preenche endereço salvo
-    try {
-      const user = await API.auth.profile();
-      if (user.street) {
-        document.getElementById('zipcode').value    = user.zipcode    || '';
-        document.getElementById('street').value     = user.street     || '';
-        document.getElementById('number').value     = user.number     || '';
-        document.getElementById('complement').value = user.complement || '';
-        document.getElementById('city').value       = user.city       || '';
-        document.getElementById('state').value      = user.state      || '';
-      }
-    } catch (_) {}
+let cartData      = null;
+let shippingCost  = null;
+let mpBrick       = null;
+let mp            = null;
 
-    // Carrega resumo do carrinho
-    try {
-      cartData = await API.cart.get();
-      if (!cartData.items.length) {
-        window.location.href = '/pages/cart.html';
-        return;
-      }
+// ── Init ───────────────────────────────────
+async function init() {
+  mp = new MercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
 
-      const summaryEl = document.getElementById('order-summary');
-      summaryEl.innerHTML = `
-        ${cartData.items.map(i => `
-          <div class="order-summary-item">
-            <span>${i.product.name} × ${i.quantity}</span>
-            <span>${formatPrice(i.subtotal)}</span>
-          </div>
-        `).join('')}
-        <div class="order-summary-item">
-          <span class="text-muted">Frete</span>
-          <span class="text-muted">A calcular</span>
-        </div>
-        <div class="summary-total">
-          <span>Total</span>
-          <span>${formatPrice(cartData.total)}</span>
-        </div>
-      `;
-    } catch (_) {}
+  // Pré-preenche endereço do perfil
+  try {
+    const user = await API.auth.profile();
+    if (user.street) {
+      setField('zipcode',    user.zipcode);
+      setField('street',     user.street);
+      setField('number',     user.number);
+      setField('complement', user.complement);
+      setField('city',       user.city);
+      setField('state',      user.state);
+    }
+  } catch (_) {}
+
+  // Carrega resumo
+  try {
+    cartData = await API.cart.get();
+    if (!cartData.items?.length) {
+      window.location.href = '/pages/cart.html';
+      return;
+    }
+    renderSummary();
+  } catch (_) {
+    showToast('Erro ao carregar carrinho', 'error');
   }
 
-  document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.textContent = 'Processando...';
+  // Verificar status pós-redirect do MP
+  checkMPRedirect();
+}
 
-    try {
-      const order = await API.orders.create({
-        zipcode:    document.getElementById('zipcode').value,
-        street:     document.getElementById('street').value,
-        number:     document.getElementById('number').value,
-        complement: document.getElementById('complement').value,
-        city:       document.getElementById('city').value,
-        state:      document.getElementById('state').value,
-      });
+// ── Helpers ─────────────────────────────────
+function setField(id, val) {
+  const el = document.getElementById(id);
+  if (el && val) el.value = val;
+}
 
-      showToast('Pedido realizado com sucesso! ⚔️', 'success');
-      setTimeout(() => window.location.href = '/pages/profile.html', 1200);
-    } catch (err) {
-      showToast(err.error || 'Erro ao criar pedido', 'error');
-      btn.disabled = false;
-      btn.textContent = '⚔️ Confirmar Pedido';
+function getAddr() {
+  return {
+    zipcode:    document.getElementById('zipcode').value.trim(),
+    street:     document.getElementById('street').value.trim(),
+    number:     document.getElementById('number').value.trim(),
+    complement: document.getElementById('complement').value.trim(),
+    city:       document.getElementById('city').value.trim(),
+    state:      document.getElementById('state').value.trim().toUpperCase(),
+  };
+}
+
+// ── Resumo do Pedido ────────────────────────
+function renderSummary(freight = null) {
+  const el = document.getElementById('order-summary');
+
+  const subtotal = cartData.total;
+  const frete    = freight ?? shippingCost;
+  const total    = frete !== null ? subtotal + frete : null;
+
+  el.innerHTML = `
+    ${cartData.items.map(i => `
+      <div class="order-summary-item">
+        <span>${i.product.name} × ${i.quantity}</span>
+        <span>${formatPrice(i.subtotal)}</span>
+      </div>
+    `).join('')}
+
+    <div class="order-summary-item">
+      <span class="text-muted">Frete</span>
+      <span id="summary-freight">
+        ${frete === null
+          ? '<em class="text-muted">A calcular</em>'
+          : frete === 0
+            ? '<strong style="color:#155724">🎉 Grátis</strong>'
+            : `<strong>${formatPrice(frete)}</strong>`
+        }
+      </span>
+    </div>
+
+    <div class="summary-total">
+      <span>Total</span>
+      <span>${total !== null ? formatPrice(total) : '—'}</span>
+    </div>
+  `;
+}
+
+// ── Calcular Frete ──────────────────────────
+document.getElementById('btnCalcShipping').addEventListener('click', async () => {
+  const addr = getAddr();
+
+  if (!addr.state || !addr.city) {
+    showToast('Preencha cidade e estado primeiro', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btnCalcShipping');
+  btn.disabled    = true;
+  btn.textContent = 'Calculando...';
+
+  try {
+    const result  = await API.orders.calcShipping({ state: addr.state, city: addr.city });
+    shippingCost  = result.shipping_cost;
+
+    // Badge
+    const badge = document.getElementById('shipping-badge');
+    const label = document.getElementById('shipping-label');
+    const wrap  = document.getElementById('shipping-result');
+
+    wrap.style.display = 'block';
+
+    if (result.free) {
+      badge.className   = 'shipping-badge shipping-free';
+      badge.textContent = '🎉 FRETE GRÁTIS';
+      label.textContent = `Para ${addr.city} — ${addr.state}`;
+    } else {
+      badge.className   = 'shipping-badge shipping-paid';
+      badge.textContent = `🚚 ${formatPrice(shippingCost)}`;
+      label.textContent = `Para ${addr.state}`;
     }
-  });
 
-  init();
+    renderSummary(shippingCost);
+
+    // Inicializar brick do MP
+    await initMPBrick();
+
+  } catch (err) {
+    showToast('Erro ao calcular frete', 'error');
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = '🚚 Calcular Frete';
+  }
+});
+
+// ── Mercado Pago Brick ──────────────────────
+async function initMPBrick() {
+  // Destrói brick anterior se existir
+  if (mpBrick) {
+    await mpBrick.unmount();
+    mpBrick = null;
+  }
+
+  document.getElementById('mp-payment-brick').innerHTML =
+    '<div class="mp-loading">⏳ Carregando formas de pagamento...</div>';
+
+  try {
+    const addr   = getAddr();
+    const result = await API.orders.mpPreference({
+      state: addr.state,
+      city:  addr.city,
+    });
+
+    const bricks  = mp.bricks();
+    const settings = {
+      initialization: {
+        amount:        cartData.total + shippingCost,
+        preferenceId:  result.preference_id,
+      },
+      customization: {
+        paymentMethods: {
+          ticket:           'all',
+          bankTransfer:     'all',
+          creditCard:       'all',
+          debitCard:        'all',
+          mercadoPago:      'all',
+        },
+      },
+      callbacks: {
+        onReady: () => {
+          console.log('MP Brick ready');
+        },
+        onSubmit: async ({ selectedPaymentMethod, formData }) => {
+          // Cria pedido no backend
+          try {
+            const order = await API.orders.create({
+              ...getAddr(),
+            });
+
+            showToast('Pedido criado! Redirecionando...', 'success');
+            setTimeout(() => {
+              window.location.href = `/pages/profile.html`;
+            }, 1500);
+
+          } catch (err) {
+            showToast(err.error || 'Erro ao finalizar pedido', 'error');
+          }
+        },
+        onError: (error) => {
+          console.error('MP Brick error:', error);
+          showToast('Erro no pagamento. Tente novamente.', 'error');
+        },
+      },
+    };
+
+    document.getElementById('mp-payment-brick').innerHTML = '';
+    mpBrick = await bricks.create('payment', 'mp-payment-brick', settings);
+
+  } catch (err) {
+    document.getElementById('mp-payment-brick').innerHTML =
+      '<div class="mp-loading">❌ Erro ao carregar pagamento. Recarregue a página.</div>';
+    showToast('Erro ao inicializar Mercado Pago', 'error');
+  }
+}
+
+// ── Verificar redirect pós-pagamento ────────
+function checkMPRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  const st     = params.get('status');
+
+  if (st === 'success') {
+    showToast('✅ Pagamento aprovado! Obrigado pela compra!', 'success');
+    setTimeout(() => window.location.href = '/pages/profile.html', 2000);
+  } else if (st === 'pending') {
+    showToast('⏳ Pagamento em análise. Avisaremos em breve.', 'info');
+  } else if (st === 'failure') {
+    showToast('❌ Pagamento recusado. Tente outra forma.', 'error');
+  }
+}
+
+init();
 </script>
 </body>
 </html>

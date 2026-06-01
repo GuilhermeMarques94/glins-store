@@ -124,5 +124,8 @@ const API = {
     create:       (data)    => apiFetch('/orders/', { method: 'POST', body: JSON.stringify(data) }),
     adminList:    (params)  => apiFetch('/orders/admin/?' + new URLSearchParams(params || {})),
     adminUpdate:  (id, d)   => apiFetch(`/orders/admin/${id}/`, { method: 'PATCH', body: JSON.stringify(d) }),
-  }
+    // ← NOVOS
+    calcShipping: (data)    => apiFetch('/orders/shipping/', { method: 'POST', body: JSON.stringify(data) }),
+    mpPreference: (data)    => apiFetch('/orders/payment/preference/', { method: 'POST', body: JSON.stringify(data) }),
+  },
 };
