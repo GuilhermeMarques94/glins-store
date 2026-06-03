@@ -289,9 +289,8 @@ async function initMPBrick() {
       },
       customization: {
         paymentMethods: {
-          // ✅ Só PIX e crédito, máximo 3x
-          creditCard:   'all',
-          ticket:       'all',   // PIX no Brick é via "ticket"
+          creditCard:      'all',      // ✅ Cartão de crédito até 3x
+          bankTransfer:    ['pix'],    // ✅ PIX com QR Code
           maxInstallments: 3,
         },
       },
@@ -300,10 +299,7 @@ async function initMPBrick() {
 
         onSubmit: async ({ selectedPaymentMethod, formData }) => {
           try {
-            // 1️⃣ Cria o pedido no backend
-            const order = await API.orders.create({ ...getAddr() });
-
-            // 2️⃣ Processa o pagamento no MP via backend
+            const order   = await API.orders.create({ ...getAddr() });
             const payment = await API.orders.processPayment(formData);
 
             if (payment.status === 'approved') {
@@ -311,7 +307,7 @@ async function initMPBrick() {
               setTimeout(() => window.location.href = '/pages/profile.html', 2000);
 
             } else if (payment.status === 'pending' && payment.point_of_interaction) {
-              // ✅ PIX — exibe QR Code
+              // ✅ PIX → exibe QR Code na tela
               showPixQR(payment.point_of_interaction.transaction_data);
 
             } else {

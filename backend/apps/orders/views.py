@@ -89,9 +89,9 @@ class CreateMPPreferenceView(APIView):
                 'excluded_payment_types': [
                     {'id': 'debit_card'},
                     {'id': 'prepaid_card'},
-                    {'id': 'bank_transfer'},
-                    {'id': 'ticket'},          # boleto
+                    {'id': 'ticket'},       # boleto
                     {'id': 'atm'},
+                    # ✅ bank_transfer (PIX) removido daqui
                 ],
                 'installments': 3,
             },
