@@ -264,63 +264,62 @@ async function initMPBrick() {
     '<div class="mp-loading">⏳ Carregando formas de pagamento...</div>';
 
   try {
-    const addr   = getAddr();
-    const result = await API.orders.mpPreference({
-      state: addr.state,
-      city:  addr.city,
-    });
-
     const totalAmount = cartData.total + shippingCost;
     const bricks      = mp.bricks();
 
     const brickSettings = {
       initialization: {
-        amount:       totalAmount,
-        preferenceId: result.preference_id,
+        amount: totalAmount,
+        // ✅ SEM preferenceId — não é necessário para PIX/cartão direto
       },
       customization: {
         paymentMethods: {
-          creditCard:   'all',       // ✅ Cartão de crédito até 3x
-          bankTransfer: ['pix'],     // ✅ PIX com QR Code
+          creditCard:      'all',     // ✅ Cartão de crédito até 3x
+          bankTransfer:    ['pix'],   // ✅ PIX
           maxInstallments: 3,
         },
       },
       callbacks: {
         onReady: () => console.log('MP Brick ready'),
 
-        onSubmit: async ({ selectedPaymentMethod, formData }) => {
-          try {
-            // 1️⃣ Cria o pedido no backend ANTES do pagamento
-            await API.orders.create({ ...getAddr() });
+        // ✅ onSubmit DEVE retornar uma Promise
+        onSubmit: ({ selectedPaymentMethod, formData }) => {
+          return new Promise(async (resolve, reject) => {
+            try {
+              // 1️⃣ Cria o pedido no backend
+              await API.orders.create({ ...getAddr() });
 
-            // 2️⃣ Processa o pagamento no MP
-            const payment = await API.orders.processPayment(formData);
+              // 2️⃣ Processa pagamento no MP via backend
+              const payment = await API.orders.processPayment(formData);
 
-            if (payment.status === 'approved') {
-              // ✅ Cartão aprovado
-              showToast('✅ Pagamento aprovado! Obrigado!', 'success');
-              setTimeout(() => window.location.href = '/pages/profile.html', 2000);
+              if (payment.status === 'approved') {
+                resolve(); // ✅ avisa o Brick que deu certo
+                showToast('✅ Pagamento aprovado! Obrigado!', 'success');
+                setTimeout(() => window.location.href = '/pages/profile.html', 2000);
 
-            } else if (payment.status === 'pending' && payment.qr_code) {
-              // ✅ PIX → exibe QR Code na tela
-              showPixQR({
-                qr_code:        payment.qr_code,
-                qr_code_base64: payment.qr_code_base64,
-              });
+              } else if (payment.status === 'pending' && payment.qr_code) {
+                resolve(); // ✅ avisa o Brick que deu certo
+                // PIX → substitui o Brick pelo QR Code
+                showPixQR({
+                  qr_code:        payment.qr_code,
+                  qr_code_base64: payment.qr_code_base64,
+                });
 
-            } else {
-              showToast('❌ Pagamento não aprovado. Tente novamente.', 'error');
+              } else {
+                reject(); // ❌ avisa o Brick que falhou
+                showToast('❌ Pagamento não aprovado. Tente novamente.', 'error');
+              }
+
+            } catch (err) {
+              console.error('Erro no pagamento:', err);
+              reject(); // ❌ avisa o Brick que falhou
+              showToast(err.error || 'Erro ao finalizar pedido', 'error');
             }
-
-          } catch (err) {
-            console.error(err);
-            showToast(err.error || 'Erro ao finalizar pedido', 'error');
-          }
+          });
         },
 
         onError: (error) => {
           console.error('MP Brick error:', error);
-          showToast('Erro no pagamento. Tente novamente.', 'error');
         },
       },
     };
@@ -329,6 +328,7 @@ async function initMPBrick() {
     mpBrick = await bricks.create('payment', 'mp-payment-brick', brickSettings);
 
   } catch (err) {
+    console.error('Erro ao inicializar Brick:', err);
     document.getElementById('mp-payment-brick').innerHTML =
       '<div class="mp-loading">❌ Erro ao carregar pagamento. Recarregue a página.</div>';
     showToast('Erro ao inicializar Mercado Pago', 'error');
