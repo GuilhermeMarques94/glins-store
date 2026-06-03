@@ -18,10 +18,6 @@ from apps.cart.models import CartItem
 
 # ── Calcular Frete ─────────────────────────────────────────────────────────────
 class ShippingCalculateView(APIView):
-    """
-    POST /api/orders/shipping/
-    Body: { "state": "MG", "city": "Uberlândia" }
-    """
     def post(self, request):
         state = request.data.get('state', '').strip()
         city  = request.data.get('city', '').strip()
@@ -43,10 +39,6 @@ class ShippingCalculateView(APIView):
 
 # ── Criar Preferência Mercado Pago ─────────────────────────────────────────────
 class CreateMPPreferenceView(APIView):
-    """
-    POST /api/orders/payment/preference/
-    Cria a preferência de pagamento no MP e retorna o preference_id
-    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -65,7 +57,6 @@ class CreateMPPreferenceView(APIView):
 
         shipping_cost = calculate_shipping(state, city)
 
-        # Montar itens para o MP
         mp_items = []
         for item in cart_items:
             mp_items.append({
@@ -76,7 +67,6 @@ class CreateMPPreferenceView(APIView):
                 'currency_id': 'BRL',
             })
 
-        # Adiciona frete como item (se houver)
         if shipping_cost > 0:
             mp_items.append({
                 'id':          'shipping',
@@ -94,6 +84,17 @@ class CreateMPPreferenceView(APIView):
                 'email': request.user.email,
                 'name':  getattr(request.user, 'name', request.user.email),
             },
+            # ✅ Só PIX e cartão de crédito, máximo 3x
+            'payment_methods': {
+                'excluded_payment_types': [
+                    {'id': 'debit_card'},
+                    {'id': 'prepaid_card'},
+                    {'id': 'bank_transfer'},
+                    {'id': 'ticket'},          # boleto
+                    {'id': 'atm'},
+                ],
+                'installments': 3,
+            },
             'back_urls': {
                 'success': f'{settings.FRONTEND_URL}/pages/checkout.html?status=success',
                 'failure': f'{settings.FRONTEND_URL}/pages/checkout.html?status=failure',
@@ -101,7 +102,9 @@ class CreateMPPreferenceView(APIView):
             },
             'auto_return':          'approved',
             'statement_descriptor': 'GLINS STORE',
+            # ✅ Usamos o ID do pedido futuramente; por ora user.id
             'external_reference':   str(request.user.id),
+            'notification_url':     f'{settings.BACKEND_URL}/api/orders/payment/webhook/',
         }
 
         result = sdk.preference().create(preference_data)
@@ -112,18 +115,60 @@ class CreateMPPreferenceView(APIView):
         preference = result['response']
         return Response({
             'preference_id': preference['id'],
-            'init_point':    preference['init_point'],       # produção
-            'sandbox_url':   preference['sandbox_init_point'], # teste
+            'init_point':    preference['init_point'],
+            'sandbox_url':   preference['sandbox_init_point'],
             'shipping_cost': shipping_cost,
         })
 
 
+# ── Processar Pagamento (chamado pelo Brick) ───────────────────────────────────
+class PaymentProcessView(APIView):
+    """
+    POST /api/orders/payment/process/
+    Recebe formData do Brick, cria o pagamento no MP e retorna status + QR PIX se necessário.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        sdk       = mercadopago.SDK(settings.MP_ACCESS_TOKEN)
+        form_data = request.data  # vem direto do Brick do MP
+
+        result  = sdk.payment().create(form_data)
+        payment = result['response']
+
+        mp_status = payment.get('status')          # approved / pending / rejected
+        payment_id = payment.get('id')
+
+        # Atualiza o pedido pendente mais recente do usuário
+        if mp_status in ['approved', 'pending']:
+            try:
+                order = Order.objects.filter(
+                    user=request.user,
+                    status='pending'
+                ).latest('created_at')
+
+                if mp_status == 'approved':
+                    order.status = 'paid'
+                    order.save()
+                # pending → mantém 'pending', webhook vai atualizar quando pix for pago
+
+            except Order.DoesNotExist:
+                pass
+
+        response_data = {
+            'status':     mp_status,
+            'payment_id': payment_id,
+        }
+
+        # ✅ Se for PIX pendente, devolve os dados do QR
+        if mp_status == 'pending' and payment.get('point_of_interaction'):
+            response_data['point_of_interaction'] = payment['point_of_interaction']
+
+        return Response(response_data)
+
+
 # ── Webhook Mercado Pago ───────────────────────────────────────────────────────
 class MPWebhookView(APIView):
-    """
-    POST /api/orders/payment/webhook/
-    Recebe notificações do Mercado Pago
-    """
     authentication_classes = []
     permission_classes     = []
 
@@ -139,12 +184,10 @@ class MPWebhookView(APIView):
             payment = sdk.payment().get(resource_id)
 
             if payment['status'] == 200:
-                p      = payment['response']
-                mp_status = p.get('status')           # approved / pending / rejected
+                p         = payment['response']
+                mp_status = p.get('status')
                 ext_ref   = p.get('external_reference')  # user.id
-                amount    = Decimal(str(p.get('transaction_amount', 0)))
 
-                # Atualiza o pedido mais recente pendente do usuário
                 try:
                     order = Order.objects.filter(
                         user_id=ext_ref,
@@ -183,7 +226,6 @@ class OrderListView(APIView):
         if not cart_items.exists():
             return Response({'error': 'Carrinho vazio'}, status=400)
 
-        # Validar estoque
         for item in cart_items:
             if item.product.stock < item.quantity:
                 return Response(
@@ -191,16 +233,13 @@ class OrderListView(APIView):
                     status=400
                 )
 
-        # Calcular frete
         shipping_cost = Decimal(str(
             calculate_shipping(addr['state'], addr['city'])
         ))
 
-        # Calcular total
         subtotal = sum(i.subtotal for i in cart_items)
         total    = subtotal + shipping_cost
 
-        # Criar pedido
         order = Order.objects.create(
             user=request.user,
             total=total,
@@ -208,7 +247,6 @@ class OrderListView(APIView):
             **addr
         )
 
-        # Criar itens e baixar estoque
         for item in cart_items:
             OrderItem.objects.create(
                 order    = order,
@@ -220,7 +258,6 @@ class OrderListView(APIView):
             item.product.stock -= item.quantity
             item.product.save()
 
-        # Limpar carrinho
         cart_items.delete()
 
         return Response(OrderSerializer(order).data, status=201)

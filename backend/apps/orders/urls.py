@@ -12,6 +12,7 @@ urlpatterns = [
 
     # Mercado Pago
     path('payment/preference/',        views.CreateMPPreferenceView.as_view(),  name='mp_preference'),
+    path('payment/process/',           views.PaymentProcessView.as_view(),      name='mp_process'),   # ✅ NOVO
     path('payment/webhook/',           views.MPWebhookView.as_view(),           name='mp_webhook'),
 
     # Admin
