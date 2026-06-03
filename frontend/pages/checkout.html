@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Checkout — Glins Store</title>
 
-  <!-- SDK Mercado Pago -->
   <script src="https://sdk.mercadopago.com/js/v2"></script>
 
   <link rel="stylesheet" href="/assets/css/global.css"/>
@@ -26,11 +25,8 @@
                           font-size: .8rem; font-weight: 600; }
     .shipping-free      { background: #d4edda; color: #155724; }
     .shipping-paid      { background: #fff3cd; color: #856404; }
-
-    /* Mercado Pago Brick */
     #mp-payment-brick   { margin-top: 16px; min-height: 200px; }
     .mp-loading         { text-align: center; padding: 32px; color: var(--text-muted); }
-
     @media (max-width: 768px) {
       .checkout-layout  { grid-template-columns: 1fr; }
       .grid-2           { grid-template-columns: 1fr; }
@@ -48,7 +44,6 @@
 
       <!-- ── Coluna Esquerda ────────────────── -->
       <div>
-
         <!-- Endereço -->
         <div class="card mb-3">
           <div class="section-title">📍 Endereço de Entrega</div>
@@ -81,13 +76,11 @@
             </div>
           </div>
 
-          <!-- Botão calcular frete -->
           <button type="button" class="btn btn-secondary" id="btnCalcShipping"
                   style="margin-top:8px">
             🚚 Calcular Frete
           </button>
 
-          <!-- Resultado do frete -->
           <div id="shipping-result" style="margin-top:12px; display:none">
             <span id="shipping-badge" class="shipping-badge"></span>
             <span id="shipping-label" style="margin-left:8px; font-size:.9rem"></span>
@@ -103,7 +96,6 @@
             </div>
           </div>
         </div>
-
       </div>
 
       <!-- ── Resumo ─────────────────────────── -->
@@ -132,7 +124,7 @@ let shippingCost = null;
 let mpBrick      = null;
 let mp           = null;
 
-// ── Init ────────────────────────────────────
+// ── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
   mp = new MercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
 
@@ -162,7 +154,7 @@ async function init() {
   checkMPRedirect();
 }
 
-// ── Helpers ─────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function setField(id, val) {
   const el = document.getElementById(id);
   if (el && val) el.value = val;
@@ -179,7 +171,11 @@ function getAddr() {
   };
 }
 
-// ── Resumo do Pedido ─────────────────────────
+function addrValida(addr) {
+  return addr.zipcode && addr.street && addr.number && addr.city && addr.state;
+}
+
+// ── Resumo do Pedido ──────────────────────────────────────────────────────────
 function renderSummary(freight = null) {
   const el       = document.getElementById('order-summary');
   const subtotal = cartData.total;
@@ -211,7 +207,7 @@ function renderSummary(freight = null) {
   `;
 }
 
-// ── Calcular Frete ───────────────────────────
+// ── Calcular Frete ────────────────────────────────────────────────────────────
 document.getElementById('btnCalcShipping').addEventListener('click', async () => {
   const addr = getAddr();
   if (!addr.state || !addr.city) {
@@ -253,7 +249,7 @@ document.getElementById('btnCalcShipping').addEventListener('click', async () =>
   }
 });
 
-// ── Mercado Pago Brick ───────────────────────
+// ── Mercado Pago Brick ────────────────────────────────────────────────────────
 async function initMPBrick() {
   if (mpBrick) {
     await mpBrick.unmount();
@@ -270,56 +266,80 @@ async function initMPBrick() {
     const brickSettings = {
       initialization: {
         amount: totalAmount,
-        // ✅ SEM preferenceId — não é necessário para PIX/cartão direto
+        // Sem preferenceId — não necessário para PIX/cartão direto
       },
       customization: {
         paymentMethods: {
-          creditCard:      'all',     // ✅ Cartão de crédito até 3x
-          bankTransfer:    ['pix'],   // ✅ PIX
+          creditCard:      'all',
+          bankTransfer:    ['pix'],
           maxInstallments: 3,
         },
       },
       callbacks: {
-        onReady: () => console.log('MP Brick ready'),
+        onReady: () => console.log('[Brick] Ready'),
 
-        // ✅ onSubmit DEVE retornar uma Promise
+        // ✅ onSubmit DEVE retornar Promise
         onSubmit: ({ selectedPaymentMethod, formData }) => {
           return new Promise(async (resolve, reject) => {
             try {
-              // 1️⃣ Cria o pedido no backend
-              await API.orders.create({ ...getAddr() });
+              const addr = getAddr();
 
-              // 2️⃣ Processa pagamento no MP via backend
-              const payment = await API.orders.processPayment(formData);
+              if (!addrValida(addr)) {
+                showToast('Preencha todos os campos do endereço', 'error');
+                reject();
+                return;
+              }
+
+              console.log('[Brick] formData:', JSON.stringify(formData, null, 2));
+
+              // ✅ Envia formData + endereço juntos para o backend
+              const payload = {
+                ...formData,
+                address: addr,
+              };
+
+              const payment = await API.orders.processPayment(payload);
+
+              console.log('[Brick] resposta payment:', JSON.stringify(payment, null, 2));
 
               if (payment.status === 'approved') {
-                resolve(); // ✅ avisa o Brick que deu certo
-                showToast('✅ Pagamento aprovado! Obrigado!', 'success');
+                resolve();
+                showToast('✅ Pagamento aprovado! Obrigado pela compra!', 'success');
                 setTimeout(() => window.location.href = '/pages/profile.html', 2000);
 
-              } else if (payment.status === 'pending' && payment.qr_code) {
-                resolve(); // ✅ avisa o Brick que deu certo
-                // PIX → substitui o Brick pelo QR Code
-                showPixQR({
-                  qr_code:        payment.qr_code,
-                  qr_code_base64: payment.qr_code_base64,
-                });
+              } else if (payment.status === 'pending') {
+
+                if (payment.qr_code) {
+                  // ✅ PIX com QR gerado
+                  resolve();
+                  showPixQR({
+                    qr_code:        payment.qr_code,
+                    qr_code_base64: payment.qr_code_base64,
+                  });
+                } else {
+                  // PIX pending mas sem QR ainda (raro)
+                  resolve();
+                  showToast('⏳ Pagamento em análise. Aguarde a confirmação.', 'info');
+                  setTimeout(() => window.location.href = '/pages/profile.html', 3000);
+                }
 
               } else {
-                reject(); // ❌ avisa o Brick que falhou
-                showToast('❌ Pagamento não aprovado. Tente novamente.', 'error');
+                // Pagamento rejeitado — NÃO criou pedido no backend
+                reject();
+                const msg = payment.error || 'Pagamento não aprovado. Tente novamente.';
+                showToast(`❌ ${msg}`, 'error');
               }
 
             } catch (err) {
-              console.error('Erro no pagamento:', err);
-              reject(); // ❌ avisa o Brick que falhou
-              showToast(err.error || 'Erro ao finalizar pedido', 'error');
+              console.error('[Brick] Erro:', err);
+              reject();
+              showToast(err?.error || 'Erro ao processar pagamento.', 'error');
             }
           });
         },
 
         onError: (error) => {
-          console.error('MP Brick error:', error);
+          console.error('[Brick] onError:', error);
         },
       },
     };
@@ -328,18 +348,16 @@ async function initMPBrick() {
     mpBrick = await bricks.create('payment', 'mp-payment-brick', brickSettings);
 
   } catch (err) {
-    console.error('Erro ao inicializar Brick:', err);
+    console.error('[Brick] Erro ao inicializar:', err);
     document.getElementById('mp-payment-brick').innerHTML =
       '<div class="mp-loading">❌ Erro ao carregar pagamento. Recarregue a página.</div>';
     showToast('Erro ao inicializar Mercado Pago', 'error');
   }
 }
 
-// ── Exibir QR Code PIX ───────────────────────
+// ── QR Code PIX ───────────────────────────────────────────────────────────────
 function showPixQR(txData) {
-  const paymentSection = document.getElementById('mp-payment-brick');
-
-  paymentSection.innerHTML = `
+  document.getElementById('mp-payment-brick').innerHTML = `
     <div style="text-align:center; padding:32px 16px">
 
       <div style="font-size:2.5rem; margin-bottom:8px">📱</div>
@@ -352,35 +370,46 @@ function showPixQR(txData) {
         <div style="display:inline-block; padding:12px; background:#fff;
                     border:3px solid var(--primary); border-radius:16px; margin-bottom:20px">
           <img src="data:image/png;base64,${txData.qr_code_base64}"
-               alt="QR Code PIX" style="width:200px; height:200px; display:block"/>
+               alt="QR Code PIX"
+               style="width:200px; height:200px; display:block"/>
         </div>
-      ` : ''}
+      ` : `<p style="color:orange">⚠️ QR Code não disponível. Use o código abaixo.</p>`}
 
-      <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:8px">Código PIX copia e cola:</p>
+      <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:8px">
+        Código PIX copia e cola:
+      </p>
 
       <div style="display:flex; gap:8px; max-width:440px; margin:0 auto 24px">
         <input id="pix-code-input" type="text" readonly
-               value="${txData.qr_code}"
+               value="${txData.qr_code || ''}"
                onclick="this.select()"
                style="flex:1; padding:10px 12px; border:1px solid var(--border);
                       border-radius:8px; font-size:.78rem; background:var(--bg-secondary);
                       color:var(--text); font-family:monospace; cursor:pointer"/>
-        <button onclick="copyPix()" class="btn btn-primary" style="white-space:nowrap; padding:10px 16px">
+        <button onclick="copyPix()" class="btn btn-primary"
+                style="white-space:nowrap; padding:10px 16px">
           📋 Copiar
         </button>
       </div>
 
       <div style="background:#fff8e1; border:1px solid #ffe082; border-radius:10px;
-                  padding:14px 18px; max-width:400px; margin:0 auto; font-size:.85rem; color:#7a6000">
+                  padding:14px 18px; max-width:400px; margin:0 auto;
+                  font-size:.85rem; color:#7a6000">
         ⏳ <strong>Aguardando pagamento...</strong><br/>
         Após pagar, seu pedido será confirmado automaticamente.
+      </div>
+
+      <div style="margin-top:20px">
+        <a href="/pages/profile.html" class="btn btn-secondary" style="font-size:.85rem">
+          👤 Ver meus pedidos
+        </a>
       </div>
 
     </div>
   `;
 }
 
-// ── Copiar PIX ───────────────────────────────
+// ── Copiar PIX ────────────────────────────────────────────────────────────────
 function copyPix() {
   const input = document.getElementById('pix-code-input');
   navigator.clipboard.writeText(input.value)
@@ -391,11 +420,10 @@ function copyPix() {
     });
 }
 
-// ── Verificar redirect pós-pagamento ─────────
+// ── Verificar redirect pós-pagamento (Checkout Pro fallback) ──────────────────
 function checkMPRedirect() {
   const params = new URLSearchParams(window.location.search);
   const st     = params.get('status');
-
   if (st === 'success') {
     showToast('✅ Pagamento aprovado! Obrigado pela compra!', 'success');
     setTimeout(() => window.location.href = '/pages/profile.html', 2000);
