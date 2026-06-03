@@ -127,16 +127,15 @@ if (!requireAuth()) {}
 
 const MP_PUBLIC_KEY = 'APP_USR-fc1a26c5-bfc3-45b0-a72c-6b51763ebc0c';
 
-let cartData      = null;
-let shippingCost  = null;
-let mpBrick       = null;
-let mp            = null;
+let cartData     = null;
+let shippingCost = null;
+let mpBrick      = null;
+let mp           = null;
 
-// ── Init ───────────────────────────────────
+// ── Init ────────────────────────────────────
 async function init() {
   mp = new MercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
 
-  // Pré-preenche endereço do perfil
   try {
     const user = await API.auth.profile();
     if (user.street) {
@@ -149,7 +148,6 @@ async function init() {
     }
   } catch (_) {}
 
-  // Carrega resumo
   try {
     cartData = await API.cart.get();
     if (!cartData.items?.length) {
@@ -161,7 +159,6 @@ async function init() {
     showToast('Erro ao carregar carrinho', 'error');
   }
 
-  // Verificar status pós-redirect do MP
   checkMPRedirect();
 }
 
@@ -182,10 +179,9 @@ function getAddr() {
   };
 }
 
-// ── Resumo do Pedido ────────────────────────
+// ── Resumo do Pedido ─────────────────────────
 function renderSummary(freight = null) {
-  const el = document.getElementById('order-summary');
-
+  const el       = document.getElementById('order-summary');
   const subtotal = cartData.total;
   const frete    = freight ?? shippingCost;
   const total    = frete !== null ? subtotal + frete : null;
@@ -197,7 +193,6 @@ function renderSummary(freight = null) {
         <span>${formatPrice(i.subtotal)}</span>
       </div>
     `).join('')}
-
     <div class="order-summary-item">
       <span class="text-muted">Frete</span>
       <span id="summary-freight">
@@ -209,7 +204,6 @@ function renderSummary(freight = null) {
         }
       </span>
     </div>
-
     <div class="summary-total">
       <span>Total</span>
       <span>${total !== null ? formatPrice(total) : '—'}</span>
@@ -217,28 +211,25 @@ function renderSummary(freight = null) {
   `;
 }
 
-// ── Calcular Frete ──────────────────────────
+// ── Calcular Frete ───────────────────────────
 document.getElementById('btnCalcShipping').addEventListener('click', async () => {
   const addr = getAddr();
-
   if (!addr.state || !addr.city) {
     showToast('Preencha cidade e estado primeiro', 'error');
     return;
   }
 
-  const btn = document.getElementById('btnCalcShipping');
+  const btn       = document.getElementById('btnCalcShipping');
   btn.disabled    = true;
   btn.textContent = 'Calculando...';
 
   try {
-    const result  = await API.orders.calcShipping({ state: addr.state, city: addr.city });
-    shippingCost  = result.shipping_cost;
+    const result = await API.orders.calcShipping({ state: addr.state, city: addr.city });
+    shippingCost = result.shipping_cost;
 
-    // Badge
     const badge = document.getElementById('shipping-badge');
     const label = document.getElementById('shipping-label');
     const wrap  = document.getElementById('shipping-result');
-
     wrap.style.display = 'block';
 
     if (result.free) {
@@ -252,8 +243,6 @@ document.getElementById('btnCalcShipping').addEventListener('click', async () =>
     }
 
     renderSummary(shippingCost);
-
-    // Inicializar brick do MP
     await initMPBrick();
 
   } catch (err) {
@@ -264,7 +253,7 @@ document.getElementById('btnCalcShipping').addEventListener('click', async () =>
   }
 });
 
-// ── Mercado Pago Brick ──────────────────────
+// ── Mercado Pago Brick ───────────────────────
 async function initMPBrick() {
   if (mpBrick) {
     await mpBrick.unmount();
@@ -281,16 +270,18 @@ async function initMPBrick() {
       city:  addr.city,
     });
 
-    const bricks = mp.bricks();
+    const totalAmount = cartData.total + shippingCost;
+    const bricks      = mp.bricks();
+
     const brickSettings = {
       initialization: {
-        amount:       cartData.total + shippingCost,
+        amount:       totalAmount,
         preferenceId: result.preference_id,
       },
       customization: {
         paymentMethods: {
-          creditCard:      'all',      // ✅ Cartão de crédito até 3x
-          bankTransfer:    ['pix'],    // ✅ PIX com QR Code
+          creditCard:   'all',       // ✅ Cartão de crédito até 3x
+          bankTransfer: ['pix'],     // ✅ PIX com QR Code
           maxInstallments: 3,
         },
       },
@@ -299,22 +290,30 @@ async function initMPBrick() {
 
         onSubmit: async ({ selectedPaymentMethod, formData }) => {
           try {
-            const order   = await API.orders.create({ ...getAddr() });
+            // 1️⃣ Cria o pedido no backend ANTES do pagamento
+            await API.orders.create({ ...getAddr() });
+
+            // 2️⃣ Processa o pagamento no MP
             const payment = await API.orders.processPayment(formData);
 
             if (payment.status === 'approved') {
-              showToast('✅ Pagamento aprovado! Obrigado pela compra!', 'success');
+              // ✅ Cartão aprovado
+              showToast('✅ Pagamento aprovado! Obrigado!', 'success');
               setTimeout(() => window.location.href = '/pages/profile.html', 2000);
 
-            } else if (payment.status === 'pending' && payment.point_of_interaction) {
+            } else if (payment.status === 'pending' && payment.qr_code) {
               // ✅ PIX → exibe QR Code na tela
-              showPixQR(payment.point_of_interaction.transaction_data);
+              showPixQR({
+                qr_code:        payment.qr_code,
+                qr_code_base64: payment.qr_code_base64,
+              });
 
             } else {
               showToast('❌ Pagamento não aprovado. Tente novamente.', 'error');
             }
 
           } catch (err) {
+            console.error(err);
             showToast(err.error || 'Erro ao finalizar pedido', 'error');
           }
         },
@@ -336,52 +335,63 @@ async function initMPBrick() {
   }
 }
 
-// ── Exibir QR Code PIX ──────────────────────
+// ── Exibir QR Code PIX ───────────────────────
 function showPixQR(txData) {
-  const qrSrc = txData.qr_code_base64
-    ? `data:image/png;base64,${txData.qr_code_base64}`
-    : null;
+  const paymentSection = document.getElementById('mp-payment-brick');
 
-  document.getElementById('mp-payment-brick').innerHTML = `
-    <div style="text-align:center; padding:24px">
-      <h3 style="margin-bottom:16px">📱 Pague com PIX</h3>
+  paymentSection.innerHTML = `
+    <div style="text-align:center; padding:32px 16px">
 
-      ${qrSrc
-        ? `<img src="${qrSrc}" alt="QR Code PIX"
-               style="width:220px; border:4px solid var(--primary); border-radius:12px; padding:8px"/>`
-        : ''}
-
-      <p style="margin:16px 0 8px; font-size:.9rem; color:var(--text-muted)">
-        Ou copie o código abaixo:
+      <div style="font-size:2.5rem; margin-bottom:8px">📱</div>
+      <h3 style="margin-bottom:4px">Pague com PIX</h3>
+      <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:24px">
+        Escaneie o QR Code ou copie o código abaixo
       </p>
 
-      <div style="display:flex; gap:8px; max-width:420px; margin:0 auto">
-        <input id="pix-copy-code" readonly value="${txData.qr_code}"
-               style="flex:1; padding:8px 12px; border:1px solid var(--border);
-                      border-radius:8px; font-size:.8rem; background:var(--bg-secondary)"
-               onclick="this.select()"/>
-        <button onclick="copyPix()" class="btn btn-primary" style="white-space:nowrap">
+      ${txData.qr_code_base64 ? `
+        <div style="display:inline-block; padding:12px; background:#fff;
+                    border:3px solid var(--primary); border-radius:16px; margin-bottom:20px">
+          <img src="data:image/png;base64,${txData.qr_code_base64}"
+               alt="QR Code PIX" style="width:200px; height:200px; display:block"/>
+        </div>
+      ` : ''}
+
+      <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:8px">Código PIX copia e cola:</p>
+
+      <div style="display:flex; gap:8px; max-width:440px; margin:0 auto 24px">
+        <input id="pix-code-input" type="text" readonly
+               value="${txData.qr_code}"
+               onclick="this.select()"
+               style="flex:1; padding:10px 12px; border:1px solid var(--border);
+                      border-radius:8px; font-size:.78rem; background:var(--bg-secondary);
+                      color:var(--text); font-family:monospace; cursor:pointer"/>
+        <button onclick="copyPix()" class="btn btn-primary" style="white-space:nowrap; padding:10px 16px">
           📋 Copiar
         </button>
       </div>
 
-      <p style="margin-top:20px; color:var(--text-muted); font-size:.85rem">
-        ⏳ Aguardando confirmação do pagamento...
-      </p>
+      <div style="background:#fff8e1; border:1px solid #ffe082; border-radius:10px;
+                  padding:14px 18px; max-width:400px; margin:0 auto; font-size:.85rem; color:#7a6000">
+        ⏳ <strong>Aguardando pagamento...</strong><br/>
+        Após pagar, seu pedido será confirmado automaticamente.
+      </div>
+
     </div>
   `;
 }
 
-// ── Copiar código PIX ───────────────────────
+// ── Copiar PIX ───────────────────────────────
 function copyPix() {
-  const input = document.getElementById('pix-copy-code');
-  input.select();
+  const input = document.getElementById('pix-code-input');
   navigator.clipboard.writeText(input.value)
     .then(() => showToast('✅ Código PIX copiado!', 'success'))
-    .catch(() => showToast('Selecione e copie manualmente', 'info'));
+    .catch(() => {
+      input.select();
+      showToast('Selecione e copie manualmente', 'info');
+    });
 }
 
-// ── Verificar redirect pós-pagamento ────────
+// ── Verificar redirect pós-pagamento ─────────
 function checkMPRedirect() {
   const params = new URLSearchParams(window.location.search);
   const st     = params.get('status');
