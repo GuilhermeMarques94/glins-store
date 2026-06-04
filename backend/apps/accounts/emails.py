@@ -13,4 +13,4 @@ def send_welcome_email(user):
         to=[user.email],
     )
     msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
+    msg.send(fail_silently=True)

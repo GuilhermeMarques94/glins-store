@@ -1,3 +1,7 @@
+import threading
+import logging
+import os
+
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,11 +10,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model, authenticate
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+
 from .serializers import RegisterSerializer, UserSerializer, ChangePasswordSerializer
-import os
 from .emails import send_welcome_email
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -22,10 +27,23 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         tokens = _get_tokens(user)
+
+        # Envia e-mail em background — não trava o registro
+        thread = threading.Thread(target=self._send_email, args=(user,))
+        thread.daemon = True
+        thread.start()
+
         return Response({
             'user': UserSerializer(user).data,
             **tokens
         }, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def _send_email(user):
+        try:
+            send_welcome_email(user)
+        except Exception as e:
+            logger.error(f"[EMAIL] Boas-vindas falhou para {user.email}: {e}")
 
 
 class LoginView(APIView):
@@ -89,7 +107,7 @@ class ChangePasswordView(APIView):
         return Response({'message': 'Senha alterada com sucesso'})
 
 
-# ── Helper ────────────────────────────────────────────────────────────
+# ── Helper ─────────────────────────────────────────────────────────────
 def _get_tokens(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -98,47 +116,25 @@ def _get_tokens(user):
     }
 
 
-# ── Endpoint TEMPORÁRIO para criar superusuário ───────────────────────
+# ── Endpoint TEMPORÁRIO para criar superusuário ────────────────────────
 @csrf_exempt
 def create_superuser_temp(request):
     secret = request.GET.get('secret', '')
     if secret != os.environ.get('SUPERUSER_SECRET', ''):
         return JsonResponse({'error': 'Forbidden'}, status=403)
 
-    User = get_user_model()
     email    = os.environ.get('SUPERUSER_EMAIL', '')
     password = os.environ.get('SUPERUSER_PASSWORD', '')
-    name     = os.environ.get('SUPERUSER_NAME', 'Admin')  # ← adicionado
+    name     = os.environ.get('SUPERUSER_NAME', 'Admin')
 
     if not email or not password:
-        return JsonResponse({'error': 'Variáveis SUPERUSER_EMAIL e SUPERUSER_PASSWORD não configuradas'}, status=400)
+        return JsonResponse(
+            {'error': 'Variáveis SUPERUSER_EMAIL e SUPERUSER_PASSWORD não configuradas'},
+            status=400
+        )
 
     if User.objects.filter(email=email).exists():
         return JsonResponse({'message': 'Superusuário já existe!'})
 
-    User.objects.create_superuser(email=email, name=name, password=password)  # ← name aqui
+    User.objects.create_superuser(email=email, name=name, password=password)
     return JsonResponse({'message': f'Superusuário {email} criado com sucesso!'})
-
-
-class RegisterView(generics.CreateAPIView):
-    serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        tokens = _get_tokens(user)
-
-        # ── Disparo e-mail boas-vindas ──────────────────
-        try:
-            send_welcome_email(user)
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).error(f"[EMAIL] Boas-vindas: {e}")
-        # ───────────────────────────────────────────────
-
-        return Response({
-            'user': UserSerializer(user).data,
-            **tokens
-        }, status=status.HTTP_201_CREATED)
