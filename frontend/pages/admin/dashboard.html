@@ -845,7 +845,7 @@
     }
 
     try {
-      await API.products.addImage(productId, { image_url: url, order: 0 });
+      await API.products.addImage(productId, { image: url, order: 0 });
       showToast('✅ Imagem adicionada!', 'success');
       input.value = '';
       openProductModal(productId); // recarrega modal com galeria atualizada

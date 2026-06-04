@@ -64,9 +64,8 @@
     /* Product card (same as index) */
     .product-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: var(--transition); cursor: pointer; display: flex; flex-direction: column; }
     .product-card:hover { border-color: var(--primary-dark); transform: translateY(-4px); box-shadow: var(--shadow-gold); }
-    .product-img-wrap { height: 200px; overflow: hidden; background: var(--bg-surface); position: relative; }
-    .product-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-    .product-card:hover .product-img { transform: scale(1.05); }
+    .product-img-wrap { height: 200px; overflow: hidden; background: var(--bg-surface); position: relative; display: flex; align-items: center; justify-content: center; }
+    .product-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.4s ease; }
     .product-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--border-gold); }
     .out-of-stock-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; font-family: var(--font-title); color: var(--danger); font-size: 0.85rem; letter-spacing: 0.1em; }
     .product-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
