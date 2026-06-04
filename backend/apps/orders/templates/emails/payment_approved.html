@@ -1,0 +1,35 @@
+{% extends "emails/base.html" %}
+{% block title %}Pagamento aprovado — Pedido #{{ order.id }}{% endblock %}
+{% block content %}
+<h2>Pagamento confirmado! 🎉</h2>
+<span class="badge badge-approved">✅ Aprovado</span>
+<p>Ótima notícia, {{ order.user.first_name|default:order.user.username }}! Seu pagamento foi aprovado e seu pedido já está na fila de preparação.</p>
+
+<div class="order-box">
+  <p><strong>Pedido:</strong> #{{ order.id }}</p>
+  <p><strong>Pagamento:</strong> {{ order.payment_method|upper }}</p>
+  <p><strong>Total pago:</strong> R$ {{ order.total_price|floatformat:2 }}</p>
+</div>
+
+<table class="items-table">
+  <thead>
+    <tr><th>Produto</th><th>Qtd</th><th>Subtotal</th></tr>
+  </thead>
+  <tbody>
+    {% for item in order.items.all %}
+    <tr>
+      <td>{{ item.product.name }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>R$ {{ item.get_subtotal|floatformat:2 }}</td>
+    </tr>
+    {% endfor %}
+    <tr class="total-row">
+      <td colspan="2">Total</td>
+      <td>R$ {{ order.total_price|floatformat:2 }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Em breve você receberá uma atualização quando seu pedido for enviado. 📦</p>
+<a href="https://glins-store.vercel.app" class="btn">Acompanhar pedido</a>
+{% endblock %}

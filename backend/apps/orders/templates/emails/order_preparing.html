@@ -1,0 +1,15 @@
+{% extends "emails/base.html" %}
+{% block title %}Pedido #{{ order.id }} em preparação{% endblock %}
+{% block content %}
+<h2>Seu pedido está sendo preparado! 📦</h2>
+<span class="badge badge-preparing">🔧 Em Preparação</span>
+<p>Olá, {{ order.user.first_name|default:order.user.username }}! Estamos separando e embalando seu pedido com muito cuidado.</p>
+
+<div class="order-box">
+  <p><strong>Pedido:</strong> #{{ order.id }}</p>
+  <p><strong>Total:</strong> R$ {{ order.total_price|floatformat:2 }}</p>
+</div>
+
+<p>Assim que seu pedido for enviado, você receberá o <strong>código de rastreamento</strong>. 🚚</p>
+<a href="https://glins-store.vercel.app" class="btn">Acompanhar pedido</a>
+{% endblock %}

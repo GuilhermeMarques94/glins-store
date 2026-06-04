@@ -1,0 +1,16 @@
+{% extends "emails/base.html" %}
+{% block title %}Pedido #{{ order.id }} entregue!{% endblock %}
+{% block content %}
+<h2>Pedido entregue! 🎊</h2>
+<span class="badge badge-delivered">✅ Entregue</span>
+<p>Olá, {{ order.user.first_name|default:order.user.username }}! Seu pedido foi entregue com sucesso.</p>
+
+<div class="order-box">
+  <p><strong>Pedido:</strong> #{{ order.id }}</p>
+  <p><strong>Total:</strong> R$ {{ order.total_price|floatformat:2 }}</p>
+</div>
+
+<p>Esperamos que você aproveite muito sua compra! ⚔️</p>
+<p>Que tal explorar mais produtos?</p>
+<a href="https://glins-store.vercel.app" class="btn">Ver mais produtos</a>
+{% endblock %}

@@ -15,6 +15,10 @@ from django.conf import settings
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, CreateOrderSerializer
 from .shipping import calculate_shipping
+from .emails import (                           # ← NOVO
+    send_order_created_email,
+    send_payment_approved_email,
+)
 from apps.cart.models import CartItem
 
 logger = logging.getLogger(__name__)
@@ -124,25 +128,17 @@ class CreateMPPreferenceView(APIView):
 
 # ── Processar Pagamento (chamado pelo Brick) ───────────────────────────────────
 class PaymentProcessView(APIView):
-    """
-    POST /api/orders/payment/process/
-    1. Processa pagamento no MP
-    2. Se aprovado/pendente → cria pedido e baixa estoque
-    3. Retorna status + QR PIX se necessário
-    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        logger.warning(f"[MP] TOKEN USADO: {settings.MP_ACCESS_TOKEN[:20]}...")  # ← aqui
+        logger.warning(f"[MP] TOKEN USADO: {settings.MP_ACCESS_TOKEN[:20]}...")
         sdk = mercadopago.SDK(settings.MP_ACCESS_TOKEN)
         form_data = request.data
 
         logger.warning(f"[MP] form_data recebido: {dict(form_data)}")
 
-        # ── Monta payload para o MP ────────────────────────────────────────────
         payer = form_data.get('payer', {})
 
-        # Monta payer corretamente preservando identification
         payer_data = {}
         if isinstance(payer, dict):
             payer_data['email'] = payer.get('email', '')
@@ -159,29 +155,26 @@ class PaymentProcessView(APIView):
             'description':        form_data.get('description', 'Glins Store'),
             'payment_method_id':  form_data.get('payment_method_id', 'pix'),
             'installments':       int(form_data.get('installments', 1)),
-            'payer':              payer_data,  # ✅ agora com identification
+            'payer':              payer_data,
             'external_reference':   str(request.user.id),
             'notification_url':     f'{settings.BACKEND_URL}/api/orders/payment/webhook/',
             'statement_descriptor': 'GLINS STORE',
         }
 
-        # Campos exclusivos de cartão de crédito
         if form_data.get('token'):
             payment_data['token'] = form_data.get('token')
         if form_data.get('issuer_id'):
             payment_data['issuer_id'] = form_data.get('issuer_id')
 
-
         logger.warning(f"[MP] payload enviado: {payment_data}")
 
-        # ── Chama o MP com idempotency key ─────────────────────────────────────
         request_options = mercadopago.config.RequestOptions()
         request_options.custom_headers = {
             'X-Idempotency-Key': str(uuid.uuid4())
         }
 
-        result  = sdk.payment().create(payment_data, request_options)
-        payment = result.get('response', {})
+        result     = sdk.payment().create(payment_data, request_options)
+        payment    = result.get('response', {})
         mp_status  = payment.get('status')
         mp_detail  = payment.get('status_detail', '')
         payment_id = payment.get('id')
@@ -189,41 +182,46 @@ class PaymentProcessView(APIView):
         logger.warning(f"[MP] status: {mp_status} | detail: {mp_detail} | id: {payment_id}")
         logger.warning(f"[MP] response completo: {payment}")
 
-        # ── Se pagamento falhou → retorna erro SEM criar pedido ────────────────
         if mp_status not in ['approved', 'pending']:
             return Response({
                 'status':        mp_status,
                 'status_detail': mp_detail,
                 'payment_id':    payment_id,
                 'error':         self._traduz_erro(mp_detail),
-            }, status=200)  # 200 para o Brick não disparar onError
+            }, status=200)
 
-        # ── Pagamento OK → cria pedido e baixa estoque ─────────────────────────
         addr_data = request.data.get('address', {})
 
         try:
             order = self._criar_pedido(request.user, addr_data, payment_id, mp_status)
         except Exception as e:
             logger.error(f"[PEDIDO] Erro ao criar pedido: {e}")
-            # Pagamento feito mas pedido falhou — retorna assim mesmo, webhook vai resolver
             return Response({
                 'status':     mp_status,
                 'payment_id': payment_id,
                 'warning':    'Pagamento confirmado mas houve erro ao registrar pedido.',
             })
 
-        # ── Monta resposta ─────────────────────────────────────────────────────
+        # ── Disparo de e-mails ─────────────────────────────────────────────────
+        try:
+            if mp_status == 'pending':
+                send_order_created_email(order)       # PIX aguardando pagamento
+            elif mp_status == 'approved':
+                send_payment_approved_email(order)    # Cartão aprovado + notifica admin
+        except Exception as e:
+            logger.error(f"[EMAIL] Erro ao enviar e-mail pós-pagamento: {e}")
+        # ──────────────────────────────────────────────────────────────────────
+
         response_data = {
             'status':     mp_status,
             'payment_id': payment_id,
             'order_id':   order.id,
         }
 
-        # PIX pendente → extrai QR Code
         if mp_status == 'pending':
-            poi = payment.get('point_of_interaction', {})
-            tx  = poi.get('transaction_data', {})
-            qr  = tx.get('qr_code', '')
+            poi  = payment.get('point_of_interaction', {})
+            tx   = poi.get('transaction_data', {})
+            qr   = tx.get('qr_code', '')
             qr64 = tx.get('qr_code_base64', '')
 
             logger.warning(f"[PIX] qr_code presente: {bool(qr)} | base64 presente: {bool(qr64)}")
@@ -233,7 +231,6 @@ class PaymentProcessView(APIView):
 
         return Response(response_data)
 
-    # ── Cria pedido a partir dos itens do carrinho ─────────────────────────────
     @transaction.atomic
     def _criar_pedido(self, user, addr_data, payment_id, mp_status):
         cart_items = CartItem.objects.filter(
@@ -243,12 +240,10 @@ class PaymentProcessView(APIView):
         if not cart_items.exists():
             raise ValueError('Carrinho vazio ao tentar criar pedido')
 
-        # Valida estoque
         for item in cart_items:
             if item.product.stock < item.quantity:
                 raise ValueError(f'Estoque insuficiente: {item.product.name}')
 
-        # Calcula totais (addr_data pode vir do request separado)
         shipping_cost = Decimal(str(
             calculate_shipping(
                 addr_data.get('state', ''),
@@ -291,14 +286,14 @@ class PaymentProcessView(APIView):
 
     def _traduz_erro(self, detail):
         erros = {
-            'cc_rejected_insufficient_amount': 'Saldo insuficiente no cartão.',
+            'cc_rejected_insufficient_amount':    'Saldo insuficiente no cartão.',
             'cc_rejected_bad_filled_card_number': 'Número do cartão inválido.',
-            'cc_rejected_bad_filled_date': 'Data de validade inválida.',
+            'cc_rejected_bad_filled_date':        'Data de validade inválida.',
             'cc_rejected_bad_filled_security_code': 'CVV inválido.',
-            'cc_rejected_blacklist': 'Cartão não autorizado.',
-            'cc_rejected_call_for_authorize': 'Ligue para seu banco para autorizar.',
-            'cc_rejected_duplicated_payment': 'Pagamento duplicado detectado.',
-            'cc_rejected_high_risk': 'Pagamento recusado por segurança.',
+            'cc_rejected_blacklist':              'Cartão não autorizado.',
+            'cc_rejected_call_for_authorize':     'Ligue para seu banco para autorizar.',
+            'cc_rejected_duplicated_payment':     'Pagamento duplicado detectado.',
+            'cc_rejected_high_risk':              'Pagamento recusado por segurança.',
         }
         return erros.get(detail, 'Pagamento não aprovado. Tente novamente.')
 
@@ -309,7 +304,7 @@ class MPWebhookView(APIView):
     permission_classes     = []
 
     def post(self, request):
-        topic = request.data.get('type') or request.query_params.get('topic')
+        topic       = request.data.get('type') or request.query_params.get('topic')
         resource_id = (
             request.data.get('data', {}).get('id')
             or request.query_params.get('id')
@@ -318,8 +313,8 @@ class MPWebhookView(APIView):
         logger.warning(f"[WEBHOOK] topic={topic} | id={resource_id}")
 
         if topic == 'payment' and resource_id:
-            sdk     = mercadopago.SDK(settings.MP_ACCESS_TOKEN)
-            result  = sdk.payment().get(resource_id)
+            sdk    = mercadopago.SDK(settings.MP_ACCESS_TOKEN)
+            result = sdk.payment().get(resource_id)
 
             if result['status'] == 200:
                 p          = result['response']
@@ -328,15 +323,21 @@ class MPWebhookView(APIView):
 
                 logger.warning(f"[WEBHOOK] payment_id={payment_id} status={mp_status}")
 
-                # Busca pedido pelo payment_id (mais confiável que external_reference)
                 try:
                     order = Order.objects.get(payment_id=payment_id)
                     if mp_status == 'approved' and order.status != 'paid':
                         order.status = 'paid'
                         order.save()
                         logger.warning(f"[WEBHOOK] Pedido #{order.id} marcado como PAGO")
+
+                        # ── Disparo e-mail aprovação via webhook (PIX confirmado) ──
+                        try:
+                            send_payment_approved_email(order)
+                        except Exception as e:
+                            logger.error(f"[EMAIL] Erro no webhook ao enviar e-mail: {e}")
+                        # ──────────────────────────────────────────────────────────
+
                 except Order.DoesNotExist:
-                    # Fallback: busca por external_reference (user_id)
                     ext_ref = p.get('external_reference')
                     try:
                         order = Order.objects.filter(
@@ -347,6 +348,14 @@ class MPWebhookView(APIView):
                             order.status = 'paid'
                             order.save()
                             logger.warning(f"[WEBHOOK] Pedido #{order.id} pago via fallback")
+
+                            # ── Disparo e-mail fallback ────────────────────────────
+                            try:
+                                send_payment_approved_email(order)
+                            except Exception as e:
+                                logger.error(f"[EMAIL] Erro no webhook fallback: {e}")
+                            # ──────────────────────────────────────────────────────
+
                     except Order.DoesNotExist:
                         logger.warning(f"[WEBHOOK] Nenhum pedido encontrado para payment_id={payment_id}")
 
@@ -363,8 +372,6 @@ class OrderListView(APIView):
         ).prefetch_related('items').order_by('-created_at')
         return Response(OrderSerializer(orders, many=True).data)
 
-    # ⚠️ Este POST agora é chamado apenas em casos sem Brick (fallback)
-    # O fluxo principal cria o pedido dentro do PaymentProcessView
     @transaction.atomic
     def post(self, request):
         serializer = CreateOrderSerializer(data=request.data)

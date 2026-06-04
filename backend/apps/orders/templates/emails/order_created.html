@@ -1,0 +1,43 @@
+{% extends "emails/base.html" %}
+{% block title %}Pedido #{{ order.id }} criado{% endblock %}
+{% block content %}
+<h2>Olá, {{ order.user.first_name|default:order.user.username }}! 👋</h2>
+<span class="badge badge-pending">⏳ Aguardando Pagamento</span>
+<p>Seu pedido foi criado com sucesso! Efetue o pagamento via <strong>PIX</strong> para confirmarmos.</p>
+
+<div class="order-box">
+  <p><strong>Pedido:</strong> #{{ order.id }}</p>
+  <p><strong>Data:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+  <p><strong>Pagamento:</strong> PIX</p>
+</div>
+
+<table class="items-table">
+  <thead>
+    <tr>
+      <th>Produto</th>
+      <th>Qtd</th>
+      <th>Subtotal</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in order.items.all %}
+    <tr>
+      <td>{{ item.product.name }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>R$ {{ item.get_subtotal|floatformat:2 }}</td>
+    </tr>
+    {% endfor %}
+    <tr>
+      <td colspan="2">Frete</td>
+      <td>R$ {{ order.shipping_cost|floatformat:2 }}</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2">Total</td>
+      <td>R$ {{ order.total_price|floatformat:2 }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Após a confirmação do pagamento, você receberá um novo e-mail.</p>
+<a href="https://glins-store.vercel.app" class="btn">Ver minha conta</a>
+{% endblock %}

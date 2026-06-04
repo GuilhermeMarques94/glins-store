@@ -1,5 +1,11 @@
 from django.contrib import admin
 from .models import Order, OrderItem
+from .emails import (
+    send_order_preparing_email,
+    send_order_shipped_email,
+    send_order_delivered_email,
+    send_order_cancelled_email,
+)
 
 
 class OrderItemInline(admin.TabularInline):
@@ -24,12 +30,20 @@ class OrderAdmin(admin.ModelAdmin):
     inlines         = [OrderItemInline]
 
     fieldsets = (
-        ('👤 Cliente',      {'fields': ('user',)}),
-        ('📋 Pedido',       {'fields': ('status', 'total', 'shipping_cost')}),
-        ('📍 Endereço',     {'fields': ('zipcode', 'street', 'number', 'complement', 'city', 'state')}),
-        ('🚚 Entrega',      {'fields': ('tracking_code',)}),
-        ('📅 Datas',        {'fields': ('created_at', 'updated_at')}),
+        ('👤 Cliente',  {'fields': ('user',)}),
+        ('📋 Pedido',   {'fields': ('status', 'total', 'shipping_cost')}),
+        ('📍 Endereço', {'fields': ('zipcode', 'street', 'number', 'complement', 'city', 'state')}),
+        ('🚚 Entrega',  {'fields': ('tracking_code',)}),
+        ('📅 Datas',    {'fields': ('created_at', 'updated_at')}),
     )
+
+    # Mapa status → função de e-mail
+    STATUS_EMAIL_MAP = {
+        'preparing': send_order_preparing_email,
+        'shipped':   send_order_shipped_email,
+        'delivered': send_order_delivered_email,
+        'cancelled': send_order_cancelled_email,
+    }
 
     @admin.display(description='Cliente')
     def user_name(self, obj):
@@ -38,3 +52,17 @@ class OrderAdmin(admin.ModelAdmin):
     @admin.display(description='Total')
     def total_fmt(self, obj):
         return f'R$ {obj.total:.2f}'
+
+    def save_model(self, request, obj, form, change):
+        if change and 'status' in form.changed_data:
+            email_fn = self.STATUS_EMAIL_MAP.get(obj.status)
+            if email_fn:
+                try:
+                    email_fn(obj)
+                except Exception as e:
+                    self.message_user(
+                        request,
+                        f'⚠️ Pedido salvo, mas erro ao enviar e-mail: {e}',
+                        level='warning',
+                    )
+        super().save_model(request, obj, form, change)

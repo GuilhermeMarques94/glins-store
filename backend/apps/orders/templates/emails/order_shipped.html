@@ -1,0 +1,23 @@
+{% extends "emails/base.html" %}
+{% block title %}Pedido #{{ order.id }} enviado!{% endblock %}
+{% block content %}
+<h2>Seu pedido foi enviado! 🚚</h2>
+<span class="badge badge-shipped">📬 Enviado</span>
+<p>Olá, {{ order.user.first_name|default:order.user.username }}! Seu pedido saiu para entrega.</p>
+
+<div class="order-box">
+  <p><strong>Pedido:</strong> #{{ order.id }}</p>
+  <p><strong>Total:</strong> R$ {{ order.total_price|floatformat:2 }}</p>
+  {% if order.tracking_code %}
+  <p><strong>Código de rastreio:</strong> {{ order.tracking_code }}</p>
+  {% endif %}
+</div>
+
+{% if order.tracking_code %}
+<a href="https://www.correios.com.br/rastreamento/#/track/{{ order.tracking_code }}" class="btn">
+  Rastrear meu pedido
+</a>
+{% endif %}
+
+<p style="margin-top:15px;">Prazo estimado conforme informado no checkout. 📅</p>
+{% endblock %}

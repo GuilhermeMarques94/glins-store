@@ -1,0 +1,15 @@
+{% extends "emails/base.html" %}
+{% block title %}Pedido #{{ order.id }} cancelado{% endblock %}
+{% block content %}
+<h2>Pedido cancelado 😔</h2>
+<span class="badge badge-cancelled">❌ Cancelado</span>
+<p>Olá, {{ order.user.first_name|default:order.user.username }}. Infelizmente seu pedido #{{ order.id }} foi cancelado.</p>
+
+<div class="order-box">
+  <p><strong>Pedido:</strong> #{{ order.id }}</p>
+  <p><strong>Total:</strong> R$ {{ order.total_price|floatformat:2 }}</p>
+</div>
+
+<p>Se tiver dúvidas, entre em contato conosco respondendo este e-mail.</p>
+<a href="https://glins-store.vercel.app" class="btn">Voltar à loja</a>
+{% endblock %}
