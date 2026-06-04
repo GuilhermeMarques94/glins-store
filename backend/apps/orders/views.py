@@ -133,7 +133,8 @@ class PaymentProcessView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        sdk       = mercadopago.SDK(settings.MP_ACCESS_TOKEN)
+        logger.warning(f"[MP] TOKEN USADO: {settings.MP_ACCESS_TOKEN[:20]}...")  # ← aqui
+        sdk = mercadopago.SDK(settings.MP_ACCESS_TOKEN)
         form_data = request.data
 
         logger.warning(f"[MP] form_data recebido: {dict(form_data)}")
