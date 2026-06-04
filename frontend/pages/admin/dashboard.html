@@ -239,7 +239,6 @@
     .stock-low   { color: #e67e22; font-weight: 600; }
     .stock-zero  { color: var(--danger); font-weight: 600; }
 
-    /* Debug box */
     .debug-box {
       background: #1a0a0a;
       border: 1px solid #c0392b;
@@ -421,12 +420,10 @@
   let categories  = [];
 
   // ══ Normaliza resposta paginada ou array direto ══
-  // A API pode retornar { results: [...], count: N } ou direto []
   function toArray(response) {
     if (!response) return [];
     if (Array.isArray(response)) return response;
     if (Array.isArray(response.results)) return response.results;
-    // Às vezes pode vir outro wrapper
     const keys = Object.keys(response);
     for (const k of keys) {
       if (Array.isArray(response[k])) return response[k];
@@ -436,7 +433,6 @@
 
   // ══ Extrai nome/email do cliente independente da estrutura ══
   function getClientName(order) {
-    // Tenta todos os campos possíveis
     if (order.user?.name)       return order.user.name;
     if (order.user?.first_name) return `${order.user.first_name} ${order.user.last_name || ''}`.trim();
     if (order.user?.username)   return order.user.username;
@@ -444,7 +440,6 @@
     if (order.customer_name)    return order.customer_name;
     if (order.customer?.name)   return order.customer.name;
     if (order.shipping_address) {
-      // Tenta extrair nome do endereço se for objeto
       if (typeof order.shipping_address === 'object' && order.shipping_address.name)
         return order.shipping_address.name;
     }
@@ -452,9 +447,9 @@
   }
 
   function getClientEmail(order) {
-    if (order.user?.email)    return order.user.email;
-    if (order.customer_email) return order.customer_email;
-    if (order.customer?.email)return order.customer.email;
+    if (order.user?.email)     return order.user.email;
+    if (order.customer_email)  return order.customer_email;
+    if (order.customer?.email) return order.customer.email;
     return '—';
   }
 
@@ -489,7 +484,6 @@
         API.categories.list()
       ]);
 
-      // ── Log de debug (remova depois de confirmar) ──
       console.log('📦 RAW Products:', rawProducts);
       console.log('📋 RAW Orders:',   rawOrders);
       console.log('📂 RAW Cats:',     rawCats);
@@ -618,6 +612,7 @@
     tb.innerHTML = products.map(p => {
       const stock = p.stock ?? p.quantity ?? 0;
       const stockClass = stock === 0 ? 'badge-danger' : stock <= 5 ? 'badge-gold' : 'badge-success';
+      // ✅ Campo correto da API
       const thumb = p.image_url || p.image || p.thumbnail || p.cover_image || null;
       return `
         <tr>
@@ -639,7 +634,7 @@
             : '<span class="badge badge-muted">Inativo</span>'}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-outline btn-sm" onclick="openProductModal(${p.id})" title="Editar">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id}, '${(p.name || '').replace(/'/g,"\\'")}')" title="Deletar">🗑️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id}, '${(p.name || '').replace(/'/g,"\\'")}')">🗑️</button>
           </td>
         </tr>`;
     }).join('');
@@ -712,15 +707,37 @@
             <label>Descrição</label>
             <textarea id="pDesc" class="form-control" rows="3" placeholder="Descreva o produto..."></textarea>
           </div>
-          ${isEdit ? `
+
+          <!-- ✅ Imagem principal por URL com preview -->
           <div class="form-group">
-            <label>Imagens atuais</label>
+            <label>🖼️ URL da imagem principal</label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <img id="mainImgPreview"
+                   src="" alt="Preview"
+                   style="width:52px;height:52px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--border);display:none;flex-shrink:0"/>
+              <input type="url" id="pImageUrl" class="form-control"
+                     placeholder="https://exemplo.com/imagem.jpg"
+                     oninput="updateMainPreview(this.value)"/>
+            </div>
+          </div>
+
+          ${isEdit ? `
+          <!-- ✅ Galeria de imagens adicionais -->
+          <div class="form-group">
+            <label>Imagens adicionais</label>
             <div class="image-gallery" id="currentImages"><div class="loader"></div></div>
           </div>` : ''}
+
+          <!-- ✅ Adicionar imagem extra por URL -->
           <div class="form-group">
-            <label>${isEdit ? 'Adicionar nova imagem' : 'Imagem do produto'}</label>
-            <input type="file" id="pImage" class="form-control" accept="image/*"/>
+            <label>${isEdit ? 'Adicionar imagem extra' : 'Imagem extra (URL)'}</label>
+            <div style="display:flex;gap:10px">
+              <input type="url" id="pNewImageUrl" class="form-control" placeholder="https://exemplo.com/imagem2.jpg"/>
+              <button type="button" class="btn btn-outline" style="white-space:nowrap"
+                      onclick="addExtraImage(${id})">+ Add</button>
+            </div>
           </div>
+
           <div class="flex gap-2 mt-2">
             <button type="submit" class="btn btn-primary" id="saveProductBtn">
               ${isEdit ? '💾 Salvar alterações' : '➕ Criar produto'}
@@ -733,10 +750,8 @@
 
     if (isEdit) {
       try {
-        const [p, images] = await Promise.all([
-          API.products.detail(id),
-          API.products.getImages(id).catch(() => [])
-        ]);
+        const p = await API.products.detail(id);
+
         document.getElementById('pName').value     = p.name || '';
         document.getElementById('pPrice').value    = p.price || '';
         document.getElementById('pStock').value    = p.stock ?? p.quantity ?? 0;
@@ -744,15 +759,26 @@
         document.getElementById('pActive').value   = p.is_active !== false ? 'true' : 'false';
         document.getElementById('pCategory').value = p.category?.id || p.category || '';
 
+        // ✅ Preenche e exibe preview da imagem principal
+        if (p.image_url) {
+          document.getElementById('pImageUrl').value = p.image_url;
+          updateMainPreview(p.image_url);
+        }
+
+        // ✅ Galeria adicional — usa image_url (campo correto da API)
         const gallery = document.getElementById('currentImages');
-        const imgs = toArray(images);
+        const imgs = toArray(p.images);
         gallery.innerHTML = imgs.length
           ? imgs.map(img => `
               <div class="image-gallery-item" id="img-${img.id}">
-                <img src="${img.image || img.url}" alt="Imagem"/>
-                <button class="del-img" onclick="deleteProductImage(${id}, ${img.id})" title="Remover">✕</button>
+                <img src="${img.image_url}" alt="Imagem"
+                     onerror="this.style.opacity='0.3'"/>
+                <button class="del-img"
+                        onclick="deleteProductImage(${id}, ${img.id})"
+                        title="Remover">✕</button>
               </div>`).join('')
-          : '<span class="text-muted" style="font-size:0.82rem">Nenhuma imagem cadastrada</span>';
+          : '<span class="text-muted" style="font-size:0.82rem">Nenhuma imagem adicional cadastrada</span>';
+
       } catch(e) {
         console.error('[Modal Produto]', e);
         showToast('Erro ao carregar dados do produto', 'error');
@@ -772,22 +798,14 @@
         description: document.getElementById('pDesc').value.trim(),
         category:    document.getElementById('pCategory').value || null,
         is_active:   document.getElementById('pActive').value === 'true',
+        // ✅ Salva image_url direto no payload do produto
+        image_url:   document.getElementById('pImageUrl').value.trim() || '',
       };
 
       try {
         const product = isEdit
           ? await API.products.update(id, data)
           : await API.products.create(data);
-
-        const imageFile = document.getElementById('pImage').files[0];
-        if (imageFile) {
-          try {
-            await API.products.uploadImage(product.id, imageFile);
-          } catch (imgErr) {
-            console.error('[Upload Imagem]', imgErr);
-            showToast('Produto salvo, mas erro no upload da imagem', 'info');
-          }
-        }
 
         showToast(isEdit ? '✅ Produto atualizado!' : '✅ Produto criado!', 'success');
         closeModal();
@@ -800,6 +818,41 @@
         btn.textContent = isEdit ? '💾 Salvar alterações' : '➕ Criar produto';
       }
     });
+  }
+
+  // ✅ Preview ao vivo da imagem principal
+  function updateMainPreview(url) {
+    const img = document.getElementById('mainImgPreview');
+    if (!img) return;
+    if (url) {
+      img.src = url;
+      img.style.display = 'block';
+      img.onerror = () => { img.style.display = 'none'; };
+    } else {
+      img.style.display = 'none';
+    }
+  }
+
+  // ✅ Adiciona imagem extra via URL (endpoint de galeria)
+  async function addExtraImage(productId) {
+    const input = document.getElementById('pNewImageUrl');
+    const url = input?.value?.trim();
+    if (!url) { showToast('Digite uma URL de imagem válida', 'warning'); return; }
+
+    if (!productId) {
+      showToast('Salve o produto primeiro para adicionar imagens extras', 'info');
+      return;
+    }
+
+    try {
+      await API.products.addImage(productId, { image_url: url, order: 0 });
+      showToast('✅ Imagem adicionada!', 'success');
+      input.value = '';
+      openProductModal(productId); // recarrega modal com galeria atualizada
+    } catch(e) {
+      console.error('[Add Imagem]', e);
+      showToast(e?.detail || 'Erro ao adicionar imagem', 'error');
+    }
   }
 
   async function deleteProductImage(productId, imgId) {
@@ -982,7 +1035,8 @@
     document.getElementById('modal-container').appendChild(modal);
 
     try {
-      const o = await API.orders.detail(id);
+      // ✅ Usa adminDetail para evitar "No Order matches" do endpoint de usuário
+      const o = await API.orders.adminDetail(id);
       console.log('📋 Order detail:', o);
 
       const items = toArray(o.items || o.order_items);
