@@ -141,14 +141,24 @@ class PaymentProcessView(APIView):
         # ── Monta payload para o MP ────────────────────────────────────────────
         payer = form_data.get('payer', {})
 
+        # Monta payer corretamente preservando identification
+        payer_data = {}
+        if isinstance(payer, dict):
+            payer_data['email'] = payer.get('email', '')
+            if payer.get('identification'):
+                payer_data['identification'] = {
+                    'type':   payer['identification'].get('type', 'CPF'),
+                    'number': payer['identification'].get('number', ''),
+                }
+        else:
+            payer_data['email'] = payer
+
         payment_data = {
             'transaction_amount': float(form_data.get('transaction_amount', 0)),
             'description':        form_data.get('description', 'Glins Store'),
             'payment_method_id':  form_data.get('payment_method_id', 'pix'),
             'installments':       int(form_data.get('installments', 1)),
-            'payer': {
-                'email': payer.get('email') if isinstance(payer, dict) else payer,
-            },
+            'payer':              payer_data,  # ✅ agora com identification
             'external_reference':   str(request.user.id),
             'notification_url':     f'{settings.BACKEND_URL}/api/orders/payment/webhook/',
             'statement_descriptor': 'GLINS STORE',
@@ -156,9 +166,10 @@ class PaymentProcessView(APIView):
 
         # Campos exclusivos de cartão de crédito
         if form_data.get('token'):
-            payment_data['token']     = form_data.get('token')
+            payment_data['token'] = form_data.get('token')
         if form_data.get('issuer_id'):
             payment_data['issuer_id'] = form_data.get('issuer_id')
+
 
         logger.warning(f"[MP] payload enviado: {payment_data}")
 
