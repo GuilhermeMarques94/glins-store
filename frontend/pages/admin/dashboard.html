@@ -6,7 +6,6 @@
   <title>Admin — Glins Store</title>
   <link rel="stylesheet" href="/assets/css/global.css"/>
   <style>
-    /* ── Layout ── */
     .admin-layout {
       display: grid;
       grid-template-columns: 240px 1fr;
@@ -58,13 +57,11 @@
     .sidebar-footer a { color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
     .sidebar-footer a:hover { color: var(--primary); }
 
-    /* ── Main ── */
     .admin-main { padding: 32px; background: var(--bg-surface); }
     .admin-header { margin-bottom: 28px; }
     .admin-header h1 { font-size: 1.6rem; margin-bottom: 4px; }
     .flex-between { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 
-    /* ── Stats ── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -92,7 +89,6 @@
     .stat-value { font-family: var(--font-title); font-size: 1.6rem; color: var(--primary); }
     .stat-label { color: var(--text-muted); font-size: 0.82rem; margin-top: 4px; }
 
-    /* ── Tabela ── */
     .table-wrapper { overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; }
     .data-table th {
@@ -129,7 +125,6 @@
       font-size: 1.3rem;
     }
 
-    /* ── Modal ── */
     .modal-overlay {
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.85);
@@ -159,7 +154,6 @@
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
-    /* ── Image Gallery ── */
     .image-gallery {
       display: flex; flex-wrap: wrap; gap: 10px;
       margin-top: 10px;
@@ -182,7 +176,6 @@
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* ── Order Detail ── */
     .order-items-list { margin: 16px 0; }
     .order-item-row {
       display: flex; align-items: center; gap: 12px;
@@ -234,7 +227,6 @@
       margin-bottom: 8px;
     }
 
-    /* ── Search/Filter bar ── */
     .filter-bar {
       display: flex; gap: 10px; flex-wrap: wrap;
       margin-bottom: 20px;
@@ -243,10 +235,25 @@
       flex: 1; min-width: 140px;
     }
 
-    /* ── Badges extras ── */
     .badge-gold  { background: rgba(201,162,39,0.15); color: var(--primary); }
     .stock-low   { color: #e67e22; font-weight: 600; }
     .stock-zero  { color: var(--danger); font-weight: 600; }
+
+    /* Debug box */
+    .debug-box {
+      background: #1a0a0a;
+      border: 1px solid #c0392b;
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 20px;
+      font-size: 0.8rem;
+      color: #e74c3c;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 200px;
+      overflow-y: auto;
+    }
 
     @media (max-width: 900px) {
       .admin-layout { grid-template-columns: 1fr; }
@@ -264,8 +271,6 @@
 <div id="modal-container"></div>
 
 <div class="admin-layout">
-
-  <!-- ── Sidebar ── -->
   <aside class="admin-sidebar">
     <div class="sidebar-brand">
       👑 GLINS STORE
@@ -282,7 +287,6 @@
     </div>
   </aside>
 
-  <!-- ── Main ── -->
   <main class="admin-main">
 
     <!-- ══ DASHBOARD ══ -->
@@ -291,11 +295,10 @@
         <h1>📊 Dashboard</h1>
         <p class="text-muted">Visão geral da Glins Store</p>
       </div>
-
+      <div id="dashboard-error" style="display:none"></div>
       <div class="stats-grid" id="stats-grid">
         <div class="loader"></div>
       </div>
-
       <div class="grid-2" style="gap:20px">
         <div class="card">
           <h3 style="margin-bottom:16px; font-size:1rem">📋 Últimos Pedidos</h3>
@@ -317,7 +320,6 @@
         </div>
         <button class="btn btn-primary" onclick="openProductModal()">+ Novo Produto</button>
       </div>
-
       <div class="filter-bar">
         <input type="text" class="form-control" id="productSearch"
                placeholder="🔍 Buscar produto..." oninput="filterProducts()"/>
@@ -330,19 +332,13 @@
           <option value="inactive">❌ Inativos</option>
         </select>
       </div>
-
       <div class="card">
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Imagem</th>
-                <th>Nome</th>
-                <th>Categoria</th>
-                <th>Preço</th>
-                <th>Estoque</th>
-                <th>Status</th>
-                <th>Ações</th>
+                <th>Imagem</th><th>Nome</th><th>Categoria</th>
+                <th>Preço</th><th>Estoque</th><th>Status</th><th>Ações</th>
               </tr>
             </thead>
             <tbody id="products-table">
@@ -382,7 +378,6 @@
         <h1>📋 Pedidos</h1>
         <p class="text-muted">Gerencie e atualize os pedidos dos clientes</p>
       </div>
-
       <div class="filter-bar">
         <input type="text" class="form-control" id="orderSearch"
                placeholder="🔍 Buscar por cliente ou #ID..." oninput="filterOrders()"/>
@@ -396,20 +391,13 @@
           <option value="cancelled">❌ Cancelado</option>
         </select>
       </div>
-
       <div class="card">
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Cliente</th>
-                <th>E-mail</th>
-                <th>Itens</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Data</th>
-                <th>Ações</th>
+                <th>#</th><th>Cliente</th><th>E-mail</th><th>Itens</th>
+                <th>Total</th><th>Status</th><th>Data</th><th>Ações</th>
               </tr>
             </thead>
             <tbody id="orders-table">
@@ -428,9 +416,47 @@
 <script>
   if (!requireAdmin()) {}
 
-  let allProducts  = [];
-  let allOrders    = [];
-  let categories   = [];
+  let allProducts = [];
+  let allOrders   = [];
+  let categories  = [];
+
+  // ══ Normaliza resposta paginada ou array direto ══
+  // A API pode retornar { results: [...], count: N } ou direto []
+  function toArray(response) {
+    if (!response) return [];
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response.results)) return response.results;
+    // Às vezes pode vir outro wrapper
+    const keys = Object.keys(response);
+    for (const k of keys) {
+      if (Array.isArray(response[k])) return response[k];
+    }
+    return [];
+  }
+
+  // ══ Extrai nome/email do cliente independente da estrutura ══
+  function getClientName(order) {
+    // Tenta todos os campos possíveis
+    if (order.user?.name)       return order.user.name;
+    if (order.user?.first_name) return `${order.user.first_name} ${order.user.last_name || ''}`.trim();
+    if (order.user?.username)   return order.user.username;
+    if (order.user?.email)      return order.user.email;
+    if (order.customer_name)    return order.customer_name;
+    if (order.customer?.name)   return order.customer.name;
+    if (order.shipping_address) {
+      // Tenta extrair nome do endereço se for objeto
+      if (typeof order.shipping_address === 'object' && order.shipping_address.name)
+        return order.shipping_address.name;
+    }
+    return `#${order.id}`;
+  }
+
+  function getClientEmail(order) {
+    if (order.user?.email)    return order.user.email;
+    if (order.customer_email) return order.customer_email;
+    if (order.customer?.email)return order.customer.email;
+    return '—';
+  }
 
   // ════════════════════════════════════════
   //  NAVEGAÇÃO
@@ -451,19 +477,34 @@
   //  DASHBOARD
   // ════════════════════════════════════════
   async function loadDashboard() {
+    document.getElementById('stats-grid').innerHTML = '<div class="loader"></div>';
+    document.getElementById('recent-orders').innerHTML = '<div class="loader"></div>';
+    document.getElementById('low-stock').innerHTML = '<div class="loader"></div>';
+    document.getElementById('dashboard-error').style.display = 'none';
+
     try {
-      const [products, orders, cats] = await Promise.all([
+      const [rawProducts, rawOrders, rawCats] = await Promise.all([
         API.products.adminList(),
         API.orders.adminList(),
         API.categories.list()
       ]);
 
-      const totalRevenue = orders
+      // ── Log de debug (remova depois de confirmar) ──
+      console.log('📦 RAW Products:', rawProducts);
+      console.log('📋 RAW Orders:',   rawOrders);
+      console.log('📂 RAW Cats:',     rawCats);
+
+      const products = toArray(rawProducts);
+      const orders   = toArray(rawOrders);
+      const cats     = toArray(rawCats);
+
+      console.log(`✅ Products: ${products.length} | Orders: ${orders.length} | Cats: ${cats.length}`);
+
+      const totalRevenue   = orders
         .filter(o => o.status !== 'cancelled')
         .reduce((s, o) => s + parseFloat(o.total || 0), 0);
-
       const pendingOrders  = orders.filter(o => o.status === 'pending').length;
-      const activeProducts = products.filter(p => p.is_active).length;
+      const activeProducts = products.filter(p => p.is_active !== false).length;
 
       document.getElementById('stats-grid').innerHTML = `
         <div class="stat-card">
@@ -490,43 +531,51 @@
           <div class="stat-icon">📂</div>
           <div class="stat-value">${cats.length}</div>
           <div class="stat-label">Categorias</div>
-        </div>
-      `;
+        </div>`;
 
       // Últimos 6 pedidos
       const recent = [...orders].slice(0, 6);
       document.getElementById('recent-orders').innerHTML = recent.length
         ? `<div class="table-wrapper"><table class="data-table">
-            <thead><tr><th>#</th><th>Cliente</th><th>Total</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>#</th><th>Cliente</th><th>Total</th><th>Status</th></tr></thead>
             <tbody>${recent.map(o => `
               <tr>
                 <td><strong>#${o.id}</strong></td>
-                <td>${o.user?.name || o.user?.username || o.user?.email || '—'}</td>
+                <td>${getClientName(o)}</td>
                 <td>${formatPrice(o.total)}</td>
                 <td>${statusBadge(o.status)}</td>
-                <td><button class="btn btn-outline btn-sm" onclick="showSection('orders', document.querySelector('.admin-nav a:nth-child(4)'))">Ver</button></td>
               </tr>`).join('')}
-            </tbody>
-          </table></div>`
+            </tbody></table></div>`
         : '<p class="text-muted text-center" style="padding:20px">Nenhum pedido ainda.</p>';
 
       // Estoque crítico (≤ 5)
-      const lowStock = products.filter(p => p.stock <= 5).sort((a,b) => a.stock - b.stock).slice(0, 8);
+      const lowStock = products
+        .filter(p => (p.stock ?? p.quantity ?? 0) <= 5)
+        .sort((a, b) => (a.stock ?? 0) - (b.stock ?? 0))
+        .slice(0, 8);
+
       document.getElementById('low-stock').innerHTML = lowStock.length
         ? `<div class="table-wrapper"><table class="data-table">
             <thead><tr><th>Produto</th><th>Estoque</th></tr></thead>
-            <tbody>${lowStock.map(p => `
-              <tr>
+            <tbody>${lowStock.map(p => {
+              const qty = p.stock ?? p.quantity ?? 0;
+              return `<tr>
                 <td>${p.name}</td>
-                <td><span class="${p.stock === 0 ? 'stock-zero' : 'stock-low'}">${p.stock === 0 ? '❌ Esgotado' : `⚠️ ${p.stock} un.`}</span></td>
-              </tr>`).join('')}
-            </tbody>
-          </table></div>`
+                <td><span class="${qty === 0 ? 'stock-zero' : 'stock-low'}">${qty === 0 ? '❌ Esgotado' : `⚠️ ${qty} un.`}</span></td>
+              </tr>`;
+            }).join('')}
+            </tbody></table></div>`
         : '<p class="text-muted text-center" style="padding:20px">✅ Estoque saudável!</p>';
 
     } catch (e) {
-      console.error('[Dashboard]', e);
-      document.getElementById('stats-grid').innerHTML = '<p class="text-muted">Erro ao carregar dados.</p>';
+      console.error('[Dashboard] ERRO COMPLETO:', e);
+      const errBox = document.getElementById('dashboard-error');
+      errBox.style.display = 'block';
+      errBox.className = 'debug-box';
+      errBox.textContent = `❌ Erro ao carregar dashboard:\n${JSON.stringify(e, null, 2)}\n\n${e?.message || ''}`;
+      document.getElementById('stats-grid').innerHTML = '';
+      document.getElementById('recent-orders').innerHTML = '<p class="text-muted text-center" style="padding:20px">Erro ao carregar.</p>';
+      document.getElementById('low-stock').innerHTML = '<p class="text-muted text-center" style="padding:20px">Erro ao carregar.</p>';
     }
   }
 
@@ -537,22 +586,26 @@
     const tb = document.getElementById('products-table');
     tb.innerHTML = '<tr><td colspan="7" class="text-center"><div class="loader"></div></td></tr>';
     try {
-      const [products, cats] = await Promise.all([
+      const [rawProducts, rawCats] = await Promise.all([
         API.products.adminList(),
         API.categories.list()
       ]);
-      allProducts = products;
-      categories  = cats;
 
-      // Preenche filtro de categoria
+      console.log('📦 Products raw:', rawProducts);
+
+      allProducts = toArray(rawProducts);
+      categories  = toArray(rawCats);
+
+      console.log(`📦 Products parsed: ${allProducts.length}`);
+
       const catFilter = document.getElementById('productCatFilter');
       catFilter.innerHTML = '<option value="">Todas as categorias</option>' +
-        cats.map(c => `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`).join('');
+        categories.map(c => `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`).join('');
 
-      renderProducts(products);
+      renderProducts(allProducts);
     } catch (e) {
       console.error('[Produtos]', e);
-      tb.innerHTML = '<tr><td colspan="7" class="text-muted text-center" style="padding:20px">❌ Erro ao carregar produtos.</td></tr>';
+      tb.innerHTML = `<tr><td colspan="7" class="text-muted text-center" style="padding:20px">❌ Erro: ${e?.detail || e?.message || 'Falha ao carregar produtos'}</td></tr>`;
     }
   }
 
@@ -563,27 +616,30 @@
       return;
     }
     tb.innerHTML = products.map(p => {
-      const stockClass = p.stock === 0 ? 'badge-danger' : p.stock <= 5 ? 'badge-gold' : 'badge-success';
+      const stock = p.stock ?? p.quantity ?? 0;
+      const stockClass = stock === 0 ? 'badge-danger' : stock <= 5 ? 'badge-gold' : 'badge-success';
+      const thumb = p.image_url || p.image || p.thumbnail || p.cover_image || null;
       return `
         <tr>
           <td>
-            ${p.image_url
-              ? `<img class="product-thumb" src="${p.image_url}" alt="${p.name}"/>`
+            ${thumb
+              ? `<img class="product-thumb" src="${thumb}" alt="${p.name}" onerror="this.style.display='none';this.nextSibling.style.display='flex'"/>
+                 <div class="product-thumb-placeholder" style="display:none">🏺</div>`
               : `<div class="product-thumb-placeholder">🏺</div>`}
           </td>
           <td>
             <strong>${p.name}</strong>
             ${p.description ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description}</div>` : ''}
           </td>
-          <td>${p.category_name || '<span class="text-muted">—</span>'}</td>
+          <td>${p.category_name || p.category?.name || '<span class="text-muted">—</span>'}</td>
           <td><strong>${formatPrice(p.price)}</strong></td>
-          <td><span class="badge ${stockClass}">${p.stock}</span></td>
-          <td>${p.is_active
+          <td><span class="badge ${stockClass}">${stock}</span></td>
+          <td>${p.is_active !== false
             ? '<span class="badge badge-success">Ativo</span>'
             : '<span class="badge badge-muted">Inativo</span>'}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-outline btn-sm" onclick="openProductModal(${p.id})" title="Editar">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g,"\\'")}'')" title="Deletar">🗑️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id}, '${(p.name || '').replace(/'/g,"\\'")}')" title="Deletar">🗑️</button>
           </td>
         </tr>`;
     }).join('');
@@ -595,9 +651,9 @@
     const status = document.getElementById('productStatusFilter').value;
 
     const filtered = allProducts.filter(p => {
-      const matchSearch = p.name.toLowerCase().includes(search);
-      const matchCat    = !cat    || String(p.category) === cat;
-      const matchStatus = !status || (status === 'active' ? p.is_active : !p.is_active);
+      const matchSearch = (p.name || '').toLowerCase().includes(search);
+      const matchCat    = !cat    || String(p.category?.id || p.category) === cat;
+      const matchStatus = !status || (status === 'active' ? p.is_active !== false : p.is_active === false);
       return matchSearch && matchCat && matchStatus;
     });
     renderProducts(filtered);
@@ -619,18 +675,15 @@
 
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
-    modal.id = 'product-modal';
     modal.innerHTML = `
       <div class="modal">
         <button class="modal-close" onclick="closeModal()">✕</button>
         <h2>${isEdit ? '✏️ Editar Produto' : '📦 Novo Produto'}</h2>
         <form id="productForm" autocomplete="off">
-
           <div class="form-group">
             <label>Nome do produto *</label>
             <input type="text" id="pName" class="form-control" required placeholder="Ex: Booster Box Pokémon"/>
           </div>
-
           <div class="grid-3">
             <div class="form-group">
               <label>Preço (R$) *</label>
@@ -648,7 +701,6 @@
               </select>
             </div>
           </div>
-
           <div class="form-group">
             <label>Categoria</label>
             <select id="pCategory" class="form-control">
@@ -656,26 +708,19 @@
               ${categories.map(c => `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`).join('')}
             </select>
           </div>
-
           <div class="form-group">
             <label>Descrição</label>
             <textarea id="pDesc" class="form-control" rows="3" placeholder="Descreva o produto..."></textarea>
           </div>
-
           ${isEdit ? `
           <div class="form-group">
             <label>Imagens atuais</label>
-            <div class="image-gallery" id="currentImages">
-              <div class="loader"></div>
-            </div>
+            <div class="image-gallery" id="currentImages"><div class="loader"></div></div>
           </div>` : ''}
-
           <div class="form-group">
             <label>${isEdit ? 'Adicionar nova imagem' : 'Imagem do produto'}</label>
             <input type="file" id="pImage" class="form-control" accept="image/*"/>
-            <small class="text-muted">Formatos aceitos: JPG, PNG, WebP</small>
           </div>
-
           <div class="flex gap-2 mt-2">
             <button type="submit" class="btn btn-primary" id="saveProductBtn">
               ${isEdit ? '💾 Salvar alterações' : '➕ Criar produto'}
@@ -684,30 +729,27 @@
           </div>
         </form>
       </div>`;
-
     document.getElementById('modal-container').appendChild(modal);
 
-    // Preenche dados se for edição
     if (isEdit) {
       try {
         const [p, images] = await Promise.all([
           API.products.detail(id),
           API.products.getImages(id).catch(() => [])
         ]);
-        document.getElementById('pName').value     = p.name;
-        document.getElementById('pPrice').value    = p.price;
-        document.getElementById('pStock').value    = p.stock;
+        document.getElementById('pName').value     = p.name || '';
+        document.getElementById('pPrice').value    = p.price || '';
+        document.getElementById('pStock').value    = p.stock ?? p.quantity ?? 0;
         document.getElementById('pDesc').value     = p.description || '';
-        document.getElementById('pActive').value   = p.is_active ? 'true' : 'false';
-        document.getElementById('pCategory').value = p.category || '';
+        document.getElementById('pActive').value   = p.is_active !== false ? 'true' : 'false';
+        document.getElementById('pCategory').value = p.category?.id || p.category || '';
 
-        // Galeria de imagens
         const gallery = document.getElementById('currentImages');
-        const imgs = Array.isArray(images) ? images : (images?.results || []);
+        const imgs = toArray(images);
         gallery.innerHTML = imgs.length
           ? imgs.map(img => `
               <div class="image-gallery-item" id="img-${img.id}">
-                <img src="${img.image}" alt="Imagem"/>
+                <img src="${img.image || img.url}" alt="Imagem"/>
                 <button class="del-img" onclick="deleteProductImage(${id}, ${img.id})" title="Remover">✕</button>
               </div>`).join('')
           : '<span class="text-muted" style="font-size:0.82rem">Nenhuma imagem cadastrada</span>';
@@ -733,17 +775,18 @@
       };
 
       try {
-        let product;
-        if (isEdit) {
-          product = await API.products.update(id, data);
-        } else {
-          product = await API.products.create(data);
-        }
+        const product = isEdit
+          ? await API.products.update(id, data)
+          : await API.products.create(data);
 
-        // Upload de imagem
         const imageFile = document.getElementById('pImage').files[0];
         if (imageFile) {
-          await API.products.uploadImage(product.id, imageFile);
+          try {
+            await API.products.uploadImage(product.id, imageFile);
+          } catch (imgErr) {
+            console.error('[Upload Imagem]', imgErr);
+            showToast('Produto salvo, mas erro no upload da imagem', 'info');
+          }
         }
 
         showToast(isEdit ? '✅ Produto atualizado!' : '✅ Produto criado!', 'success');
@@ -751,7 +794,7 @@
         loadProducts();
       } catch (err) {
         console.error('[Salvar Produto]', err);
-        const msg = err?.name?.[0] || err?.detail || err?.image?.[0] || 'Erro ao salvar produto';
+        const msg = err?.name?.[0] || err?.price?.[0] || err?.detail || 'Erro ao salvar produto';
         showToast(msg, 'error');
         btn.disabled = false;
         btn.textContent = isEdit ? '💾 Salvar alterações' : '➕ Criar produto';
@@ -763,8 +806,7 @@
     if (!confirm('Remover esta imagem?')) return;
     try {
       await API.products.deleteImage(productId, imgId);
-      const el = document.getElementById(`img-${imgId}`);
-      el?.remove();
+      document.getElementById(`img-${imgId}`)?.remove();
       showToast('Imagem removida', 'success');
     } catch (_) { showToast('Erro ao remover imagem', 'error'); }
   }
@@ -775,9 +817,9 @@
   async function loadCategories() {
     const tb = document.getElementById('categories-table');
     try {
-      const cats = await API.categories.list();
-      categories = cats;
-      tb.innerHTML = cats.map(c => `
+      const rawCats = await API.categories.list();
+      categories = toArray(rawCats);
+      tb.innerHTML = categories.map(c => `
         <tr>
           <td style="font-size:1.6rem">${c.icon || '🏷️'}</td>
           <td><strong>${c.name}</strong></td>
@@ -785,7 +827,7 @@
           <td><span class="badge badge-gold">${c.product_count ?? 0}</span></td>
           <td style="white-space:nowrap">
             <button class="btn btn-outline btn-sm" onclick="openCategoryModal(${c.id})">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id}, '${c.name.replace(/'/g,"\\'")}')">🗑️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id}, '${(c.name || '').replace(/'/g,"\\'")}')">🗑️</button>
           </td>
         </tr>`).join('');
     } catch (e) {
@@ -824,7 +866,6 @@
       </div>`;
     document.getElementById('modal-container').appendChild(modal);
 
-    // Auto-slug
     document.getElementById('cName').addEventListener('input', (e) => {
       if (!isEdit) {
         document.getElementById('cSlug').value = e.target.value
@@ -881,12 +922,14 @@
     tb.innerHTML = '<tr><td colspan="8" class="text-center"><div class="loader"></div></td></tr>';
     const filter = document.getElementById('orderStatusFilter')?.value;
     try {
-      const orders = await API.orders.adminList(filter ? { status: filter } : {});
-      allOrders = orders;
-      renderOrders(orders);
+      const rawOrders = await API.orders.adminList(filter ? { status: filter } : {});
+      console.log('📋 Orders raw:', rawOrders);
+      allOrders = toArray(rawOrders);
+      console.log(`📋 Orders parsed: ${allOrders.length}`);
+      renderOrders(allOrders);
     } catch (e) {
       console.error('[Pedidos]', e);
-      tb.innerHTML = '<tr><td colspan="8" class="text-muted text-center" style="padding:20px">❌ Erro ao carregar pedidos</td></tr>';
+      tb.innerHTML = `<tr><td colspan="8" class="text-muted text-center" style="padding:20px">❌ Erro: ${e?.detail || e?.message || 'Falha ao carregar pedidos'}</td></tr>`;
     }
   }
 
@@ -897,14 +940,12 @@
       return;
     }
     tb.innerHTML = orders.map(o => {
-      const clientName  = o.user?.name || o.user?.username || '—';
-      const clientEmail = o.user?.email || '—';
-      const itemCount   = o.items?.length ?? o.item_count ?? '—';
+      const itemCount = o.items?.length ?? o.item_count ?? o.items_count ?? '—';
       return `
         <tr>
           <td><strong>#${o.id}</strong></td>
-          <td>${clientName}</td>
-          <td style="font-size:0.82rem;color:var(--text-muted)">${clientEmail}</td>
+          <td>${getClientName(o)}</td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">${getClientEmail(o)}</td>
           <td><span class="badge badge-gold">${itemCount} ${itemCount === 1 ? 'item' : 'itens'}</span></td>
           <td><strong>${formatPrice(o.total)}</strong></td>
           <td>${statusBadge(o.status)}</td>
@@ -919,14 +960,15 @@
   function filterOrders() {
     const search = document.getElementById('orderSearch').value.toLowerCase();
     const filtered = allOrders.filter(o => {
-      const name  = (o.user?.name || o.user?.username || o.user?.email || '').toLowerCase();
+      const name  = getClientName(o).toLowerCase();
+      const email = getClientEmail(o).toLowerCase();
       const id    = String(o.id);
-      return name.includes(search) || id.includes(search);
+      return name.includes(search) || email.includes(search) || id.includes(search);
     });
     renderOrders(filtered);
   }
 
-  // ── Modal Pedido ───────────────────────
+  // ── Modal Pedido ──────────────────────
   async function openOrderModal(id) {
     closeModal();
     const modal = document.createElement('div');
@@ -941,47 +983,50 @@
 
     try {
       const o = await API.orders.detail(id);
-      const clientName  = o.user?.name || o.user?.username || '—';
-      const clientEmail = o.user?.email || '—';
-      const items       = o.items || [];
+      console.log('📋 Order detail:', o);
+
+      const items = toArray(o.items || o.order_items);
 
       document.getElementById('orderDetail').innerHTML = `
-
-        <!-- Info do cliente -->
         <div class="customer-info">
           <div class="info-label">👤 Cliente</div>
-          <p><strong>${clientName}</strong></p>
-          <p>📧 ${clientEmail}</p>
-          ${o.shipping_address ? `<p>📍 ${o.shipping_address}</p>` : ''}
+          <p><strong>${getClientName(o)}</strong></p>
+          <p>📧 ${getClientEmail(o)}</p>
+          ${o.shipping_address ? `<p>📍 ${typeof o.shipping_address === 'object'
+            ? `${o.shipping_address.street || ''}, ${o.shipping_address.city || ''} - ${o.shipping_address.state || ''}`
+            : o.shipping_address}</p>` : ''}
           ${o.tracking_code ? `<p>🚚 Rastreio: <strong>${o.tracking_code}</strong></p>` : ''}
         </div>
 
-        <!-- Itens do pedido -->
         <div class="info-label">🛍️ Itens do Pedido</div>
         <div class="order-items-list">
-          ${items.length ? items.map(item => `
-            <div class="order-item-row">
-              ${item.product_image
-                ? `<img src="${item.product_image}" alt="${item.product_name}"/>`
-                : `<div class="product-thumb-placeholder">🏺</div>`}
-              <div class="order-item-info">
-                <strong>${item.product_name || item.product}</strong>
-                <span>Qtd: ${item.quantity} × ${formatPrice(item.price)}</span>
-              </div>
-              <strong>${formatPrice(item.quantity * item.price)}</strong>
-            </div>`).join('')
-          : '<p class="text-muted">Sem itens</p>'}
+          ${items.length ? items.map(item => {
+            const name  = item.product_name || item.name || item.product?.name || `Produto #${item.product}`;
+            const img   = item.product_image || item.image || item.product?.image_url || null;
+            const price = parseFloat(item.price || item.unit_price || 0);
+            const qty   = item.quantity || 1;
+            return `
+              <div class="order-item-row">
+                ${img
+                  ? `<img src="${img}" alt="${name}"/>`
+                  : `<div class="product-thumb-placeholder">🏺</div>`}
+                <div class="order-item-info">
+                  <strong>${name}</strong>
+                  <span>Qtd: ${qty} × ${formatPrice(price)}</span>
+                </div>
+                <strong>${formatPrice(qty * price)}</strong>
+              </div>`;
+          }).join('')
+          : '<p class="text-muted">Sem itens registrados</p>'}
         </div>
 
-        <!-- Resumo financeiro -->
         <div class="order-summary">
           <div class="order-summary-row"><span>Subtotal</span><span>${formatPrice(o.subtotal || o.total)}</span></div>
           ${o.shipping_cost ? `<div class="order-summary-row"><span>🚚 Frete</span><span>${formatPrice(o.shipping_cost)}</span></div>` : ''}
-          ${o.discount ? `<div class="order-summary-row"><span>🏷️ Desconto</span><span>-${formatPrice(o.discount)}</span></div>` : ''}
+          ${o.discount      ? `<div class="order-summary-row"><span>🏷️ Desconto</span><span>-${formatPrice(o.discount)}</span></div>` : ''}
           <div class="order-summary-row total"><span>Total</span><span>${formatPrice(o.total)}</span></div>
         </div>
 
-        <!-- Atualizar pedido -->
         <div class="info-label" style="margin-top:16px">⚙️ Atualizar Pedido</div>
         <form id="orderForm">
           <div class="grid-2">
@@ -1006,8 +1051,7 @@
             <button type="submit" class="btn btn-primary">💾 Salvar alterações</button>
             <button type="button" class="btn btn-outline" onclick="closeModal()">Fechar</button>
           </div>
-        </form>
-      `;
+        </form>`;
 
       document.getElementById('orderForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1024,7 +1068,8 @@
 
     } catch (e) {
       console.error('[Order Modal]', e);
-      document.getElementById('orderDetail').innerHTML = '<p class="text-muted text-center">Erro ao carregar pedido.</p>';
+      document.getElementById('orderDetail').innerHTML =
+        `<p class="text-muted text-center">Erro ao carregar pedido: ${e?.detail || e?.message || ''}</p>`;
     }
   }
 
@@ -1039,7 +1084,6 @@
     if (e.target.classList.contains('modal-overlay')) closeModal();
   });
 
-  // Init
   loadDashboard();
 </script>
 </body>
