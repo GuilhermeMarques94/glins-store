@@ -70,3 +70,10 @@ def send_order_cancelled_email(order):
         f'❌ Pedido #{order.id} cancelado',
         order,
     )
+
+def send_tracking_code_email(order):
+    send_order_email(
+        'order_shipped.html',
+        f'🚚 Seu pedido #{order.id} foi enviado! Rastreie aqui',
+        order,
+    )

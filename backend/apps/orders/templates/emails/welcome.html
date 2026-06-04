@@ -1,0 +1,31 @@
+{% extends "emails/base.html" %}
+{% block title %}Bem-vindo à Glins Store!{% endblock %}
+{% block content %}
+
+<h2>Bem-vindo à Glins Store! 🎉</h2>
+<span class="badge badge-approved">✅ Cadastro realizado</span>
+
+<p>Olá, <strong>{{ user.name }}</strong>! É muito bom ter você por aqui.</p>
+
+<p>
+  Sua conta foi criada com sucesso. Agora você pode explorar nossa loja
+  e encontrar os melhores <strong>card games e colecionáveis</strong> do mercado!
+</p>
+
+<div class="order-box">
+  <p><strong>Nome:</strong> {{ user.name }}</p>
+  <p><strong>E-mail:</strong> {{ user.email }}</p>
+  <p><strong>Membro desde:</strong> {{ user.created_at|date:"d/m/Y" }}</p>
+</div>
+
+<p>Acesse a loja e aproveite as novidades que preparamos para você! ⚔️</p>
+
+<a href="https://glins-store.vercel.app" class="btn">
+  Acessar a Glins Store
+</a>
+
+<p style="margin-top: 20px; font-size: 13px; color: #888;">
+  Se você não criou essa conta, ignore este e-mail.
+</p>
+
+{% endblock %}

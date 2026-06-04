@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .serializers import RegisterSerializer, UserSerializer, ChangePasswordSerializer
 import os
+from .emails import send_welcome_email
 
 User = get_user_model()
 
@@ -117,3 +118,27 @@ def create_superuser_temp(request):
 
     User.objects.create_superuser(email=email, name=name, password=password)  # ← name aqui
     return JsonResponse({'message': f'Superusuário {email} criado com sucesso!'})
+
+
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        tokens = _get_tokens(user)
+
+        # ── Disparo e-mail boas-vindas ──────────────────
+        try:
+            send_welcome_email(user)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"[EMAIL] Boas-vindas: {e}")
+        # ───────────────────────────────────────────────
+
+        return Response({
+            'user': UserSerializer(user).data,
+            **tokens
+        }, status=status.HTTP_201_CREATED)

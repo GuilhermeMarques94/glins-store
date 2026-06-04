@@ -7,7 +7,7 @@
 
 <div class="order-box">
   <p><strong>Pedido:</strong> #{{ order.id }}</p>
-  <p><strong>Total:</strong> R$ {{ order.total_price|floatformat:2 }}</p>
+  <p><strong>Total:</strong> R$ {{ order.total|floatformat:2 }}</p>
   {% if order.tracking_code %}
   <p><strong>Código de rastreio:</strong> {{ order.tracking_code }}</p>
   {% endif %}
