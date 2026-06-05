@@ -308,7 +308,7 @@
     try {
       const data = await API.products.list({ ordering: '-created_at' });
       const products = data.results || data;
-      const featured = products.slice(0, 8);
+      const featured = products.slice(0, 4);
 
       if (!featured.length) {
         el.innerHTML = '<p class="text-muted text-center">Nenhum produto cadastrado ainda.</p>';
