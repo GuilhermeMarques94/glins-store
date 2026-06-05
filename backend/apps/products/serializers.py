@@ -27,7 +27,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'category', 'category_name',
             'name', 'slug', 'description',
             'price', 'stock', 'in_stock',
-            'image_url', 'images',          # ← image_url legado + galeria nova
+            'image_url', 'images',
             'is_active',
             'created_at', 'updated_at'
         ]
@@ -41,3 +41,8 @@ class ProductImageUploadSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'order': {'required': False, 'default': 0}
         }
+
+
+class ProductImageURLSerializer(serializers.Serializer):
+    image_url = serializers.URLField()
+    order     = serializers.IntegerField(default=0, required=False)
