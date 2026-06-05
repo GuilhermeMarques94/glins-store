@@ -91,10 +91,16 @@ const API = {
     deleteImage: (id, imgId) => apiFetch(`/products/${id}/images/${imgId}/`, { method: 'DELETE' }),
 
     // ✅ Adiciona imagem por URL (JSON, não FormData)
-    addImage: (id, data) => apiFetch(`/products/${id}/images/`, {
-      method: 'POST',
-      body: JSON.stringify(data) // { image_url: "https://...", order: 0 }
-    }),
+    addImageFile: (id, file, order = 0) => {
+      const form = new FormData();
+      form.append('image', file);
+      form.append('order', order);
+      return apiFetch(`/products/${id}/images/`, {
+        method: 'POST',
+        headers: {}, // sem Content-Type para o browser setar o boundary do multipart
+        body: form
+      });
+    },
   },
 
   // ── Categories ────────────────────────
