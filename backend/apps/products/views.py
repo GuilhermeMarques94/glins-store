@@ -11,7 +11,8 @@ import uuid
 from .models import Product, Category, ProductImage
 from .serializers import (
     CategorySerializer, ProductSerializer,
-    ProductImageSerializer, ProductImageUploadSerializer
+    ProductImageSerializer, ProductImageUploadSerializer,
+    ProductImageURLSerializer
 )
 
 
@@ -114,7 +115,7 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
 class ProductImageListView(APIView):
     """
     GET  /products/<pk>/images/  → lista imagens do produto
-    POST /products/<pk>/images/  → faz upload de uma nova imagem
+    POST /products/<pk>/images/  → upload de arquivo OU URL direta
     """
 
     def get_permissions(self):
@@ -127,15 +128,33 @@ class ProductImageListView(APIView):
         return Response(ProductImageSerializer(images, many=True).data)
 
     def post(self, request, pk):
-        product    = Product.objects.get(pk=pk)
-        serializer = ProductImageUploadSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        product = Product.objects.get(pk=pk)
 
-        url   = upload_image_to_supabase(request.FILES['image'])
-        order = serializer.validated_data.get('order', 0)
-        img   = ProductImage.objects.create(product=product, image_url=url, order=order)
+        # ── Modo 1: URL direta (JSON com image_url) ──────────────────────────
+        if 'image_url' in request.data:
+            serializer = ProductImageURLSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        # Se for order=0 (principal), sincroniza com image_url legado
+            url   = serializer.validated_data['image_url']
+            order = serializer.validated_data.get('order', 0)
+
+        # ── Modo 2: Upload de arquivo (multipart com image) ──────────────────
+        elif 'image' in request.FILES:
+            serializer = ProductImageUploadSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            url   = upload_image_to_supabase(request.FILES['image'])
+            order = serializer.validated_data.get('order', 0)
+
+        else:
+            return Response(
+                {'error': 'Envie "image_url" (URL) ou "image" (arquivo).'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        img = ProductImage.objects.create(product=product, image_url=url, order=order)
+
+        # Se for principal (order=0), sincroniza com image_url legado
         if order == 0:
             product.image_url = url
             product.save(update_fields=['image_url'])

@@ -34,6 +34,10 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
 
 
-class ProductImageUploadSerializer(serializers.Serializer):
-    image = serializers.ImageField()
-    order = serializers.IntegerField(default=0, required=False)
+class ProductImageUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = ProductImage
+        fields = ['image_url', 'order']
+        extra_kwargs = {
+            'order': {'required': False, 'default': 0}
+        }
