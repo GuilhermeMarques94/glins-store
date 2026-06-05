@@ -93,10 +93,7 @@ const API = {
     // ✅ Adiciona imagem por URL (JSON, não FormData)
     addImage: (id, data) => apiFetch(`/products/${id}/images/`, {
       method: 'POST',
-      body: JSON.stringify({
-        image: data.image_url,   // ← campo que a API espera
-        order: data.order ?? 0
-      })
+      body: JSON.stringify(data) // { image_url: "https://...", order: 0 }
     }),
   },
 
