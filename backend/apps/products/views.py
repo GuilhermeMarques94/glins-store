@@ -154,8 +154,9 @@ class ProductImageListView(APIView):
 
         img = ProductImage.objects.create(product=product, image_url=url, order=order)
 
-        # Se for principal (order=0), sincroniza com image_url legado
-        if order == 0:
+        # ✅ Só sincroniza image_url legado se for a PRIMEIRA imagem do produto
+        ja_tem_imagens = ProductImage.objects.filter(product=product).exclude(pk=img.pk).exists()
+        if not ja_tem_imagens:
             product.image_url = url
             product.save(update_fields=['image_url'])
 
