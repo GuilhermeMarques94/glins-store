@@ -127,6 +127,7 @@ let mp           = null;
 // ── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
   mp = new MercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
+  initViaCEP('zipcode', 'street', 'city', 'state', 'number');
 
   try {
     const user = await API.auth.profile();

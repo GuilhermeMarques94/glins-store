@@ -81,3 +81,65 @@ async function updateCartBadge() {
     }
   } catch (_) {}
 }
+
+// ══════════════════════════════════════════
+//  AUTO-PREENCHER ENDEREÇO via ViaCEP
+// ══════════════════════════════════════════
+
+/**
+ * Inicializa o auto-preenchimento de endereço via ViaCEP.
+ * @param {string} cepId       - ID do input de CEP
+ * @param {string} streetId    - ID do input de rua
+ * @param {string} cityId      - ID do input de cidade
+ * @param {string} stateId     - ID do input de estado
+ * @param {string} [numberId]  - ID do input de número (recebe foco após preencher)
+ */
+function initViaCEP(cepId, streetId, cityId, stateId, numberId = null) {
+  const cepInput = document.getElementById(cepId);
+  if (!cepInput) return;
+
+  cepInput.addEventListener('input', (e) => {
+    // Mantém só números
+    let val = e.target.value.replace(/\D/g, '');
+
+    // Formata 00000-000
+    if (val.length > 5) val = val.slice(0, 5) + '-' + val.slice(5, 8);
+    e.target.value = val;
+
+    // Dispara busca quando tiver 8 dígitos
+    if (val.replace('-', '').length === 8) fetchViaCEP(val, streetId, cityId, stateId, numberId);
+  });
+}
+
+async function fetchViaCEP(cep, streetId, cityId, stateId, numberId) {
+  const clean = cep.replace(/\D/g, '');
+  try {
+    const res  = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+    const data = await res.json();
+
+    if (data.erro) {
+      showToast('CEP não encontrado', 'error');
+      return;
+    }
+
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val) el.value = val;
+    };
+
+    set(streetId, data.logradouro);
+    set(cityId,   data.localidade);
+    set(stateId,  data.uf);
+
+    // Foca no campo de número para o usuário preencher
+    if (numberId) {
+      const numEl = document.getElementById(numberId);
+      if (numEl) numEl.focus();
+    }
+
+    showToast('✅ Endereço preenchido!', 'success');
+
+  } catch (_) {
+    showToast('Erro ao buscar CEP', 'error');
+  }
+}

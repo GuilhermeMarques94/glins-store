@@ -161,6 +161,7 @@
 
   async function init() {
     userData = await API.auth.profile();
+    initViaCEP('aZipcode', 'aStreet', 'aCity', 'aState', 'aNumber');
     document.getElementById('sidebarName').textContent  = userData.name;
     document.getElementById('sidebarEmail').textContent = userData.email;
     document.getElementById('pName').value       = userData.name  || '';

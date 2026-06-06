@@ -177,10 +177,7 @@ class ProductImageDeleteView(APIView):
 class AdminProductListView(generics.ListAPIView):
     serializer_class   = ProductSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends    = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields      = ['name', 'description', 'category__name']
-    ordering_fields    = ['price', 'created_at', 'name', 'stock']
-    ordering           = ['-created_at']
+    # SEM filter_backends — tudo manual para garantir funcionamento
 
     def get_queryset(self):
         if not self.request.user.is_admin:
@@ -191,13 +188,22 @@ class AdminProductListView(generics.ListAPIView):
               .prefetch_related('images')
               .order_by('-created_at'))
 
-        # Filtro por categoria
-        category = self.request.query_params.get('category')
+        # 🔍 Busca por nome ou descrição
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            qs = qs.filter(
+                Q(name__icontains=search) |
+                Q(description__icontains=search) |
+                Q(category__name__icontains=search)
+            )
+
+        # 📂 Filtro por categoria (ID)
+        category = self.request.query_params.get('category', '').strip()
         if category:
             qs = qs.filter(category__id=category)
 
-        # Filtro por status ativo/inativo
-        status_filter = self.request.query_params.get('status')
+        # ✅/❌ Filtro por status
+        status_filter = self.request.query_params.get('status', '').strip()
         if status_filter == 'active':
             qs = qs.filter(is_active=True)
         elif status_filter == 'inactive':
