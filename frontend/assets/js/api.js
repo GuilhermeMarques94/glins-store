@@ -132,7 +132,7 @@ const API = {
     list:           ()       => apiFetch('/orders/'),
     detail:         (id)     => apiFetch(`/orders/${id}/`),
     create:         (data)   => apiFetch('/orders/', { method: 'POST', body: JSON.stringify(data) }),
-    adminList:      (params) => apiFetch('/orders/admin/?' + new URLSearchParams(params || {})),
+    adminList: (params = {}) => apiFetch('/products/admin/all/?' + new URLSearchParams(params)),
 
     // ✅ Detalhe pelo endpoint admin (evita "No Order matches" do endpoint de usuário)
     adminDetail:    (id)     => apiFetch(`/orders/admin/${id}/`),

@@ -177,11 +177,30 @@ class ProductImageDeleteView(APIView):
 class AdminProductListView(generics.ListAPIView):
     serializer_class   = ProductSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends    = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields      = ['name', 'description', 'category__name']
+    ordering_fields    = ['price', 'created_at', 'name', 'stock']
+    ordering           = ['-created_at']
 
     def get_queryset(self):
         if not self.request.user.is_admin:
             return Product.objects.none()
-        return (Product.objects.all()
-                .select_related('category')
-                .prefetch_related('images')
-                .order_by('-created_at'))
+
+        qs = (Product.objects.all()
+              .select_related('category')
+              .prefetch_related('images')
+              .order_by('-created_at'))
+
+        # Filtro por categoria
+        category = self.request.query_params.get('category')
+        if category:
+            qs = qs.filter(category__id=category)
+
+        # Filtro por status ativo/inativo
+        status_filter = self.request.query_params.get('status')
+        if status_filter == 'active':
+            qs = qs.filter(is_active=True)
+        elif status_filter == 'inactive':
+            qs = qs.filter(is_active=False)
+
+        return qs
