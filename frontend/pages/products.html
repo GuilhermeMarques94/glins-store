@@ -162,13 +162,19 @@
 <script src="/assets/js/navbar.js"></script>
 <script>
   let currentCategory = new URLSearchParams(location.search).get('category') || '';
+  let currentPage     = 1;
+  let totalCount      = 0;
+  const PAGE_SIZE     = 20; // deve bater com o page_size do backend
 
+  // ════════════════════════════════
+  //  CATEGORIAS
+  // ════════════════════════════════
   async function loadCategories() {
     const el = document.getElementById('cat-filters');
     try {
-        const res = await API.categories.list();
-        const cats = res.results ?? res; // ← extrai o array do objeto paginado
-        cats.forEach(c => {
+      const res  = await API.categories.list();
+      const cats = res.results ?? res;
+      cats.forEach(c => {
         const item = document.createElement('div');
         item.className = `cat-filter-item ${currentCategory === c.slug ? 'active' : ''}`;
         item.dataset.slug = c.slug;
@@ -181,55 +187,132 @@
 
   function setCategory(slug) {
     currentCategory = slug;
+    currentPage     = 1; // volta pra página 1 ao trocar categoria
     document.querySelectorAll('.cat-filter-item').forEach(el => {
       el.classList.toggle('active', el.dataset.slug === slug);
     });
     applyFilters();
   }
 
-  async function applyFilters() {
-    const grid = document.getElementById('products-grid');
+  // ════════════════════════════════
+  //  FILTROS + BUSCA
+  // ════════════════════════════════
+  async function applyFilters(page = 1) {
+    currentPage = page;
+    const grid  = document.getElementById('products-grid');
     grid.innerHTML = '<div class="loader"></div>';
 
     const params = {
       search:   document.getElementById('searchInput').value,
       ordering: document.getElementById('ordering').value,
+      page:     currentPage,
     };
-    if (currentCategory)  params.category  = currentCategory;
-    if (document.getElementById('minPrice').value) params.min_price = document.getElementById('minPrice').value;
-    if (document.getElementById('maxPrice').value) params.max_price = document.getElementById('maxPrice').value;
-    if (document.getElementById('inStockOnly').checked) params.in_stock = 'true';
+    if (currentCategory) params.category  = currentCategory;
+    if (document.getElementById('minPrice').value)        params.min_price = document.getElementById('minPrice').value;
+    if (document.getElementById('maxPrice').value)        params.max_price = document.getElementById('maxPrice').value;
+    if (document.getElementById('inStockOnly').checked)   params.in_stock  = 'true';
 
     try {
       const data     = await API.products.list(params);
-      const products = data.results || data;
-      document.getElementById('productsCount').textContent = `${products.length} produto(s)`;
+      const products = data.results ?? data;
+      totalCount     = data.count   ?? products.length;
+
+      document.getElementById('productsCount').textContent =
+        `${totalCount} produto(s)`;
 
       if (!products.length) {
-        grid.innerHTML = `<div class="text-muted text-center" style="grid-column:1/-1; padding:60px 0">
+        grid.innerHTML = `<div class="text-muted text-center" style="grid-column:1/-1;padding:60px 0">
           🔍 Nenhum produto encontrado.
         </div>`;
+        renderPagination(0);
         return;
       }
+
       grid.innerHTML = products.map(p => productCard(p)).join('');
+      renderPagination(totalCount);
+
+      // Scroll suave pro topo da grid ao trocar de página
+      grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
     } catch (_) {
       grid.innerHTML = '<p class="text-muted text-center">Erro ao carregar produtos.</p>';
+      renderPagination(0);
     }
   }
 
+  // ════════════════════════════════
+  //  PAGINAÇÃO
+  // ════════════════════════════════
+  function renderPagination(total) {
+    const container  = document.getElementById('pagination');
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+    const pages = getPageRange(currentPage, totalPages);
+    let html    = '';
+
+    // Botão anterior
+    html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''}
+              onclick="applyFilters(${currentPage - 1})">← Anterior</button>`;
+
+    // Números de página com reticências
+    pages.forEach(p => {
+      if (p === '...') {
+        html += `<span class="page-btn" style="cursor:default;opacity:0.4">…</span>`;
+      } else {
+        html += `<button class="page-btn ${p === currentPage ? 'active' : ''}"
+                  onclick="applyFilters(${p})">${p}</button>`;
+      }
+    });
+
+    // Botão próxima
+    html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''}
+              onclick="applyFilters(${currentPage + 1})">Próxima →</button>`;
+
+    container.innerHTML = html;
+  }
+
+  // Gera intervalo inteligente: [1, ..., 4, 5, 6, ..., 12]
+  function getPageRange(current, total) {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+    const pages = new Set([1, total, current]);
+    if (current > 1) pages.add(current - 1);
+    if (current < total) pages.add(current + 1);
+
+    const sorted = [...pages].sort((a, b) => a - b);
+    const result = [];
+
+    sorted.forEach((p, i) => {
+      if (i > 0 && p - sorted[i - 1] > 1) result.push('...');
+      result.push(p);
+    });
+
+    return result;
+  }
+
+  // ════════════════════════════════
+  //  LIMPAR FILTROS
+  // ════════════════════════════════
   function clearFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('minPrice').value    = '';
-    document.getElementById('maxPrice').value    = '';
-    document.getElementById('inStockOnly').checked = false;
+    document.getElementById('searchInput').value    = '';
+    document.getElementById('minPrice').value        = '';
+    document.getElementById('maxPrice').value        = '';
+    document.getElementById('inStockOnly').checked   = false;
     setCategory('');
   }
 
+  // ════════════════════════════════
+  //  CARD DE PRODUTO
+  // ════════════════════════════════
   function productCard(p) {
     return `
       <div class="product-card" onclick="window.location='/pages/product-detail.html?id=${p.id}'">
         <div class="product-img-wrap">
-          ${p.image_url ? `<img class="product-img" src="${p.image_url}" alt="${p.name}" loading="lazy"/>` : `<div class="product-img-placeholder">🏺</div>`}
+          ${p.image_url
+            ? `<img class="product-img" src="${p.image_url}" alt="${p.name}" loading="lazy"/>`
+            : `<div class="product-img-placeholder">🏺</div>`}
           ${!p.in_stock ? '<div class="out-of-stock-overlay">ESGOTADO</div>' : ''}
         </div>
         <div class="product-body">
@@ -245,6 +328,9 @@
       </div>`;
   }
 
+  // ════════════════════════════════
+  //  CARRINHO
+  // ════════════════════════════════
   async function addToCart(id) {
     if (!Auth.isLogged()) { window.location.href = '/pages/login.html'; return; }
     try {
@@ -256,9 +342,9 @@
     }
   }
 
-  // Enter na busca
+  // Enter na busca → volta pra página 1
   document.getElementById('searchInput')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') applyFilters();
+    if (e.key === 'Enter') applyFilters(1);
   });
 
   loadCategories();
