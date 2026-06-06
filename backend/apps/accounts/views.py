@@ -28,10 +28,11 @@ class RegisterView(generics.CreateAPIView):
         user = serializer.save()
         tokens = _get_tokens(user)
 
-        # Envia e-mail em background — não trava o registro
-        thread = threading.Thread(target=self._send_email, args=(user,))
-        thread.daemon = True
-        thread.start()
+        # ✅ Envia direto — sem thread
+        try:
+            send_welcome_email(user)
+        except Exception as e:
+            logger.error(f"[EMAIL] Boas-vindas falhou para {user.email}: {e}")
 
         return Response({
             'user': UserSerializer(user).data,

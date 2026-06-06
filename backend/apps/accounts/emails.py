@@ -1,5 +1,3 @@
-# accounts/emails.py
-
 import logging
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -15,7 +13,6 @@ def send_welcome_email(user):
       <div style="max-width:520px;margin:40px auto;background:#1a1a1a;
                   border:1px solid #c9a227;border-radius:12px;overflow:hidden">
 
-        <!-- Header -->
         <div style="background:linear-gradient(135deg,#1a1a1a,#2a2a2a);
                     padding:40px 32px;text-align:center;
                     border-bottom:2px solid #c9a227">
@@ -28,7 +25,6 @@ def send_welcome_email(user):
           </p>
         </div>
 
-        <!-- Body -->
         <div style="padding:36px 32px">
           <h2 style="color:#fff;font-size:1.3rem;margin:0 0 12px">
             Bem-vindo, {user.name}! 🎉
@@ -53,7 +49,6 @@ def send_welcome_email(user):
           </p>
         </div>
 
-        <!-- Footer -->
         <div style="background:#111;padding:20px 32px;text-align:center;
                     border-top:1px solid #333">
           <p style="color:#555;font-size:0.78rem;margin:0">
@@ -68,11 +63,11 @@ def send_welcome_email(user):
 
     msg = EmailMultiAlternatives(
         subject='⚔️ Bem-vindo à Glins Store!',
-        body=f'Olá {user.name}, sua conta foi criada com sucesso na Glins Store! Acesse: {settings.FRONTEND_URL}',
+        body=f'Olá {user.name}, sua conta foi criada com sucesso na Glins Store!',
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user.email],
     )
     msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)  # ← agora lança exceção se falhar
+    msg.send(fail_silently=False)  # ← lança exceção se falhar
 
     logger.info(f"[EMAIL] ✅ Boas-vindas enviado para {user.email}")
