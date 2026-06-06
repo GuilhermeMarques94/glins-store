@@ -68,6 +68,4 @@ def send_welcome_email(user):
         to=[user.email],
     )
     msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)  # ← lança exceção se falhar
-
-    logger.info(f"[EMAIL] ✅ Boas-vindas enviado para {user.email}")
+    msg.send(fail_silently=False)

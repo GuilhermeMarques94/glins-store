@@ -28,16 +28,23 @@ class RegisterView(generics.CreateAPIView):
         user = serializer.save()
         tokens = _get_tokens(user)
 
-        # ✅ Envia direto — sem thread
-        try:
-            send_welcome_email(user)
-        except Exception as e:
-            logger.error(f"[EMAIL] Boas-vindas falhou para {user.email}: {e}")
+        # ✅ Thread sem daemon=True — Gunicorn não mata antes de terminar
+        thread = threading.Thread(target=self._send_email, args=(user,))
+        thread.daemon = False  # ← era True antes, esse era o problema
+        thread.start()
 
         return Response({
             'user': UserSerializer(user).data,
             **tokens
         }, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def _send_email(user):
+        try:
+            send_welcome_email(user)
+            logger.info(f"[EMAIL] ✅ Boas-vindas enviado para {user.email}")
+        except Exception as e:
+            logger.error(f"[EMAIL] ❌ Boas-vindas falhou para {user.email}: {e}")
 
     @staticmethod
     def _send_email(user):
