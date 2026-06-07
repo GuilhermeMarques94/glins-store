@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'anymail',
     # Local
     'apps.accounts',
     'apps.products',
@@ -136,11 +137,12 @@ FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://glins-store.vercel.app')
 BACKEND_URL = os.environ.get('BACKEND_URL', 'https://glins-store-api.onrender.com')  # ✅ NOVO
 
 # ── Email ──────────────────────────────────────────────────────────────
-EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST          = 'smtp.gmail.com'
-EMAIL_PORT          = 587
-EMAIL_USE_TLS       = True
-EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '')
-DEFAULT_FROM_EMAIL  = f'Glins Store <{os.environ.get("EMAIL_HOST_USER", "")}>'
-ADMIN_EMAIL         = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
+
+ANYMAIL = {
+    "SENDINBLUE_API_KEY": os.environ.get("BREVO_API_KEY"),
+}
+
+DEFAULT_FROM_EMAIL = "Glins Store <glins.store.cardgame@gmail.com>"
+SERVER_EMAIL       = "glins.store.cardgame@gmail.com"
+ADMIN_EMAIL        = "glins.store.cardgame@gmail.com"
