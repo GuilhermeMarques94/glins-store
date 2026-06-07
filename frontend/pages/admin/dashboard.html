@@ -428,6 +428,12 @@
   let allOrders   = [];
   let categories  = [];
 
+  // ══ Paginação ══
+  let productCurrentPage  = 1;
+  let productTotalCount   = 0;
+  const PRODUCTS_PER_PAGE = 20;
+  let searchDebounceTimer = null;
+
   // ══ Normaliza resposta paginada ou array direto ══
   function toArray(response) {
     if (!response) return [];
@@ -472,7 +478,7 @@
     el?.classList.add('active');
 
     if (name === 'dashboard')  loadDashboard();
-    if (name === 'products')   loadProducts();
+    if (name === 'products')   loadProducts(1);
     if (name === 'categories') loadCategories();
     if (name === 'orders')     loadOrders();
   }
@@ -585,30 +591,67 @@
   // ════════════════════════════════════════
   //  PRODUTOS
   // ════════════════════════════════════════
-  async function loadProducts() {
+  function debounceSearch() {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      productCurrentPage = 1;
+      loadProducts(1);
+    }, 400);
+  }
+
+  function applyFilters() {
+    productCurrentPage = 1;
+    loadProducts(1);
+  }
+
+  async function loadProducts(page = null) {
+    if (page !== null) productCurrentPage = page;
+
     const tb = document.getElementById('products-table');
     tb.innerHTML = '<tr><td colspan="7" class="text-center"><div class="loader"></div></td></tr>';
+    document.getElementById('products-pagination').innerHTML = '';
+
+    const search = document.getElementById('productSearch')?.value?.trim() || '';
+    const cat    = document.getElementById('productCatFilter')?.value   || '';
+    const status = document.getElementById('productStatusFilter')?.value || '';
+
+    const params = { page: productCurrentPage };
+    if (search) params.search   = search;
+    if (cat)    params.category = cat;
+    if (status) params.status   = status;
+
     try {
-      const [rawProducts, rawCats] = await Promise.all([
-        API.products.adminList(),
-        API.categories.list()
-      ]);
-
-      console.log('📦 Products raw:', rawProducts);
-
-      allProducts = toArray(rawProducts);
-      categories  = toArray(rawCats);
-
-      console.log(`📦 Products parsed: ${allProducts.length}`);
-
+      // Sempre recarrega categorias para manter o select atualizado
+      const rawCats  = await API.categories.list();
+      categories     = toArray(rawCats);
       const catFilter = document.getElementById('productCatFilter');
+      const currentCatVal = catFilter.value;
       catFilter.innerHTML = '<option value="">Todas as categorias</option>' +
         categories.map(c => `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`).join('');
+      catFilter.value = currentCatVal; // restaura seleção atual
+
+      const rawProducts = await API.products.adminList(params);
+      console.log('📦 Products raw:', rawProducts);
+
+      // Suporta resposta paginada { count, results } ou array direto
+      if (rawProducts && typeof rawProducts === 'object' && 'results' in rawProducts) {
+        allProducts       = rawProducts.results;
+        productTotalCount = rawProducts.count;
+      } else {
+        allProducts       = toArray(rawProducts);
+        productTotalCount = allProducts.length;
+      }
+
+      console.log(`📦 Products: ${allProducts.length} | Total: ${productTotalCount}`);
 
       renderProducts(allProducts);
+      renderPagination();
+
     } catch (e) {
       console.error('[Produtos]', e);
-      tb.innerHTML = `<tr><td colspan="7" class="text-muted text-center" style="padding:20px">❌ Erro: ${e?.detail || e?.message || 'Falha ao carregar produtos'}</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="7" class="text-muted text-center" style="padding:20px">
+        ❌ Erro: ${e?.detail || e?.message || 'Falha ao carregar produtos'}
+      </td></tr>`;
     }
   }
 
@@ -619,21 +662,25 @@
       return;
     }
     tb.innerHTML = products.map(p => {
-      const stock = p.stock ?? p.quantity ?? 0;
+      const stock      = p.stock ?? p.quantity ?? 0;
       const stockClass = stock === 0 ? 'badge-danger' : stock <= 5 ? 'badge-gold' : 'badge-success';
-      // ✅ Campo correto da API
-      const thumb = p.image_url || p.image || p.thumbnail || p.cover_image || null;
+      const thumb      = p.image_url || p.image || p.thumbnail || p.cover_image || null;
       return `
         <tr>
           <td>
             ${thumb
-              ? `<img class="product-thumb" src="${thumb}" alt="${p.name}" onerror="this.style.display='none';this.nextSibling.style.display='flex'"/>
-                 <div class="product-thumb-placeholder" style="display:none">🏺</div>`
+              ? `<img class="product-thumb" src="${thumb}" alt="${p.name}"
+                      onerror="this.style.display='none';this.nextSibling.style.display='flex'"/>
+                <div class="product-thumb-placeholder" style="display:none">🏺</div>`
               : `<div class="product-thumb-placeholder">🏺</div>`}
           </td>
           <td>
             <strong>${p.name}</strong>
-            ${p.description ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description}</div>` : ''}
+            ${p.description
+              ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;
+                            max-width:200px;overflow:hidden;text-overflow:ellipsis;
+                            white-space:nowrap">${p.description}</div>`
+              : ''}
           </td>
           <td>${p.category_name || p.category?.name || '<span class="text-muted">—</span>'}</td>
           <td><strong>${formatPrice(p.price)}</strong></td>
@@ -642,25 +689,63 @@
             ? '<span class="badge badge-success">Ativo</span>'
             : '<span class="badge badge-muted">Inativo</span>'}</td>
           <td style="white-space:nowrap">
-            <button class="btn btn-outline btn-sm" onclick="openProductModal(${p.id})" title="Editar">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id}, '${(p.name || '').replace(/'/g,"\\'")}')">🗑️</button>
+            <button class="btn btn-outline btn-sm"
+                    onclick="openProductModal(${p.id})" title="Editar">✏️</button>
+            <button class="btn btn-danger btn-sm"
+                    onclick="deleteProduct(${p.id}, '${(p.name || '').replace(/'/g,"\\'")}')">🗑️</button>
           </td>
         </tr>`;
     }).join('');
   }
 
-  function filterProducts() {
-    const search = document.getElementById('productSearch').value.toLowerCase();
-    const cat    = document.getElementById('productCatFilter').value;
-    const status = document.getElementById('productStatusFilter').value;
+  function renderPagination() {
+    const container  = document.getElementById('products-pagination');
+    const totalPages = Math.ceil(productTotalCount / PRODUCTS_PER_PAGE);
+    const start      = (productCurrentPage - 1) * PRODUCTS_PER_PAGE + 1;
+    const end        = Math.min(productCurrentPage * PRODUCTS_PER_PAGE, productTotalCount);
 
-    const filtered = allProducts.filter(p => {
-      const matchSearch = (p.name || '').toLowerCase().includes(search);
-      const matchCat    = !cat    || String(p.category?.id || p.category) === cat;
-      const matchStatus = !status || (status === 'active' ? p.is_active !== false : p.is_active === false);
-      return matchSearch && matchCat && matchStatus;
-    });
-    renderProducts(filtered);
+    if (totalPages <= 1) {
+      container.innerHTML = `<span class="text-muted" style="font-size:0.82rem">
+        ${productTotalCount} produto${productTotalCount !== 1 ? 's' : ''} encontrado${productTotalCount !== 1 ? 's' : ''}
+      </span>`;
+      return;
+    }
+
+    // Gera números de páginas visíveis (janela de 5 ao redor da atual)
+    const pages = [];
+    const delta = 2;
+    for (let i = Math.max(1, productCurrentPage - delta);
+             i <= Math.min(totalPages, productCurrentPage + delta); i++) {
+      pages.push(i);
+    }
+
+    const btnStyle = (active) =>
+      `style="padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:0.82rem;
+              border:1px solid ${active ? 'var(--primary)' : 'var(--border)'};
+              background:${active ? 'var(--primary)' : 'transparent'};
+              color:${active ? '#000' : 'var(--text-light)'}"`;
+
+    container.innerHTML = `
+      <span class="text-muted" style="font-size:0.82rem">
+        Exibindo <strong>${start}–${end}</strong> de <strong>${productTotalCount}</strong> produtos
+      </span>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button ${btnStyle(false)}
+                onclick="loadProducts(1)"
+                ${productCurrentPage === 1 ? 'disabled' : ''}>«</button>
+        <button ${btnStyle(false)}
+                onclick="loadProducts(${productCurrentPage - 1})"
+                ${productCurrentPage === 1 ? 'disabled' : ''}>‹</button>
+        ${pages.map(p => `
+          <button ${btnStyle(p === productCurrentPage)}
+                  onclick="loadProducts(${p})">${p}</button>`).join('')}
+        <button ${btnStyle(false)}
+                onclick="loadProducts(${productCurrentPage + 1})"
+                ${productCurrentPage === totalPages ? 'disabled' : ''}>›</button>
+        <button ${btnStyle(false)}
+                onclick="loadProducts(${totalPages})"
+                ${productCurrentPage === totalPages ? 'disabled' : ''}>»</button>
+      </div>`;
   }
 
   async function deleteProduct(id, name) {
@@ -668,7 +753,7 @@
     try {
       await API.products.delete(id);
       showToast('Produto deletado com sucesso', 'success');
-      loadProducts();
+      loadProducts(productCurrentPage);
     } catch (_) { showToast('Erro ao deletar produto', 'error'); }
   }
 
@@ -717,7 +802,7 @@
             <textarea id="pDesc" class="form-control" rows="3" placeholder="Descreva o produto..."></textarea>
           </div>
 
-          <!-- ✅ Imagem principal por URL com preview -->
+          <!-- Imagem principal por URL com preview -->
           <div class="form-group">
             <label>🖼️ URL da imagem principal</label>
             <div style="display:flex;gap:10px;align-items:center">
@@ -731,13 +816,13 @@
           </div>
 
           ${isEdit ? `
-          <!-- ✅ Galeria de imagens adicionais -->
+          <!-- Galeria de imagens adicionais -->
           <div class="form-group">
             <label>Imagens adicionais</label>
             <div class="image-gallery" id="currentImages"><div class="loader"></div></div>
           </div>` : ''}
 
-          <!-- ✅ Adicionar imagem extra por URL -->
+          <!-- Adicionar imagem extra por URL -->
           <div class="form-group">
             <label>${isEdit ? 'Adicionar imagem extra' : 'Imagem extra (URL)'}</label>
             <div style="display:flex;gap:10px">
@@ -768,13 +853,11 @@
         document.getElementById('pActive').value   = p.is_active !== false ? 'true' : 'false';
         document.getElementById('pCategory').value = p.category?.id || p.category || '';
 
-        // ✅ Preenche e exibe preview da imagem principal
         if (p.image_url) {
           document.getElementById('pImageUrl').value = p.image_url;
           updateMainPreview(p.image_url);
         }
 
-        // ✅ Galeria adicional — usa image_url (campo correto da API)
         const gallery = document.getElementById('currentImages');
         const imgs = toArray(p.images);
         gallery.innerHTML = imgs.length
@@ -807,18 +890,17 @@
         description: document.getElementById('pDesc').value.trim(),
         category:    document.getElementById('pCategory').value || null,
         is_active:   document.getElementById('pActive').value === 'true',
-        // ✅ Salva image_url direto no payload do produto
         image_url:   document.getElementById('pImageUrl').value.trim() || '',
       };
 
       try {
-        const product = isEdit
+        isEdit
           ? await API.products.update(id, data)
           : await API.products.create(data);
 
         showToast(isEdit ? '✅ Produto atualizado!' : '✅ Produto criado!', 'success');
         closeModal();
-        loadProducts();
+        loadProducts(productCurrentPage);
       } catch (err) {
         console.error('[Salvar Produto]', err);
         const msg = err?.name?.[0] || err?.price?.[0] || err?.detail || 'Erro ao salvar produto';
@@ -829,7 +911,7 @@
     });
   }
 
-  // ✅ Preview ao vivo da imagem principal
+  // Preview ao vivo da imagem principal
   function updateMainPreview(url) {
     const img = document.getElementById('mainImgPreview');
     if (!img) return;
@@ -842,7 +924,7 @@
     }
   }
 
-  // ✅ Adiciona imagem extra via URL (endpoint de galeria)
+  // Adiciona imagem extra via URL (endpoint de galeria)
   async function addExtraImage(productId) {
     const input = document.getElementById('pNewImageUrl');
     const url = input?.value?.trim();
@@ -857,7 +939,7 @@
       await API.products.addImage(productId, { image_url: url, order: 0 });
       showToast('✅ Imagem adicionada!', 'success');
       input.value = '';
-      openProductModal(productId); // recarrega modal com galeria atualizada
+      openProductModal(productId);
     } catch(e) {
       console.error('[Add Imagem]', e);
       showToast(e?.detail || 'Erro ao adicionar imagem', 'error');
@@ -1044,7 +1126,6 @@
     document.getElementById('modal-container').appendChild(modal);
 
     try {
-      // ✅ Usa adminDetail para evitar "No Order matches" do endpoint de usuário
       const o = await API.orders.adminDetail(id);
       console.log('📋 Order detail:', o);
 
@@ -1137,198 +1218,8 @@
   }
 
   // ════════════════════════════════════════
-  //  PRODUTOS (com paginação + busca backend)
+  //  INIT
   // ════════════════════════════════════════
-  let productCurrentPage  = 1;
-  let productTotalCount   = 0;
-  const PRODUCTS_PER_PAGE = 20;
-  let searchDebounceTimer = null;
-
-  function debounceSearch() {
-    clearTimeout(searchDebounceTimer);
-    searchDebounceTimer = setTimeout(() => {
-      productCurrentPage = 1;
-      applyFilters();
-    }, 400);
-  }
-
-  function applyFilters() {
-    productCurrentPage = 1;
-    loadProducts();
-  }
-
-  async function loadProducts(page = null) {
-    if (page !== null) productCurrentPage = page;
-
-    const tb = document.getElementById('products-table');
-    tb.innerHTML = '<tr><td colspan="7" class="text-center"><div class="loader"></div></td></tr>';
-    document.getElementById('products-pagination').innerHTML = '';
-
-    const search = document.getElementById('productSearch')?.value?.trim() || '';
-    const cat    = document.getElementById('productCatFilter')?.value   || '';
-    const status = document.getElementById('productStatusFilter')?.value || '';
-
-    const params = { page: productCurrentPage };
-    if (search) params.search  = search;
-    if (cat)    params.category = cat;
-    if (status) params.status  = status;
-
-    try {
-      // Carrega categorias só na primeira vez
-      if (categories.length === 0) {
-        const rawCats = await API.categories.list();
-        categories    = toArray(rawCats);
-        const catFilter = document.getElementById('productCatFilter');
-        catFilter.innerHTML = '<option value="">Todas as categorias</option>' +
-          categories.map(c => `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`).join('');
-      }
-
-      const rawProducts = await API.products.adminList(params);
-      console.log('📦 Products raw:', rawProducts);
-
-      // Suporta resposta paginada { count, results } ou array direto
-      if (rawProducts && typeof rawProducts === 'object' && 'results' in rawProducts) {
-        allProducts        = rawProducts.results;
-        productTotalCount  = rawProducts.count;
-      } else {
-        allProducts       = toArray(rawProducts);
-        productTotalCount = allProducts.length;
-      }
-
-      console.log(`📦 Products: ${allProducts.length} | Total: ${productTotalCount}`);
-
-      renderProducts(allProducts);
-      renderPagination();
-
-    } catch (e) {
-      console.error('[Produtos]', e);
-      tb.innerHTML = `<tr><td colspan="7" class="text-muted text-center" style="padding:20px">
-        ❌ Erro: ${e?.detail || e?.message || 'Falha ao carregar produtos'}
-      </td></tr>`;
-    }
-  }
-
-  function renderProducts(products) {
-    const tb = document.getElementById('products-table');
-    if (!products.length) {
-      tb.innerHTML = '<tr><td colspan="7" class="text-muted text-center" style="padding:20px">Nenhum produto encontrado.</td></tr>';
-      return;
-    }
-    tb.innerHTML = products.map(p => {
-      const stock      = p.stock ?? p.quantity ?? 0;
-      const stockClass = stock === 0 ? 'badge-danger' : stock <= 5 ? 'badge-gold' : 'badge-success';
-      const thumb      = p.image_url || p.image || p.thumbnail || p.cover_image || null;
-      return `
-        <tr>
-          <td>
-            ${thumb
-              ? `<img class="product-thumb" src="${thumb}" alt="${p.name}"
-                      onerror="this.style.display='none';this.nextSibling.style.display='flex'"/>
-                <div class="product-thumb-placeholder" style="display:none">🏺</div>`
-              : `<div class="product-thumb-placeholder">🏺</div>`}
-          </td>
-          <td>
-            <strong>${p.name}</strong>
-            ${p.description
-              ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;
-                            max-width:200px;overflow:hidden;text-overflow:ellipsis;
-                            white-space:nowrap">${p.description}</div>`
-              : ''}
-          </td>
-          <td>${p.category_name || p.category?.name || '<span class="text-muted">—</span>'}</td>
-          <td><strong>${formatPrice(p.price)}</strong></td>
-          <td><span class="badge ${stockClass}">${stock}</span></td>
-          <td>${p.is_active !== false
-            ? '<span class="badge badge-success">Ativo</span>'
-            : '<span class="badge badge-muted">Inativo</span>'}</td>
-          <td style="white-space:nowrap">
-            <button class="btn btn-outline btn-sm"
-                    onclick="openProductModal(${p.id})" title="Editar">✏️</button>
-            <button class="btn btn-danger btn-sm"
-                    onclick="deleteProduct(${p.id}, '${(p.name || '').replace(/'/g,"\\'")}')">🗑️</button>
-          </td>
-        </tr>`;
-    }).join('');
-  }
-
-  function renderPagination() {
-    const container   = document.getElementById('products-pagination');
-    const totalPages  = Math.ceil(productTotalCount / PRODUCTS_PER_PAGE);
-    const start       = (productCurrentPage - 1) * PRODUCTS_PER_PAGE + 1;
-    const end         = Math.min(productCurrentPage * PRODUCTS_PER_PAGE, productTotalCount);
-
-    if (totalPages <= 1) {
-      container.innerHTML = `<span class="text-muted" style="font-size:0.82rem">
-        ${productTotalCount} produto${productTotalCount !== 1 ? 's' : ''} encontrado${productTotalCount !== 1 ? 's' : ''}
-      </span>`;
-      return;
-    }
-
-    // Gera números de páginas visíveis (janela de 5 ao redor da atual)
-    const pages = [];
-    const delta = 2;
-    for (let i = Math.max(1, productCurrentPage - delta);
-            i <= Math.min(totalPages, productCurrentPage + delta); i++) {
-      pages.push(i);
-    }
-
-    container.innerHTML = `
-      <span class="text-muted" style="font-size:0.82rem">
-        Exibindo <strong>${start}–${end}</strong> de <strong>${productTotalCount}</strong> produtos
-      </span>
-      <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap">
-        <button class="btn btn-outline btn-sm"
-                onclick="loadProducts(1)"
-                ${productCurrentPage === 1 ? 'disabled' : ''}>«</button>
-        <button class="btn btn-outline btn-sm"
-                onclick="loadProducts(${productCurrentPage - 1})"
-                ${productCurrentPage === 1 ? 'disabled' : ''}>‹ Anterior</button>
-
-        ${pages[0] > 1 ? `
-          <button class="btn btn-outline btn-sm" onclick="loadProducts(1)">1</button>
-          ${pages[0] > 2 ? `<span style="color:var(--text-muted)">…</span>` : ''}
-        ` : ''}
-
-        ${pages.map(p => `
-          <button class="btn btn-sm ${p === productCurrentPage ? 'btn-primary' : 'btn-outline'}"
-                  onclick="loadProducts(${p})">${p}</button>
-        `).join('')}
-
-        ${pages[pages.length - 1] < totalPages ? `
-          ${pages[pages.length - 1] < totalPages - 1 ? `<span style="color:var(--text-muted)">…</span>` : ''}
-          <button class="btn btn-outline btn-sm" onclick="loadProducts(${totalPages})">${totalPages}</button>
-        ` : ''}
-
-        <button class="btn btn-outline btn-sm"
-                onclick="loadProducts(${productCurrentPage + 1})"
-                ${productCurrentPage === totalPages ? 'disabled' : ''}>Próximo ›</button>
-        <button class="btn btn-outline btn-sm"
-                onclick="loadProducts(${totalPages})"
-                ${productCurrentPage === totalPages ? 'disabled' : ''}>»</button>
-      </div>`;
-  }
-
-  async function deleteProduct(id, name) {
-    if (!confirm(`Deletar o produto "${name}"?\nEsta ação não pode ser desfeita.`)) return;
-    try {
-      await API.products.delete(id);
-      showToast('Produto deletado com sucesso', 'success');
-      loadProducts(); // recarrega página atual
-    } catch (_) { showToast('Erro ao deletar produto', 'error'); }
-  }
-
-
-  // ════════════════════════════════════════
-  //  UTILS
-  // ════════════════════════════════════════
-  function closeModal() {
-    document.getElementById('modal-container').innerHTML = '';
-  }
-
-  document.getElementById('modal-container').addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal-overlay')) closeModal();
-  });
-
   loadDashboard();
 </script>
 </body>

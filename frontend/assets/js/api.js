@@ -25,6 +25,12 @@ const Auth = {
   }
 };
 
+// ── Query string helper ────────────────
+function buildQuery(params = {}) {
+  const qs = new URLSearchParams(params).toString();
+  return qs ? '?' + qs : '';
+}
+
 // ── Fetch wrapper ──────────────────────
 async function apiFetch(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
@@ -79,67 +85,64 @@ const API = {
 
   // ── Products ──────────────────────────
   products: {
-    list:      (params = {}) => apiFetch('/products/?' + new URLSearchParams(params)),
+    list:      (params = {}) => apiFetch('/products/'            + buildQuery(params)),
     detail:    (id)          => apiFetch(`/products/${id}/`),
-    create:    (data)        => apiFetch('/products/',       { method: 'POST',   body: JSON.stringify(data) }),
-    update:    (id, data)    => apiFetch(`/products/${id}/`, { method: 'PUT',    body: JSON.stringify(data) }),
-    delete:    (id)          => apiFetch(`/products/${id}/`, { method: 'DELETE' }),
-    adminList: ()            => apiFetch('/products/admin/all/'),
+    create:    (data)        => apiFetch('/products/',            { method: 'POST',   body: JSON.stringify(data) }),
+    update:    (id, data)    => apiFetch(`/products/${id}/`,      { method: 'PUT',    body: JSON.stringify(data) }),
+    delete:    (id)          => apiFetch(`/products/${id}/`,      { method: 'DELETE' }),
+
+    // ✅ CORRIGIDO — agora aceita e repassa params (search, category, is_active, page)
+    adminList: (params = {}) => apiFetch('/products/admin/all/' + buildQuery(params)),
 
     // ── Galeria de imagens ──
-    getImages:   (id)        => apiFetch(`/products/${id}/images/`),
-    deleteImage: (id, imgId) => apiFetch(`/products/${id}/images/${imgId}/`, { method: 'DELETE' }),
-
-    // ✅ Adiciona imagem por URL (JSON)
-    addImage: (id, data) => apiFetch(`/products/${id}/images/`, {
+    getImages:    (id)        => apiFetch(`/products/${id}/images/`),
+    deleteImage:  (id, imgId) => apiFetch(`/products/${id}/images/${imgId}/`, { method: 'DELETE' }),
+    addImage:     (id, data)  => apiFetch(`/products/${id}/images/`, {
       method: 'POST',
-      body: JSON.stringify(data) // { image_url: "https://...", order: 0 }
+      body: JSON.stringify(data)
     }),
-
-    // ✅ Adiciona imagem por upload de arquivo (multipart)
     addImageFile: (id, file, order = 0) => {
       const form = new FormData();
       form.append('image', file);
       form.append('order', order);
       return apiFetch(`/products/${id}/images/`, {
         method: 'POST',
-        headers: {}, // browser define o boundary automaticamente
+        headers: {},
         body: form
       });
     },
   },
 
-
   // ── Categories ────────────────────────
   categories: {
-    list:   ()      => apiFetch('/products/categories/').then(r => r.results ?? r),
-    create: (data)  => apiFetch('/products/categories/',       { method: 'POST',   body: JSON.stringify(data) }),
-    update: (id, d) => apiFetch(`/products/categories/${id}/`, { method: 'PUT',    body: JSON.stringify(d) }),
-    delete: (id)    => apiFetch(`/products/categories/${id}/`, { method: 'DELETE' }),
+    list:   ()         => apiFetch('/products/categories/').then(r => r.results ?? r),
+    create: (data)     => apiFetch('/products/categories/',        { method: 'POST',   body: JSON.stringify(data) }),
+    update: (id, data) => apiFetch(`/products/categories/${id}/`,  { method: 'PUT',    body: JSON.stringify(data) }),
+    delete: (id)       => apiFetch(`/products/categories/${id}/`,  { method: 'DELETE' }),
   },
 
   // ── Cart ──────────────────────────────
   cart: {
     get:    ()        => apiFetch('/cart/'),
-    add:    (data)    => apiFetch('/cart/',       { method: 'POST',   body: JSON.stringify(data) }),
-    update: (id, qty) => apiFetch(`/cart/${id}/`, { method: 'PATCH',  body: JSON.stringify({ quantity: qty }) }),
-    remove: (id)      => apiFetch(`/cart/${id}/`, { method: 'DELETE' }),
-    clear:  ()        => apiFetch('/cart/',        { method: 'DELETE' }),
+    add:    (data)    => apiFetch('/cart/',        { method: 'POST',   body: JSON.stringify(data) }),
+    update: (id, qty) => apiFetch(`/cart/${id}/`,  { method: 'PATCH',  body: JSON.stringify({ quantity: qty }) }),
+    remove: (id)      => apiFetch(`/cart/${id}/`,  { method: 'DELETE' }),
+    clear:  ()        => apiFetch('/cart/',         { method: 'DELETE' }),
   },
 
   // ── Orders ────────────────────────────
   orders: {
-    list:           ()       => apiFetch('/orders/'),
-    detail:         (id)     => apiFetch(`/orders/${id}/`),
-    create:         (data)   => apiFetch('/orders/', { method: 'POST', body: JSON.stringify(data) }),
-    adminList: (params = {}) => apiFetch('/products/admin/all/?' + new URLSearchParams(params)),
+    list:           ()            => apiFetch('/orders/'),
+    detail:         (id)          => apiFetch(`/orders/${id}/`),
+    create:         (data)        => apiFetch('/orders/',            { method: 'POST',  body: JSON.stringify(data) }),
 
-    // ✅ Detalhe pelo endpoint admin (evita "No Order matches" do endpoint de usuário)
-    adminDetail:    (id)     => apiFetch(`/orders/admin/${id}/`),
+    // ✅ CORRIGIDO — endpoint correto de pedidos
+    adminList:      (params = {}) => apiFetch('/orders/admin/'       + buildQuery(params)),
+    adminDetail:    (id)          => apiFetch(`/orders/admin/${id}/`),
+    adminUpdate:    (id, data)    => apiFetch(`/orders/admin/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
 
-    adminUpdate:    (id, d)  => apiFetch(`/orders/admin/${id}/`, { method: 'PATCH', body: JSON.stringify(d) }),
-    calcShipping:   (data)   => apiFetch('/orders/shipping/',             { method: 'POST', body: JSON.stringify(data) }),
-    mpPreference:   (data)   => apiFetch('/orders/payment/preference/',   { method: 'POST', body: JSON.stringify(data) }),
-    processPayment: (data)   => apiFetch('/orders/payment/process/',      { method: 'POST', body: JSON.stringify(data) }),
+    calcShipping:   (data)        => apiFetch('/orders/shipping/',            { method: 'POST', body: JSON.stringify(data) }),
+    mpPreference:   (data)        => apiFetch('/orders/payment/preference/',  { method: 'POST', body: JSON.stringify(data) }),
+    processPayment: (data)        => apiFetch('/orders/payment/process/',     { method: 'POST', body: JSON.stringify(data) }),
   },
 };
