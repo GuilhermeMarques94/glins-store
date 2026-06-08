@@ -122,4 +122,4 @@ whitenoise==6.8.2
 wsproto==1.2.0
 yarl==1.24.2
 yt-dlp==2025.9.26
-django-anymail[sendinblue]==10.3
+resend

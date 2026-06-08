@@ -1,8 +1,10 @@
+import resend
 import logging
-from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+resend.api_key = settings.RESEND_API_KEY
 
 
 def send_welcome_email(user):
@@ -61,11 +63,14 @@ def send_welcome_email(user):
     </html>
     """
 
-    msg = EmailMultiAlternatives(
-        subject='⚔️ Bem-vindo à Glins Store!',
-        body=f'Olá {user.name}, sua conta foi criada com sucesso na Glins Store!',
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[user.email],
-    )
-    msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
+    try:
+        resend.Emails.send({
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": [user.email],
+            "subject": "⚔️ Bem-vindo à Glins Store!",
+            "html": html_content,
+        })
+        logger.info(f"[EMAIL] ✅ Boas-vindas enviado para {user.email}")
+    except Exception as e:
+        logger.error(f"[EMAIL] ❌ Falha ao enviar boas-vindas para {user.email}: {e}")
+        raise

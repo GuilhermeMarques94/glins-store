@@ -25,7 +25,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'anymail',
     # Local
     'apps.accounts',
     'apps.products',
@@ -74,9 +73,8 @@ if DATABASE_URL:
             conn_health_checks=True,
         )
     }
-    # Necessário para pgBouncer (Transaction Pooling) do Supabase
     DATABASES['default']['OPTIONS'] = {
-        'prepare_threshold': None,  # desabilita prepared statements
+        'prepare_threshold': None,
     }
 else:
     DATABASES = {'default': {
@@ -128,21 +126,14 @@ USE_TZ        = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Mercado Pago
+# ── Mercado Pago ───────────────────────────────────────────────────────
 MP_ACCESS_TOKEN = os.environ.get('MP_ACCESS_TOKEN', '')
 
-# URL do frontend
+# ── URLs ───────────────────────────────────────────────────────────────
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://glins-store.vercel.app')
+BACKEND_URL  = os.environ.get('BACKEND_URL', 'https://glins-store-api.onrender.com')
 
-BACKEND_URL = os.environ.get('BACKEND_URL', 'https://glins-store-api.onrender.com')  # ✅ NOVO
-
-# ── Email ──────────────────────────────────────────────────────────────
-EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
-
-ANYMAIL = {
-    "SENDINBLUE_API_KEY": os.environ.get("BREVO_API_KEY"),
-}
-
-DEFAULT_FROM_EMAIL = "Glins Store <glins.store.cardgame@gmail.com>"
-SERVER_EMAIL       = "glins.store.cardgame@gmail.com"
-ADMIN_EMAIL        = "glins.store.cardgame@gmail.com"
+# ── Email (Resend) ─────────────────────────────────────────────────────
+RESEND_API_KEY     = os.environ.get('RESEND_API_KEY', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Glins Store <noreply@glinsstore.com.br>')
+ADMIN_EMAIL        = os.environ.get('ADMIN_EMAIL', '')
