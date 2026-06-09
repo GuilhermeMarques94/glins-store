@@ -11,7 +11,8 @@ function showToast(message, type = 'info') {
     document.body.appendChild(container);
   }
 
-  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  // Linha que tem os icons, substituir por:
+  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
   toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
@@ -143,3 +144,19 @@ async function fetchViaCEP(cep, streetId, cityId, stateId, numberId) {
     showToast('Erro ao buscar CEP', 'error');
   }
 }
+
+// ── Modal ──────────────────────────────
+function closeModal() {
+  const container = document.getElementById('modal-container');
+  if (container) container.innerHTML = '';
+}
+
+// Fechar modal clicando no overlay
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) closeModal();
+});
+
+// Fechar modal com ESC
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});

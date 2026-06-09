@@ -322,8 +322,8 @@
 
       <div class="filter-bar">
         <input type="text" class="form-control" id="productSearch"
-              placeholder="🔍 Buscar produto..."
-              oninput="debounceSearch()"/>
+               placeholder="🔍 Buscar produto..."
+               oninput="debounceSearch()"/>
         <select class="form-control" id="productCatFilter" onchange="applyFilters()">
           <option value="">Todas as categorias</option>
         </select>
@@ -348,10 +348,8 @@
             </tbody>
           </table>
         </div>
-
-        <!-- Paginação -->
         <div id="products-pagination"
-            style="display:flex; align-items:center; justify-content:space-between;
+             style="display:flex; align-items:center; justify-content:space-between;
                     flex-wrap:wrap; gap:12px; padding:16px; border-top:1px solid var(--border)">
         </div>
       </div>
@@ -424,17 +422,39 @@
 <script>
   if (!requireAdmin()) {}
 
+  // ════════════════════════════════════════
+  //  CLOSE MODAL — CORRIGIDO ✅
+  // ════════════════════════════════════════
+  function closeModal() {
+    const container = document.getElementById('modal-container');
+    if (container) container.innerHTML = '';
+  }
+
+  // Fechar clicando fora do modal
+  document.getElementById('modal-container').addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay')) closeModal();
+  });
+
+  // Fechar com ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ════════════════════════════════════════
+  //  ESTADO GLOBAL
+  // ════════════════════════════════════════
   let allProducts = [];
   let allOrders   = [];
   let categories  = [];
 
-  // ══ Paginação ══
   let productCurrentPage  = 1;
   let productTotalCount   = 0;
   const PRODUCTS_PER_PAGE = 20;
   let searchDebounceTimer = null;
 
-  // ══ Normaliza resposta paginada ou array direto ══
+  // ════════════════════════════════════════
+  //  HELPERS
+  // ════════════════════════════════════════
   function toArray(response) {
     if (!response) return [];
     if (Array.isArray(response)) return response;
@@ -446,7 +466,6 @@
     return [];
   }
 
-  // ══ Extrai nome/email do cliente independente da estrutura ══
   function getClientName(order) {
     if (order.user?.name)       return order.user.name;
     if (order.user?.first_name) return `${order.user.first_name} ${order.user.last_name || ''}`.trim();
@@ -499,15 +518,9 @@
         API.categories.list()
       ]);
 
-      console.log('📦 RAW Products:', rawProducts);
-      console.log('📋 RAW Orders:',   rawOrders);
-      console.log('📂 RAW Cats:',     rawCats);
-
       const products = toArray(rawProducts);
       const orders   = toArray(rawOrders);
       const cats     = toArray(rawCats);
-
-      console.log(`✅ Products: ${products.length} | Orders: ${orders.length} | Cats: ${cats.length}`);
 
       const totalRevenue   = orders
         .filter(o => o.status !== 'cancelled')
@@ -542,7 +555,6 @@
           <div class="stat-label">Categorias</div>
         </div>`;
 
-      // Últimos 6 pedidos
       const recent = [...orders].slice(0, 6);
       document.getElementById('recent-orders').innerHTML = recent.length
         ? `<div class="table-wrapper"><table class="data-table">
@@ -557,7 +569,6 @@
             </tbody></table></div>`
         : '<p class="text-muted text-center" style="padding:20px">Nenhum pedido ainda.</p>';
 
-      // Estoque crítico (≤ 5)
       const lowStock = products
         .filter(p => (p.stock ?? p.quantity ?? 0) <= 5)
         .sort((a, b) => (a.stock ?? 0) - (b.stock ?? 0))
@@ -577,7 +588,7 @@
         : '<p class="text-muted text-center" style="padding:20px">✅ Estoque saudável!</p>';
 
     } catch (e) {
-      console.error('[Dashboard] ERRO COMPLETO:', e);
+      console.error('[Dashboard] ERRO:', e);
       const errBox = document.getElementById('dashboard-error');
       errBox.style.display = 'block';
       errBox.className = 'debug-box';
@@ -621,19 +632,16 @@
     if (status) params.status   = status;
 
     try {
-      // Sempre recarrega categorias para manter o select atualizado
       const rawCats  = await API.categories.list();
       categories     = toArray(rawCats);
       const catFilter = document.getElementById('productCatFilter');
       const currentCatVal = catFilter.value;
       catFilter.innerHTML = '<option value="">Todas as categorias</option>' +
         categories.map(c => `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`).join('');
-      catFilter.value = currentCatVal; // restaura seleção atual
+      catFilter.value = currentCatVal;
 
       const rawProducts = await API.products.adminList(params);
-      console.log('📦 Products raw:', rawProducts);
 
-      // Suporta resposta paginada { count, results } ou array direto
       if (rawProducts && typeof rawProducts === 'object' && 'results' in rawProducts) {
         allProducts       = rawProducts.results;
         productTotalCount = rawProducts.count;
@@ -641,8 +649,6 @@
         allProducts       = toArray(rawProducts);
         productTotalCount = allProducts.length;
       }
-
-      console.log(`📦 Products: ${allProducts.length} | Total: ${productTotalCount}`);
 
       renderProducts(allProducts);
       renderPagination();
@@ -711,7 +717,6 @@
       return;
     }
 
-    // Gera números de páginas visíveis (janela de 5 ao redor da atual)
     const pages = [];
     const delta = 2;
     for (let i = Math.max(1, productCurrentPage - delta);
@@ -730,20 +735,16 @@
         Exibindo <strong>${start}–${end}</strong> de <strong>${productTotalCount}</strong> produtos
       </span>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <button ${btnStyle(false)}
-                onclick="loadProducts(1)"
+        <button ${btnStyle(false)} onclick="loadProducts(1)"
                 ${productCurrentPage === 1 ? 'disabled' : ''}>«</button>
-        <button ${btnStyle(false)}
-                onclick="loadProducts(${productCurrentPage - 1})"
+        <button ${btnStyle(false)} onclick="loadProducts(${productCurrentPage - 1})"
                 ${productCurrentPage === 1 ? 'disabled' : ''}>‹</button>
         ${pages.map(p => `
           <button ${btnStyle(p === productCurrentPage)}
                   onclick="loadProducts(${p})">${p}</button>`).join('')}
-        <button ${btnStyle(false)}
-                onclick="loadProducts(${productCurrentPage + 1})"
+        <button ${btnStyle(false)} onclick="loadProducts(${productCurrentPage + 1})"
                 ${productCurrentPage === totalPages ? 'disabled' : ''}>›</button>
-        <button ${btnStyle(false)}
-                onclick="loadProducts(${totalPages})"
+        <button ${btnStyle(false)} onclick="loadProducts(${totalPages})"
                 ${productCurrentPage === totalPages ? 'disabled' : ''}>»</button>
       </div>`;
   }
@@ -757,7 +758,9 @@
     } catch (_) { showToast('Erro ao deletar produto', 'error'); }
   }
 
-  // ── Modal Produto ──────────────────────
+  // ════════════════════════════════════════
+  //  MODAL PRODUTO — CORRIGIDO ✅
+  // ════════════════════════════════════════
   async function openProductModal(id = null) {
     const isEdit = id !== null;
     closeModal();
@@ -801,14 +804,12 @@
             <label>Descrição</label>
             <textarea id="pDesc" class="form-control" rows="3" placeholder="Descreva o produto..."></textarea>
           </div>
-
-          <!-- Imagem principal por URL com preview -->
           <div class="form-group">
             <label>🖼️ URL da imagem principal</label>
             <div style="display:flex;gap:10px;align-items:center">
-              <img id="mainImgPreview"
-                   src="" alt="Preview"
-                   style="width:52px;height:52px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--border);display:none;flex-shrink:0"/>
+              <img id="mainImgPreview" src="" alt="Preview"
+                   style="width:52px;height:52px;object-fit:cover;border-radius:var(--radius);
+                          border:1px solid var(--border);display:none;flex-shrink:0"/>
               <input type="url" id="pImageUrl" class="form-control"
                      placeholder="https://exemplo.com/imagem.jpg"
                      oninput="updateMainPreview(this.value)"/>
@@ -816,17 +817,16 @@
           </div>
 
           ${isEdit ? `
-          <!-- Galeria de imagens adicionais -->
           <div class="form-group">
             <label>Imagens adicionais</label>
             <div class="image-gallery" id="currentImages"><div class="loader"></div></div>
           </div>` : ''}
 
-          <!-- Adicionar imagem extra por URL -->
           <div class="form-group">
             <label>${isEdit ? 'Adicionar imagem extra' : 'Imagem extra (URL)'}</label>
             <div style="display:flex;gap:10px">
-              <input type="url" id="pNewImageUrl" class="form-control" placeholder="https://exemplo.com/imagem2.jpg"/>
+              <input type="url" id="pNewImageUrl" class="form-control"
+                     placeholder="https://exemplo.com/imagem2.jpg"/>
               <button type="button" class="btn btn-outline" style="white-space:nowrap"
                       onclick="addExtraImage(${id})">+ Add</button>
             </div>
@@ -840,6 +840,7 @@
           </div>
         </form>
       </div>`;
+
     document.getElementById('modal-container').appendChild(modal);
 
     if (isEdit) {
@@ -883,27 +884,31 @@
       btn.disabled = true;
       btn.textContent = '⏳ Salvando...';
 
+      // ✅ CORRIGIDO: price como float, category como int ou null
       const data = {
         name:        document.getElementById('pName').value.trim(),
-        price:       document.getElementById('pPrice').value,
+        price:       parseFloat(document.getElementById('pPrice').value),
         stock:       parseInt(document.getElementById('pStock').value),
         description: document.getElementById('pDesc').value.trim(),
-        category:    document.getElementById('pCategory').value || null,
+        category:    document.getElementById('pCategory').value
+                       ? parseInt(document.getElementById('pCategory').value)
+                       : null,
         is_active:   document.getElementById('pActive').value === 'true',
         image_url:   document.getElementById('pImageUrl').value.trim() || '',
       };
 
       try {
-        isEdit
-          ? await API.products.update(id, data)
-          : await API.products.create(data);
-
+        if (isEdit) {
+          await API.products.update(id, data);
+        } else {
+          await API.products.create(data);
+        }
         showToast(isEdit ? '✅ Produto atualizado!' : '✅ Produto criado!', 'success');
         closeModal();
         loadProducts(productCurrentPage);
       } catch (err) {
         console.error('[Salvar Produto]', err);
-        const msg = err?.name?.[0] || err?.price?.[0] || err?.detail || 'Erro ao salvar produto';
+        const msg = err?.name?.[0] || err?.price?.[0] || err?.detail || JSON.stringify(err) || 'Erro ao salvar produto';
         showToast(msg, 'error');
         btn.disabled = false;
         btn.textContent = isEdit ? '💾 Salvar alterações' : '➕ Criar produto';
@@ -911,7 +916,6 @@
     });
   }
 
-  // Preview ao vivo da imagem principal
   function updateMainPreview(url) {
     const img = document.getElementById('mainImgPreview');
     if (!img) return;
@@ -924,7 +928,6 @@
     }
   }
 
-  // Adiciona imagem extra via URL (endpoint de galeria)
   async function addExtraImage(productId) {
     const input = document.getElementById('pNewImageUrl');
     const url = input?.value?.trim();
@@ -963,17 +966,19 @@
     try {
       const rawCats = await API.categories.list();
       categories = toArray(rawCats);
-      tb.innerHTML = categories.map(c => `
-        <tr>
-          <td style="font-size:1.6rem">${c.icon || '🏷️'}</td>
-          <td><strong>${c.name}</strong></td>
-          <td><code style="color:var(--text-muted);font-size:0.82rem">${c.slug}</code></td>
-          <td><span class="badge badge-gold">${c.product_count ?? 0}</span></td>
-          <td style="white-space:nowrap">
-            <button class="btn btn-outline btn-sm" onclick="openCategoryModal(${c.id})">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id}, '${(c.name || '').replace(/'/g,"\\'")}')">🗑️</button>
-          </td>
-        </tr>`).join('');
+      tb.innerHTML = categories.length
+        ? categories.map(c => `
+            <tr>
+              <td style="font-size:1.6rem">${c.icon || '🏷️'}</td>
+              <td><strong>${c.name}</strong></td>
+              <td><code style="color:var(--text-muted);font-size:0.82rem">${c.slug}</code></td>
+              <td><span class="badge badge-gold">${c.product_count ?? 0}</span></td>
+              <td style="white-space:nowrap">
+                <button class="btn btn-outline btn-sm" onclick="openCategoryModal(${c.id})">✏️</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id}, '${(c.name || '').replace(/'/g,"\\'")}')">🗑️</button>
+              </td>
+            </tr>`).join('')
+        : '<tr><td colspan="5" class="text-muted text-center" style="padding:20px">Nenhuma categoria cadastrada.</td></tr>';
     } catch (e) {
       console.error('[Categorias]', e);
       tb.innerHTML = '<tr><td colspan="5" class="text-muted text-center" style="padding:20px">❌ Erro ao carregar categorias</td></tr>';
@@ -1031,6 +1036,10 @@
 
     document.getElementById('categoryForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = '⏳ Salvando...';
+
       const data = {
         name: document.getElementById('cName').value.trim(),
         slug: document.getElementById('cSlug').value.trim(),
@@ -1043,8 +1052,11 @@
         closeModal();
         loadCategories();
       } catch (err) {
-        const msg = err?.name?.[0] || err?.slug?.[0] || 'Erro ao salvar categoria';
+        console.error('[Salvar Categoria]', err);
+        const msg = err?.name?.[0] || err?.slug?.[0] || err?.detail || 'Erro ao salvar categoria';
         showToast(msg, 'error');
+        btn.disabled = false;
+        btn.textContent = isEdit ? '💾 Salvar' : '➕ Criar';
       }
     });
   }
@@ -1067,9 +1079,7 @@
     const filter = document.getElementById('orderStatusFilter')?.value;
     try {
       const rawOrders = await API.orders.adminList(filter ? { status: filter } : {});
-      console.log('📋 Orders raw:', rawOrders);
       allOrders = toArray(rawOrders);
-      console.log(`📋 Orders parsed: ${allOrders.length}`);
       renderOrders(allOrders);
     } catch (e) {
       console.error('[Pedidos]', e);
@@ -1112,7 +1122,9 @@
     renderOrders(filtered);
   }
 
-  // ── Modal Pedido ──────────────────────
+  // ════════════════════════════════════════
+  //  MODAL PEDIDO
+  // ════════════════════════════════════════
   async function openOrderModal(id) {
     closeModal();
     const modal = document.createElement('div');
@@ -1127,8 +1139,6 @@
 
     try {
       const o = await API.orders.adminDetail(id);
-      console.log('📋 Order detail:', o);
-
       const items = toArray(o.items || o.order_items);
 
       document.getElementById('orderDetail').innerHTML = `
@@ -1165,10 +1175,14 @@
         </div>
 
         <div class="order-summary">
-          <div class="order-summary-row"><span>Subtotal</span><span>${formatPrice(o.subtotal || o.total)}</span></div>
+          <div class="order-summary-row">
+            <span>Subtotal</span><span>${formatPrice(o.subtotal || o.total)}</span>
+          </div>
           ${o.shipping_cost ? `<div class="order-summary-row"><span>🚚 Frete</span><span>${formatPrice(o.shipping_cost)}</span></div>` : ''}
           ${o.discount      ? `<div class="order-summary-row"><span>🏷️ Desconto</span><span>-${formatPrice(o.discount)}</span></div>` : ''}
-          <div class="order-summary-row total"><span>Total</span><span>${formatPrice(o.total)}</span></div>
+          <div class="order-summary-row total">
+            <span>Total</span><span>${formatPrice(o.total)}</span>
+          </div>
         </div>
 
         <div class="info-label" style="margin-top:16px">⚙️ Atualizar Pedido</div>
@@ -1199,6 +1213,9 @@
 
       document.getElementById('orderForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = '⏳ Salvando...';
         try {
           await API.orders.adminUpdate(id, {
             status:        document.getElementById('oStatus').value,
@@ -1207,7 +1224,12 @@
           showToast('✅ Pedido atualizado!', 'success');
           closeModal();
           loadOrders();
-        } catch (_) { showToast('Erro ao atualizar pedido', 'error'); }
+        } catch (err) {
+          console.error('[Salvar Pedido]', err);
+          showToast(err?.detail || 'Erro ao atualizar pedido', 'error');
+          btn.disabled = false;
+          btn.textContent = '💾 Salvar alterações';
+        }
       });
 
     } catch (e) {
