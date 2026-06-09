@@ -503,6 +503,28 @@
   }
 
   // ════════════════════════════════════════
+  //  BUSCA TODOS OS PRODUTOS (todas as páginas)
+  // ════════════════════════════════════════
+  async function fetchAllProducts() {
+    let all = [];
+    let page = 1;
+
+    while (true) {
+      const res = await API.products.adminList({ page, page_size: 100 });
+
+      const items = Array.isArray(res) ? res : (res?.results ?? []);
+      all = all.concat(items);
+
+      const hasNext = !Array.isArray(res) && !!res?.next;
+      if (!hasNext || items.length === 0) break;
+
+      page++;
+    }
+
+    return all;
+  }
+
+  // ════════════════════════════════════════
   //  DASHBOARD
   // ════════════════════════════════════════
   async function loadDashboard() {
@@ -512,15 +534,14 @@
     document.getElementById('dashboard-error').style.display = 'none';
 
     try {
-      const [rawProducts, rawOrders, rawCats] = await Promise.all([
-        API.products.adminList(),
+      const [products, rawOrders, rawCats] = await Promise.all([
+        fetchAllProducts(),
         API.orders.adminList(),
         API.categories.list()
       ]);
 
-      const products = toArray(rawProducts);
-      const orders   = toArray(rawOrders);
-      const cats     = toArray(rawCats);
+      const orders = toArray(rawOrders);
+      const cats   = toArray(rawCats);
 
       const totalRevenue   = orders
         .filter(o => o.status !== 'cancelled')
@@ -555,7 +576,7 @@
           <div class="stat-label">Categorias</div>
         </div>`;
 
-      const recent = [...orders].slice(0, 6);
+      const recent = orders.slice(0, 6);
       document.getElementById('recent-orders').innerHTML = recent.length
         ? `<div class="table-wrapper"><table class="data-table">
             <thead><tr><th>#</th><th>Cliente</th><th>Total</th><th>Status</th></tr></thead>
@@ -565,13 +586,13 @@
                 <td>${getClientName(o)}</td>
                 <td>${formatPrice(o.total)}</td>
                 <td>${statusBadge(o.status)}</td>
-              </tr>`).join('')}
-            </tbody></table></div>`
+              </tr>`).join('')}</tbody>
+          </table></div>`
         : '<p class="text-muted text-center" style="padding:20px">Nenhum pedido ainda.</p>';
 
       const lowStock = products
         .filter(p => (p.stock ?? p.quantity ?? 0) <= 5)
-        .sort((a, b) => (a.stock ?? 0) - (b.stock ?? 0))
+        .sort((a, b) => (a.stock ?? a.quantity ?? 0) - (b.stock ?? b.quantity ?? 0))
         .slice(0, 8);
 
       document.getElementById('low-stock').innerHTML = lowStock.length
@@ -583,8 +604,8 @@
                 <td>${p.name}</td>
                 <td><span class="${qty === 0 ? 'stock-zero' : 'stock-low'}">${qty === 0 ? '❌ Esgotado' : `⚠️ ${qty} un.`}</span></td>
               </tr>`;
-            }).join('')}
-            </tbody></table></div>`
+            }).join('')}</tbody>
+          </table></div>`
         : '<p class="text-muted text-center" style="padding:20px">✅ Estoque saudável!</p>';
 
     } catch (e) {
