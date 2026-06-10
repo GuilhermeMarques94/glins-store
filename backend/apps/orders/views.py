@@ -15,10 +15,14 @@ from django.conf import settings
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, CreateOrderSerializer
 from .shipping import calculate_shipping
-from .emails import (                           # ← NOVO
+from .emails import (
     send_order_created_email,
     send_payment_approved_email,
     send_tracking_code_email,
+    send_order_preparing_email,
+    send_order_shipped_email,
+    send_order_delivered_email,
+    send_order_cancelled_email,
 )
 from apps.cart.models import CartItem
 
@@ -467,17 +471,18 @@ class AdminOrderUpdateView(APIView):
         )
         return Response(OrderSerializer(order).data)
 
+    # Substituir o método patch em AdminOrderUpdateView
     def patch(self, request, pk):
         if not request.user.is_admin:
             return Response(status=403)
 
         order         = get_object_or_404(Order, pk=pk)
+        old_status    = order.status
         new_status    = request.data.get('status')
         tracking_code = request.data.get('tracking_code')
 
         if tracking_code:
             order.tracking_code = tracking_code
-            # Só força "shipped" se o admin NÃO enviou um status explícito
             if not new_status:
                 order.status = 'shipped'
 
@@ -485,16 +490,24 @@ class AdminOrderUpdateView(APIView):
             valid = [s[0] for s in Order.STATUS]
             if new_status not in valid:
                 return Response({'error': 'Status inválido'}, status=400)
-            order.status = new_status  # ← status explícito sempre vence
+            order.status = new_status
 
         order.save()
 
-        # ── Disparo e-mail rastreio ─────────────────────
-        if tracking_code:
+        # ── Disparos de e-mail por status ──────────────────────────────
+        status_emails = {
+            'preparing': send_order_preparing_email,
+            'shipped':   send_order_shipped_email,   # cobre rastreio também
+            'delivered': send_order_delivered_email,
+            'cancelled': send_order_cancelled_email,
+        }
+
+        final_status = order.status
+        if final_status != old_status and final_status in status_emails:
             try:
-                send_tracking_code_email(order)
+                status_emails[final_status](order)
             except Exception as e:
-                logger.error(f"[EMAIL] Rastreio: {e}")
-        # ───────────────────────────────────────────────
+                logger.error(f"[EMAIL] Status {final_status}: {e}")
+        # ───────────────────────────────────────────────────────────────
 
         return Response(OrderSerializer(order).data)

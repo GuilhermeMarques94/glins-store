@@ -1,15 +1,37 @@
 {% extends "emails/base.html" %}
-{% block title %}Pedido #{{ order.id }} cancelado{% endblock %}
 {% block content %}
-<h2>Pedido cancelado 😔</h2>
-<span class="badge badge-cancelled">❌ Cancelado</span>
-<p>Olá, {{ order.user.first_name|default:order.user.username }}. Infelizmente seu pedido #{{ order.id }} foi cancelado.</p>
+<div style="padding:36px 32px">
+  <h2 style="color:#fff;font-size:1.3rem;margin:0 0 12px">
+    ❌ Pedido cancelado
+  </h2>
+  <p style="color:#bbb;line-height:1.7;margin:0 0 24px">
+    Olá, <strong style="color:#c9a227">{{ order.user.name }}</strong>!<br>
+    Infelizmente seu pedido <strong style="color:#c9a227">#{{ order.id }}</strong>
+    foi cancelado.
+  </p>
 
-<div class="order-box">
-  <p><strong>Pedido:</strong> #{{ order.id }}</p>
-  <p><strong>Total:</strong> R$ {{ order.total_price|floatformat:2 }}</p>
+  <div style="background:#111;border-left:4px solid #e53935;border-radius:4px;
+              padding:16px 20px;margin-bottom:24px">
+    <p style="color:#e53935;font-size:0.85rem;margin:0;font-weight:700">
+      STATUS
+    </p>
+    <p style="color:#fff;font-size:1rem;margin:6px 0 0">
+      ❌ Cancelado
+    </p>
+  </div>
+
+  <p style="color:#bbb;line-height:1.7;margin:0 0 24px">
+    Se você tiver alguma dúvida ou acredita que isso foi um erro,
+    entre em contato conosco.
+  </p>
+
+  <div style="text-align:center;margin:32px 0">
+    <a href="{{ frontend_url }}/pages/products.html"
+       style="background:#c9a227;color:#0d0d0d;text-decoration:none;
+              padding:14px 32px;border-radius:8px;font-weight:700;
+              font-size:1rem;letter-spacing:1px;display:inline-block">
+      ⚔️ CONTINUAR COMPRANDO
+    </a>
+  </div>
 </div>
-
-<p>Se tiver dúvidas, entre em contato conosco respondendo este e-mail.</p>
-<a href="https://glins-store.vercel.app" class="btn">Voltar à loja</a>
 {% endblock %}

@@ -1,33 +1,62 @@
 {% extends "emails/base.html" %}
-{% block title %}Nova venda — Pedido #{{ order.id }}{% endblock %}
 {% block content %}
-<h2>Nova venda realizada! 💰</h2>
-<span class="badge badge-approved">✅ {{ order.payment_method|upper }} Aprovado</span>
+<div style="padding:36px 32px">
+  <h2 style="color:#fff;font-size:1.3rem;margin:0 0 12px">
+    💰 Nova venda realizada!
+  </h2>
+  <p style="color:#bbb;line-height:1.7;margin:0 0 24px">
+    O pedido <strong style="color:#c9a227">#{{ order.id }}</strong>
+    foi pago e está aguardando sua ação.
+  </p>
 
-<div class="order-box">
-  <p><strong>Pedido:</strong> #{{ order.id }}</p>
-  <p><strong>Cliente:</strong> {{ order.user.get_full_name|default:order.user.username }}</p>
-  <p><strong>E-mail:</strong> {{ order.user.email }}</p>
-  <p><strong>Pagamento:</strong> {{ order.payment_method|upper }}</p>
-  <p><strong>Total:</strong> R$ {{ order.total_price|floatformat:2 }}</p>
-</div>
+  <!-- Dados do cliente -->
+  <div style="background:#111;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:16px">
+    <p style="color:#888;font-size:0.8rem;margin:0 0 10px;letter-spacing:1px;text-transform:uppercase">
+      Cliente
+    </p>
+    <p style="color:#fff;margin:0;font-size:0.95rem">
+      {{ order.user.name }}<br>
+      <span style="color:#888">{{ order.user.email }}</span>
+    </p>
+  </div>
 
-<table class="items-table">
-  <thead>
-    <tr><th>Produto</th><th>Qtd</th><th>Subtotal</th></tr>
-  </thead>
-  <tbody>
+  <!-- Itens -->
+  <div style="background:#111;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:16px">
+    <p style="color:#888;font-size:0.8rem;margin:0 0 12px;letter-spacing:1px;text-transform:uppercase">
+      Itens do pedido
+    </p>
     {% for item in order.items.all %}
-    <tr>
-      <td>{{ item.product.name }}</td>
-      <td>{{ item.quantity }}</td>
-      <td>R$ {{ item.get_subtotal|floatformat:2 }}</td>
-    </tr>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+      <span style="color:#ccc;font-size:0.9rem">{{ item.name }} × {{ item.quantity }}</span>
+      <span style="color:#c9a227;font-size:0.9rem">R$ {{ item.price }}</span>
+    </div>
     {% endfor %}
-    <tr class="total-row">
-      <td colspan="2">Total</td>
-      <td>R$ {{ order.total_price|floatformat:2 }}</td>
-    </tr>
-  </tbody>
-</table>
+    <div style="border-top:1px solid #333;margin-top:12px;padding-top:12px;display:flex;justify-content:space-between">
+      <span style="color:#fff;font-weight:700">Total recebido</span>
+      <span style="color:#c9a227;font-weight:700;font-size:1.1rem">R$ {{ order.total }}</span>
+    </div>
+  </div>
+
+  <!-- Endereço -->
+  <div style="background:#111;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:24px">
+    <p style="color:#888;font-size:0.8rem;margin:0 0 8px;letter-spacing:1px;text-transform:uppercase">
+      Endereço de entrega
+    </p>
+    <p style="color:#ccc;font-size:0.9rem;margin:0;line-height:1.7">
+      {{ order.street }}, {{ order.number }}
+      {% if order.complement %} — {{ order.complement }}{% endif %}<br>
+      {{ order.city }} — {{ order.state }}<br>
+      CEP: {{ order.zipcode }}
+    </p>
+  </div>
+
+  <div style="text-align:center;margin:32px 0">
+    <a href="{{ frontend_url }}/pages/admin/orders.html"
+       style="background:#c9a227;color:#0d0d0d;text-decoration:none;
+              padding:14px 32px;border-radius:8px;font-weight:700;
+              font-size:1rem;letter-spacing:1px;display:inline-block">
+      ⚙️ GERENCIAR PEDIDO
+    </a>
+  </div>
+</div>
 {% endblock %}

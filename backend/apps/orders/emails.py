@@ -1,25 +1,33 @@
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
+# backend/apps/orders/emails.py
+import resend
+import logging
 from django.conf import settings
+from django.template.loader import render_to_string
+
+logger = logging.getLogger(__name__)
+resend.api_key = settings.RESEND_API_KEY
 
 
 def send_order_email(template_name, subject, order, extra_context=None, recipient=None):
-    """Função genérica de disparo de e-mail."""
-    context = {'order': order}
+    """Função genérica — renderiza template e envia via Resend."""
+    context = {'order': order, 'frontend_url': settings.FRONTEND_URL}
     if extra_context:
         context.update(extra_context)
 
     html_content = render_to_string(f'emails/{template_name}', context)
     to_email = recipient or order.user.email
 
-    msg = EmailMultiAlternatives(
-        subject=subject,
-        body='',
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[to_email],
-    )
-    msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
+    try:
+        resend.Emails.send({
+            "from":    settings.DEFAULT_FROM_EMAIL,
+            "to":      [to_email],
+            "subject": subject,
+            "html":    html_content,
+        })
+        logger.info(f"[EMAIL] ✅ '{subject}' enviado para {to_email}")
+    except Exception as e:
+        logger.error(f"[EMAIL] ❌ Falha ao enviar '{subject}' para {to_email}: {e}")
+        raise
 
 
 def send_order_created_email(order):
@@ -35,10 +43,9 @@ def send_payment_approved_email(order):
         f'✅ Pagamento aprovado — Pedido #{order.id}',
         order,
     )
-    # Notifica admin também
     send_order_email(
         'new_sale_admin.html',
-        f'💰 Nova venda — Pedido #{order.id} — R$ {order.total_price}',
+        f'💰 Nova venda — Pedido #{order.id} — R$ {order.total}',
         order,
         recipient=settings.ADMIN_EMAIL,
     )

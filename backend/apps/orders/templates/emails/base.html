@@ -1,140 +1,33 @@
-<!-- orders/templates/emails/base.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{% block title %}Glins Store{% endblock %}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background-color: #f4f4f4;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      color: #333;
-    }
-    .wrapper {
-      max-width: 600px;
-      margin: 30px auto;
-      background: #ffffff;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .header {
-      background-color: #1a1a2e;
-      padding: 30px 40px;
-      text-align: center;
-    }
-    .header img {
-      max-height: 60px;
-      margin-bottom: 10px;
-    }
-    .header h1 {
-      color: #e94560;
-      font-size: 22px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-    .content {
-      padding: 35px 40px;
-    }
-    .content h2 {
-      color: #1a1a2e;
-      font-size: 20px;
-      margin-bottom: 15px;
-    }
-    .content p {
-      font-size: 15px;
-      line-height: 1.7;
-      color: #555;
-      margin-bottom: 12px;
-    }
-    .badge {
-      display: inline-block;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    .badge-approved { background: #d4edda; color: #155724; }
-    .badge-pending  { background: #fff3cd; color: #856404; }
-    .badge-shipped  { background: #cce5ff; color: #004085; }
-    .badge-cancelled{ background: #f8d7da; color: #721c24; }
-    .badge-preparing{ background: #e2e3ff; color: #383d8b; }
-    .badge-delivered{ background: #d4edda; color: #155724; }
-    .order-box {
-      background: #f8f9fa;
-      border-left: 4px solid #e94560;
-      border-radius: 6px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-    .order-box p {
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
-    .order-box strong {
-      color: #1a1a2e;
-    }
-    .items-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      font-size: 14px;
-    }
-    .items-table th {
-      background: #1a1a2e;
-      color: #fff;
-      padding: 10px;
-      text-align: left;
-    }
-    .items-table td {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-    }
-    .items-table tr:last-child td { border-bottom: none; }
-    .total-row td {
-      font-weight: bold;
-      color: #1a1a2e;
-      font-size: 15px;
-      border-top: 2px solid #e94560 !important;
-    }
-    .btn {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 12px 30px;
-      background-color: #e94560;
-      color: #ffffff !important;
-      text-decoration: none;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 15px;
-    }
-    .footer {
-      background: #1a1a2e;
-      text-align: center;
-      padding: 20px 40px;
-      font-size: 12px;
-      color: #aaa;
-    }
-    .footer a { color: #e94560; text-decoration: none; }
-  </style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="header">
-      <h1>⚔️ Glins Store</h1>
-    </div>
-    <div class="content">
-      {% block content %}{% endblock %}
-    </div>
-    <div class="footer">
-      <p>© 2026 Glins Store — Card Games & Colecionáveis</p>
-      <p style="margin-top:6px;">
-        <a href="https://glins-store.vercel.app">glins-store.vercel.app</a>
+<body style="margin:0;padding:0;background:#0d0d0d;font-family:Arial,sans-serif">
+  <div style="max-width:520px;margin:40px auto;background:#1a1a1a;
+              border:1px solid #c9a227;border-radius:12px;overflow:hidden">
+
+    <!-- HEADER -->
+    <div style="background:linear-gradient(135deg,#1a1a1a,#2a2a2a);
+                padding:40px 32px;text-align:center;
+                border-bottom:2px solid #c9a227">
+      <div style="font-size:3rem;margin-bottom:8px">⚔️</div>
+      <h1 style="color:#c9a227;font-size:1.6rem;margin:0;letter-spacing:2px">
+        GLINS STORE
+      </h1>
+      <p style="color:#888;font-size:0.85rem;margin:6px 0 0;letter-spacing:1px">
+        O SEU REINO DE PRODUTOS
       </p>
     </div>
+
+    <!-- CONTENT (cada template preenche aqui) -->
+    {% block content %}{% endblock %}
+
+    <!-- FOOTER -->
+    <div style="background:#111;padding:20px 32px;text-align:center;
+                border-top:1px solid #333">
+      <p style="color:#555;font-size:0.78rem;margin:0">
+        © 2025 Glins Store · Todos os direitos reservados
+      </p>
+    </div>
+
   </div>
 </body>
 </html>

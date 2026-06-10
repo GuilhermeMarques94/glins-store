@@ -1,23 +1,48 @@
 {% extends "emails/base.html" %}
-{% block title %}Pedido #{{ order.id }} enviado!{% endblock %}
 {% block content %}
-<h2>Seu pedido foi enviado! 🚚</h2>
-<span class="badge badge-shipped">📬 Enviado</span>
-<p>Olá, {{ order.user.first_name|default:order.user.username }}! Seu pedido saiu para entrega.</p>
+<div style="padding:36px 32px">
+  <h2 style="color:#fff;font-size:1.3rem;margin:0 0 12px">
+    🚚 Seu pedido foi enviado!
+  </h2>
+  <p style="color:#bbb;line-height:1.7;margin:0 0 24px">
+    Olá, <strong style="color:#c9a227">{{ order.user.name }}</strong>!<br>
+    Seu pedido <strong style="color:#c9a227">#{{ order.id }}</strong>
+    saiu para entrega! 🎉
+  </p>
 
-<div class="order-box">
-  <p><strong>Pedido:</strong> #{{ order.id }}</p>
-  <p><strong>Total:</strong> R$ {{ order.total|floatformat:2 }}</p>
+  <!-- Código de rastreio -->
   {% if order.tracking_code %}
-  <p><strong>Código de rastreio:</strong> {{ order.tracking_code }}</p>
+  <div style="background:#111;border:1px solid #c9a227;border-radius:8px;
+              padding:20px;margin-bottom:24px;text-align:center">
+    <p style="color:#888;font-size:0.8rem;margin:0 0 8px;letter-spacing:1px;text-transform:uppercase">
+      Código de rastreamento
+    </p>
+    <p style="color:#c9a227;font-size:1.4rem;font-weight:700;margin:0;letter-spacing:3px">
+      {{ order.tracking_code }}
+    </p>
+    <p style="color:#666;font-size:0.78rem;margin:8px 0 0">
+      Rastreie em <a href="https://www.correios.com.br" style="color:#c9a227">correios.com.br</a>
+    </p>
+  </div>
   {% endif %}
+
+  <div style="background:#111;border-left:4px solid #c9a227;border-radius:4px;
+              padding:16px 20px;margin-bottom:24px">
+    <p style="color:#888;font-size:0.85rem;margin:0 0 4px">Endereço de entrega</p>
+    <p style="color:#ccc;font-size:0.9rem;margin:0;line-height:1.7">
+      {{ order.street }}, {{ order.number }}
+      {% if order.complement %} — {{ order.complement }}{% endif %}<br>
+      {{ order.city }} — {{ order.state }} · CEP: {{ order.zipcode }}
+    </p>
+  </div>
+
+  <div style="text-align:center;margin:32px 0">
+    <a href="{{ frontend_url }}/pages/profile.html"
+       style="background:#c9a227;color:#0d0d0d;text-decoration:none;
+              padding:14px 32px;border-radius:8px;font-weight:700;
+              font-size:1rem;letter-spacing:1px;display:inline-block">
+      📦 ACOMPANHAR PEDIDO
+    </a>
+  </div>
 </div>
-
-{% if order.tracking_code %}
-<a href="https://www.correios.com.br/rastreamento/#/track/{{ order.tracking_code }}" class="btn">
-  Rastrear meu pedido
-</a>
-{% endif %}
-
-<p style="margin-top:15px;">Prazo estimado conforme informado no checkout. 📅</p>
 {% endblock %}

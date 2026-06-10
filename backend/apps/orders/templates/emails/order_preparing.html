@@ -1,15 +1,36 @@
 {% extends "emails/base.html" %}
-{% block title %}Pedido #{{ order.id }} em preparação{% endblock %}
 {% block content %}
-<h2>Seu pedido está sendo preparado! 📦</h2>
-<span class="badge badge-preparing">🔧 Em Preparação</span>
-<p>Olá, {{ order.user.first_name|default:order.user.username }}! Estamos separando e embalando seu pedido com muito cuidado.</p>
+<div style="padding:36px 32px">
+  <h2 style="color:#fff;font-size:1.3rem;margin:0 0 12px">
+    🔧 Seu pedido está sendo preparado!
+  </h2>
+  <p style="color:#bbb;line-height:1.7;margin:0 0 24px">
+    Olá, <strong style="color:#c9a227">{{ order.user.name }}</strong>!<br>
+    Ótimas notícias! Seu pedido <strong style="color:#c9a227">#{{ order.id }}</strong>
+    já está sendo preparado com todo o cuidado pelo nosso time. ⚔️
+  </p>
 
-<div class="order-box">
-  <p><strong>Pedido:</strong> #{{ order.id }}</p>
-  <p><strong>Total:</strong> R$ {{ order.total_price|floatformat:2 }}</p>
+  <div style="background:#111;border-left:4px solid #c9a227;border-radius:4px;
+              padding:16px 20px;margin-bottom:24px">
+    <p style="color:#c9a227;font-size:0.85rem;margin:0;font-weight:700">
+      STATUS ATUAL
+    </p>
+    <p style="color:#fff;font-size:1rem;margin:6px 0 0">
+      🔧 Em preparação
+    </p>
+  </div>
+
+  <p style="color:#bbb;line-height:1.7;margin:0 0 24px">
+    Em breve seu pedido será enviado e você receberá o código de rastreamento.
+  </p>
+
+  <div style="text-align:center;margin:32px 0">
+    <a href="{{ frontend_url }}/pages/profile.html"
+       style="background:#c9a227;color:#0d0d0d;text-decoration:none;
+              padding:14px 32px;border-radius:8px;font-weight:700;
+              font-size:1rem;letter-spacing:1px;display:inline-block">
+      📦 VER MEU PEDIDO
+    </a>
+  </div>
 </div>
-
-<p>Assim que seu pedido for enviado, você receberá o <strong>código de rastreamento</strong>. 🚚</p>
-<a href="https://glins-store.vercel.app" class="btn">Acompanhar pedido</a>
 {% endblock %}
