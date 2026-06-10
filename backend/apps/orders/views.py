@@ -452,8 +452,20 @@ class AdminOrderListView(APIView):
         return Response(OrderSerializer(orders, many=True).data)
 
 
+# ✅ CORRIGIDO — classe única com GET + PATCH
 class AdminOrderUpdateView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        """Retorna detalhes de um pedido específico para o admin"""
+        if not request.user.is_admin:
+            return Response(status=403)
+
+        order = get_object_or_404(
+            Order.objects.select_related('user').prefetch_related('items'),
+            pk=pk
+        )
+        return Response(OrderSerializer(order).data)
 
     def patch(self, request, pk):
         if not request.user.is_admin:
@@ -471,39 +483,14 @@ class AdminOrderUpdateView(APIView):
 
         if tracking_code:
             order.tracking_code = tracking_code
-
-        order.save()
-        return Response(OrderSerializer(order).data)
-
-class AdminOrderUpdateView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def patch(self, request, pk):
-        if not request.user.is_admin:
-            return Response(status=403)
-
-        order          = get_object_or_404(Order, pk=pk)
-        new_status     = request.data.get('status')
-        tracking_code  = request.data.get('tracking_code')
-
-        if new_status:
-            valid = [s[0] for s in Order.STATUS]
-            if new_status not in valid:
-                return Response({'error': 'Status inválido'}, status=400)
-            order.status = new_status
-
-        if tracking_code:
-            order.tracking_code = tracking_code
-            order.status = 'shipped'  # ← força status enviado automaticamente
+            order.status = 'shipped'
 
         order.save()
 
-        # ── Disparo e-mail rastreio ─────────────────────
         if tracking_code:
             try:
                 send_tracking_code_email(order)
             except Exception as e:
                 logger.error(f"[EMAIL] Rastreio: {e}")
-        # ───────────────────────────────────────────────
 
         return Response(OrderSerializer(order).data)

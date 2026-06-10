@@ -31,7 +31,11 @@ class Order(models.Model):
     updated_at    = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'Pedido #{self.id} — {self.user.name}'
+        try:
+            user_label = getattr(self.user, 'name', None) or getattr(self.user, 'email', f'ID {self.user_id}')
+        except Exception:
+            user_label = f'Usuário #{self.user_id}'
+        return f'Pedido #{self.id} — {user_label}'
 
 
 class OrderItem(models.Model):
