@@ -475,22 +475,26 @@ class AdminOrderUpdateView(APIView):
         new_status    = request.data.get('status')
         tracking_code = request.data.get('tracking_code')
 
+        if tracking_code:
+            order.tracking_code = tracking_code
+            # Só força "shipped" se o admin NÃO enviou um status explícito
+            if not new_status:
+                order.status = 'shipped'
+
         if new_status:
             valid = [s[0] for s in Order.STATUS]
             if new_status not in valid:
                 return Response({'error': 'Status inválido'}, status=400)
-            order.status = new_status
-
-        if tracking_code:
-            order.tracking_code = tracking_code
-            order.status = 'shipped'
+            order.status = new_status  # ← status explícito sempre vence
 
         order.save()
 
+        # ── Disparo e-mail rastreio ─────────────────────
         if tracking_code:
             try:
                 send_tracking_code_email(order)
             except Exception as e:
                 logger.error(f"[EMAIL] Rastreio: {e}")
+        # ───────────────────────────────────────────────
 
         return Response(OrderSerializer(order).data)
