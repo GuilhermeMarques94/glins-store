@@ -1167,10 +1167,13 @@
           <div class="info-label">👤 Cliente</div>
           <p><strong>${getClientName(o)}</strong></p>
           <p>📧 ${getClientEmail(o)}</p>
-          ${o.shipping_address ? `<p>📍 ${typeof o.shipping_address === 'object'
-            ? `${o.shipping_address.street || ''}, ${o.shipping_address.city || ''} - ${o.shipping_address.state || ''}`
-            : o.shipping_address}</p>` : ''}
-          ${o.tracking_code ? `<p>🚚 Rastreio: <strong>${o.tracking_code}</strong></p>` : ''}
+            ${o.street ? `
+              <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+                <div class="info-label" style="margin-bottom:6px">📍 Endereço de Entrega</div>
+                <p>${o.street}, ${o.number}${o.complement ? ` — ${o.complement}` : ''}</p>
+                <p>${o.city} / ${o.state} &nbsp;·&nbsp; CEP: ${o.zipcode}</p>
+              </div>` : ''}
+            ${o.tracking_code ? `<p style="margin-top:8px">🚚 Rastreio: <strong>${o.tracking_code}</strong></p>` : ''}
         </div>
 
         <div class="info-label">🛍️ Itens do Pedido</div>
