@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <title>Dúvidas Frequentes — Glins Store</title>
+  <link rel="stylesheet" href="/assets/css/global.css"/>
+  <style>
+    .faq-hero {
+      text-align: center;
+      padding: 80px 20px 48px;
+    }
+    .faq-hero .hero-badge {
+      display: inline-block;
+      padding: 6px 20px;
+      border: 1px solid var(--primary-dark);
+      border-radius: 20px;
+      color: var(--primary);
+      font-family: var(--font-title);
+      font-size: 0.78rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      background: rgba(201,162,39,0.08);
+    }
+    .faq-hero h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      margin-bottom: 14px;
+      text-shadow: 0 0 40px rgba(201,162,39,0.3);
+    }
+    .faq-hero p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    /* ── Em Construção ── */
+    .construction-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      text-align: center;
+      gap: 20px;
+    }
+    .construction-icon {
+      font-size: 5rem;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-12px); }
+    }
+    .construction-title {
+      font-family: var(--font-title);
+      font-size: 1.6rem;
+      color: var(--primary);
+      letter-spacing: 0.05em;
+    }
+    .construction-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 480px;
+      line-height: 1.8;
+    }
+    .construction-bar {
+      width: 260px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .construction-bar-fill {
+      height: 100%;
+      width: 35%;
+      background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+      border-radius: 99px;
+      animation: progress 2.5s ease-in-out infinite alternate;
+    }
+    @keyframes progress {
+      from { width: 20%; }
+      to   { width: 60%; }
+    }
+    .construction-badge {
+      display: inline-block;
+      padding: 6px 18px;
+      border: 1px solid var(--primary-dark);
+      border-radius: 20px;
+      color: var(--primary-dark);
+      font-family: var(--font-title);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: rgba(201,162,39,0.06);
+    }
+    .ornament {
+      color: var(--primary-dark);
+      font-size: 1.2rem;
+      letter-spacing: 10px;
+      margin-top: 8px;
+    }
+
+    /* Footer reutilizado */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0 24px;
+      margin-top: 40px;
+    }
+    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; margin-bottom: 32px; }
+    .footer-brand h3 { margin-bottom: 10px; }
+    .footer-brand p  { color: var(--text-muted); font-size: 0.88rem; line-height: 1.7; }
+    .footer-links h4 { font-family: var(--font-title); color: var(--primary); font-size: 0.85rem; margin-bottom: 14px; letter-spacing: 0.08em; }
+    .footer-links ul { list-style: none; }
+    .footer-links li { margin-bottom: 8px; }
+    .footer-links a  { color: var(--text-muted); font-size: 0.88rem; transition: var(--transition); }
+    .footer-links a:hover { color: var(--primary); }
+    .footer-bottom { text-align: center; color: var(--text-muted); font-size: 0.82rem; padding-top: 24px; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- Navbar injetada via JS -->
+
+<!-- ═══ HERO ═══ -->
+<div class="faq-hero">
+  <div class="hero-badge">📜 Central de Ajuda</div>
+  <h1>Dúvidas Frequentes</h1>
+  <p>Tudo o que você precisa saber sobre a Glins Store</p>
+</div>
+
+<!-- ═══ EM CONSTRUÇÃO ═══ -->
+<div class="container">
+  <div class="construction-wrap card" style="border: 1px solid var(--border-gold);">
+    <div class="construction-icon">🏗️</div>
+    <div class="construction-title">Pergaminho em Elaboração</div>
+    <p class="construction-text">
+      Nossos escribas estão trabalhando arduamente para compilar
+      todas as respostas que você precisa. Esta seção estará
+      disponível em breve, nobre aventureiro.
+    </p>
+    <div class="construction-bar">
+      <div class="construction-bar-fill"></div>
+    </div>
+    <span class="construction-badge">🔨 Em Construção</span>
+    <div class="ornament">✦ ✦ ✦</div>
+    <a href="/index.html" class="btn btn-outline">← Voltar ao Início</a>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3>⚔️ Glins Store</h3>
+        <p>Sua loja para card games, produtos colecionáveis, acessórios e muito mais.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Navegação</h4>
+        <ul>
+          <li><a href="/index.html">Início</a></li>
+          <li><a href="/pages/products.html">Produtos</a></li>
+          <li><a href="/pages/cart.html">Carrinho</a></li>
+          <li><a href="/pages/profile.html">Minha Conta</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Atendimento</h4>
+        <ul>
+          <li><a href="/pages/faq.html">Dúvidas Frequentes</a></li>
+          <li>
+            <a href="https://rastreamento.correios.com.br/app/index.php" target="_blank" rel="noopener noreferrer">
+              Rastrear Pedido
+            </a>
+          </li>
+          <li><a href="#" onclick="openContactModal(); return false;">Contato</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>⚔️ © Desde 2026 Glins Store — Todos os direitos reservados. Forjado com honra em Uberlândia, MG.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══ MODAL CONTATO ═══ -->
+<div id="contact-modal" style="
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.75);
+  align-items: center; justify-content: center;
+" onclick="closeContactModal(event)">
+  <div style="
+    background: var(--bg-card);
+    border: 1px solid var(--border-gold);
+    border-radius: var(--radius);
+    padding: 40px 36px;
+    max-width: 420px; width: 90%;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 0 40px rgba(201,162,39,0.15);
+  " onclick="event.stopPropagation()">
+
+    <button onclick="closeContactModal()" style="
+      position: absolute; top: 14px; right: 18px;
+      background: none; border: none;
+      color: var(--text-muted); font-size: 1.3rem;
+      cursor: pointer; transition: var(--transition);
+    " onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">✕</button>
+
+    <div style="font-size: 2rem; margin-bottom: 10px;">📬</div>
+    <h2 style="font-family: var(--font-title); color: var(--primary); font-size: 1.4rem; margin-bottom: 6px;">Fale Conosco</h2>
+    <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 28px; line-height: 1.6;">
+      Escolha o melhor canal para entrar em contato com a guilda.
+    </p>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <a href="mailto:glins.store.cardgame@gmail.com" style="
+        display: flex; align-items: center; gap: 14px;
+        padding: 14px 18px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        text-decoration: none;
+        transition: var(--transition);
+        color: var(--text-light);
+      " onmouseover="this.style.borderColor='var(--primary)'; this.style.boxShadow='var(--shadow-gold)'"
+         onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+        <span style="font-size: 1.8rem;">✉️</span>
+        <div style="text-align: left;">
+          <div style="font-family: var(--font-title); font-size: 0.78rem; color: var(--primary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px;">E-mail</div>
+          <div style="font-size: 0.88rem; color: var(--text-muted);">glins.store.cardgame@gmail.com</div>
+        </div>
+      </a>
+
+      <div style="
+        display: flex; align-items: center; gap: 14px;
+        padding: 14px 18px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        opacity: 0.5;
+        cursor: not-allowed;
+      ">
+        <span style="font-size: 1.8rem;">💬</span>
+        <div style="text-align: left;">
+          <div style="font-family: var(--font-title); font-size: 0.78rem; color: var(--primary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px;">WhatsApp</div>
+          <div style="font-size: 0.88rem; color: var(--text-muted);">⏳ Em breve...</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px; color: var(--text-muted); font-size: 0.78rem; letter-spacing: 0.05em;">
+      ✦ Respondemos em até 24h ✦
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/navbar.js"></script>
+<script>
+  function openContactModal() {
+    const m = document.getElementById('contact-modal');
+    m.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeContactModal(e) {
+    if (e && e.target !== document.getElementById('contact-modal')) return;
+    const m = document.getElementById('contact-modal');
+    m.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeContactModal(null);
+  });
+</script>
+</body>
+</html>
