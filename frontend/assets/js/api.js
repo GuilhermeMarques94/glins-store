@@ -75,12 +75,15 @@ const API = {
 
   // ── Auth ──────────────────────────────
   auth: {
-    register:       (data) => apiFetch('/auth/register/',        { method: 'POST', body: JSON.stringify(data) }),
-    login:          (data) => apiFetch('/auth/login/',           { method: 'POST', body: JSON.stringify(data) }),
-    logout:         ()     => apiFetch('/auth/logout/',          { method: 'POST', body: JSON.stringify({ refresh: Auth.getRefresh() }) }),
-    profile:        ()     => apiFetch('/auth/profile/'),
-    updateProfile:  (data) => apiFetch('/auth/profile/',         { method: 'PUT',  body: JSON.stringify(data) }),
-    changePassword: (data) => apiFetch('/auth/change-password/', { method: 'POST', body: JSON.stringify(data) }),
+    register:        (data) => apiFetch('/auth/register/',               { method: 'POST', body: JSON.stringify(data) }),
+    login:           (data) => apiFetch('/auth/login/',                  { method: 'POST', body: JSON.stringify(data) }),
+    logout:          ()     => apiFetch('/auth/logout/',                 { method: 'POST', body: JSON.stringify({ refresh: Auth.getRefresh() }) }),
+    profile:         ()     => apiFetch('/auth/profile/'),
+    updateProfile:   (data) => apiFetch('/auth/profile/',                { method: 'PUT',  body: JSON.stringify(data) }),
+    changePassword:  (data) => apiFetch('/auth/change-password/',        { method: 'POST', body: JSON.stringify(data) }),
+    // ── NOVO: Reset de senha ──
+    forgotPassword:  (data) => apiFetch('/auth/forgot-password/',        { method: 'POST', body: JSON.stringify(data) }),
+    resetPassword:   (data) => apiFetch('/auth/reset-password/confirm/', { method: 'POST', body: JSON.stringify(data) }),
   },
 
   // ── Products ──────────────────────────
@@ -91,7 +94,6 @@ const API = {
     update:    (id, data)    => apiFetch(`/products/${id}/`,      { method: 'PUT',    body: JSON.stringify(data) }),
     delete:    (id)          => apiFetch(`/products/${id}/`,      { method: 'DELETE' }),
 
-    // ✅ CORRIGIDO — agora aceita e repassa params (search, category, is_active, page)
     adminList: (params = {}) => apiFetch('/products/admin/all/' + buildQuery(params)),
 
     // ── Galeria de imagens ──
@@ -136,7 +138,6 @@ const API = {
     detail:         (id)          => apiFetch(`/orders/${id}/`),
     create:         (data)        => apiFetch('/orders/',            { method: 'POST',  body: JSON.stringify(data) }),
 
-    // ✅ CORRIGIDO — endpoint correto de pedidos
     adminList:      (params = {}) => apiFetch('/orders/admin/'       + buildQuery(params)),
     adminDetail:    (id)          => apiFetch(`/orders/admin/${id}/`),
     adminUpdate:    (id, data)    => apiFetch(`/orders/admin/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),

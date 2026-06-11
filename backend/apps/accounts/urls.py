@@ -10,6 +10,10 @@ urlpatterns = [
     path('profile/',         views.ProfileView.as_view(),         name='profile'),
     path('change-password/', views.ChangePasswordView.as_view(),  name='change_password'),
 
+    # ── NOVO: Reset de senha ──
+    path('forgot-password/',        views.forgot_password, name='forgot_password'),
+    path('reset-password/confirm/', views.reset_password,  name='reset_password'),
+
     # ── Temporário ──
     path('setup-admin/',     views.create_superuser_temp,         name='setup_admin'),
 ]

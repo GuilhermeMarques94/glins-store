@@ -393,7 +393,14 @@
     try {
       const data = await API.products.list({ ordering: '-created_at' });
       const products = data.results || data;
-      const featured = products.slice(0, 8);
+
+      // ── Prioriza em estoque, esgotados vêm depois ──
+      const sorted = [
+        ...products.filter(p => p.in_stock),
+        ...products.filter(p => !p.in_stock),
+      ];
+
+      const featured = sorted.slice(0, 8);
 
       if (!featured.length) {
         el.innerHTML = '<p class="text-muted text-center">Nenhum produto cadastrado ainda.</p>';

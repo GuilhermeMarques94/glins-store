@@ -35,75 +35,173 @@
       line-height: 1.7;
     }
 
-    /* ── Em Construção ── */
-    .construction-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 80px 20px;
-      text-align: center;
-      gap: 20px;
+    /* ── Layout ── */
+    .faq-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 40px;
+      padding: 0 0 80px;
+      align-items: start;
     }
-    .construction-icon {
-      font-size: 5rem;
-      animation: float 3s ease-in-out infinite;
+
+    /* ── Navegação lateral ── */
+    .faq-nav {
+      position: sticky;
+      top: 80px;
     }
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(-12px); }
-    }
-    .construction-title {
+    .faq-nav-title {
       font-family: var(--font-title);
+      font-size: 0.78rem;
+      color: var(--primary);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .faq-nav-item:hover {
+      background: rgba(201,162,39,0.08);
+      color: var(--primary);
+    }
+    .faq-nav-item.active {
+      background: rgba(201,162,39,0.12);
+      color: var(--primary);
+      border-left: 2px solid var(--primary);
+    }
+
+    /* ── Seções ── */
+    .faq-section {
+      margin-bottom: 48px;
+      scroll-margin-top: 100px;
+    }
+    .faq-section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-section-icon {
       font-size: 1.6rem;
+    }
+    .faq-section-title {
+      font-family: var(--font-title);
+      font-size: 1.1rem;
       color: var(--primary);
       letter-spacing: 0.05em;
     }
-    .construction-text {
+
+    /* ── Accordion ── */
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .faq-item:hover {
+      border-color: var(--primary-dark);
+    }
+    .faq-item.open {
+      border-color: var(--primary-dark);
+      box-shadow: 0 0 20px rgba(201,162,39,0.08);
+    }
+    .faq-question {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      cursor: pointer;
+      background: var(--bg-card);
+      gap: 16px;
+      user-select: none;
+    }
+    .faq-question span {
+      font-family: var(--font-title);
+      font-size: 0.92rem;
+      color: var(--text-light);
+      flex: 1;
+      line-height: 1.5;
+    }
+    .faq-item.open .faq-question span {
+      color: var(--primary);
+    }
+    .faq-chevron {
+      color: var(--primary-dark);
+      font-size: 0.8rem;
+      transition: transform 0.3s ease;
+      flex-shrink: 0;
+    }
+    .faq-item.open .faq-chevron {
+      transform: rotate(180deg);
+    }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.3s ease;
+      background: var(--bg-surface);
+    }
+    .faq-answer-inner {
+      padding: 0 20px;
       color: var(--text-muted);
-      font-size: 0.95rem;
-      max-width: 480px;
+      font-size: 0.9rem;
       line-height: 1.8;
     }
-    .construction-bar {
-      width: 260px;
-      height: 6px;
-      background: var(--border);
-      border-radius: 99px;
-      overflow: hidden;
-      margin-top: 8px;
+    .faq-item.open .faq-answer {
+      max-height: 400px;
+      padding: 16px 0;
     }
-    .construction-bar-fill {
-      height: 100%;
-      width: 35%;
-      background: linear-gradient(90deg, var(--primary-dark), var(--primary));
-      border-radius: 99px;
-      animation: progress 2.5s ease-in-out infinite alternate;
+    .faq-answer a {
+      color: var(--primary);
+      text-decoration: underline;
     }
-    @keyframes progress {
-      from { width: 20%; }
-      to   { width: 60%; }
+    .faq-answer a:hover {
+      color: var(--text-light);
     }
-    .construction-badge {
-      display: inline-block;
-      padding: 6px 18px;
-      border: 1px solid var(--primary-dark);
-      border-radius: 20px;
-      color: var(--primary-dark);
+
+    /* ── CTA contato ── */
+    .faq-cta {
+      text-align: center;
+      padding: 48px 24px;
+      border: 1px solid var(--border-gold);
+      border-radius: var(--radius);
+      background: rgba(201,162,39,0.04);
+      margin-bottom: 80px;
+    }
+    .faq-cta .icon { font-size: 2.4rem; margin-bottom: 14px; }
+    .faq-cta h3 {
       font-family: var(--font-title);
-      font-size: 0.75rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      background: rgba(201,162,39,0.06);
+      color: var(--primary);
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+    .faq-cta p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+      line-height: 1.7;
     }
     .ornament {
       color: var(--primary-dark);
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       letter-spacing: 10px;
-      margin-top: 8px;
+      margin-top: 20px;
     }
 
-    /* Footer reutilizado */
+    /* Footer */
     footer {
       border-top: 1px solid var(--border);
       padding: 40px 0 24px;
@@ -118,13 +216,19 @@
     .footer-links a  { color: var(--text-muted); font-size: 0.88rem; transition: var(--transition); }
     .footer-links a:hover { color: var(--primary); }
     .footer-bottom { text-align: center; color: var(--text-muted); font-size: 0.82rem; padding-top: 24px; border-top: 1px solid var(--border); }
+
+    @media (max-width: 860px) {
+      .faq-layout { grid-template-columns: 1fr; }
+      .faq-nav { position: static; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+      .faq-nav-title { display: none; }
+      .faq-nav-item { border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 0.8rem; }
+      .faq-nav-item.active { border-color: var(--primary); border-left: 1px solid var(--primary); }
+    }
   </style>
 </head>
 <body>
 
 <div id="toast-container"></div>
-
-<!-- Navbar injetada via JS -->
 
 <!-- ═══ HERO ═══ -->
 <div class="faq-hero">
@@ -133,22 +237,290 @@
   <p>Tudo o que você precisa saber sobre a Glins Store</p>
 </div>
 
-<!-- ═══ EM CONSTRUÇÃO ═══ -->
+<!-- ═══ CONTEÚDO ═══ -->
 <div class="container">
-  <div class="construction-wrap card" style="border: 1px solid var(--border-gold);">
-    <div class="construction-icon">🏗️</div>
-    <div class="construction-title">Pergaminho em Elaboração</div>
-    <p class="construction-text">
-      Nossos escribas estão trabalhando arduamente para compilar
-      todas as respostas que você precisa. Esta seção estará
-      disponível em breve, nobre aventureiro.
-    </p>
-    <div class="construction-bar">
-      <div class="construction-bar-fill"></div>
+  <div class="faq-layout">
+
+    <!-- Navegação lateral -->
+    <nav class="faq-nav card">
+      <div class="faq-nav-title">📖 Seções</div>
+      <a class="faq-nav-item active" href="#produtos" onclick="setNavActive(this)">📦 Produtos</a>
+      <a class="faq-nav-item" href="#pagamentos" onclick="setNavActive(this)">💳 Pagamentos</a>
+      <a class="faq-nav-item" href="#entrega" onclick="setNavActive(this)">🚚 Entrega & Retirada</a>
+      <a class="faq-nav-item" href="#trocas" onclick="setNavActive(this)">🔄 Trocas & Devoluções</a>
+      <a class="faq-nav-item" href="#conta" onclick="setNavActive(this)">👤 Minha Conta</a>
+      <a class="faq-nav-item" href="#contato" onclick="setNavActive(this)">📬 Contato</a>
+    </nav>
+
+    <!-- Perguntas -->
+    <div>
+
+      <!-- ── Produtos ── -->
+      <div class="faq-section" id="produtos">
+        <div class="faq-section-header">
+          <span class="faq-section-icon">📦</span>
+          <span class="faq-section-title">Produtos</span>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Quais produtos vocês vendem?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Vendemos cards de <strong>Magic: The Gathering (MTG)</strong>, dados de RPG, sleeves, playmats, deck boxes, acessórios para card games e outros itens da cultura pop. Nosso catálogo está em constante crescimento!
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>E a qualidade dos produtos?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Todos os produtos são <strong>autênticos</strong>. Trabalhamos apenas com itens de procedência garantida. Qualidade é um dos pilares da Glins Store. ⚔️
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Os produtos exibidos estão em estoque?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Sim! Todos os produtos listados no site estão <strong>disponíveis para entrega ou retirada imediata</strong>. Produtos esgotados são sinalizados claramente na página.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Vocês aceitam encomendas de itens fora do catálogo?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Entre em contato pelo e-mail <a href="mailto:glins.store.cardgame@gmail.com">glins.store.cardgame@gmail.com</a> ou via Whatsapp e verificamos a disponibilidade para você, nobre aventureiro!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Pagamentos ── -->
+      <div class="faq-section" id="pagamentos">
+        <div class="faq-section-header">
+          <span class="faq-section-icon">💳</span>
+          <span class="faq-section-title">Pagamentos</span>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Quais formas de pagamento são aceitas?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Aceitamos <strong>PIX</strong> e <strong>Cartão de Crédito</strong>. Trabalhamos para oferecer a melhor experiência de pagamento para você.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>O pagamento é seguro?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Totalmente! 🛡️ Os dados do seu cartão <strong>nunca são armazenados</strong> em nossos servidores. O processamento é realizado diretamente pelo banco de forma criptografada e segura.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Quando meu pagamento é confirmado?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Pagamentos via <strong>PIX</strong> são confirmados instantaneamente. Pagamentos via <strong>Cartão de Crédito</strong> podem levar alguns minutos para aprovação. Você receberá uma notificação assim que o pedido for confirmado.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Entrega ── -->
+      <div class="faq-section" id="entrega">
+        <div class="faq-section-header">
+          <span class="faq-section-icon">🚚</span>
+          <span class="faq-section-title">Entrega & Retirada</span>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Vocês fazem entrega?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Sim! Realizamos envios para <strong>todo o Brasil</strong> pelos Correios. O frete é calculado automaticamente no momento do checkout com base no seu CEP.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Posso retirar meu pedido pessoalmente?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Sim! 🏰 Oferecemos retirada <strong>presencial em Uberlândia - MG</strong>, sem nenhum custo de frete. O local e horário de retirada serão combinados via e-mail ou Whatsapp após a confirmação do pagamento.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Como rastreio meu pedido?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Após o envio, você receberá o <strong>código de rastreamento</strong> por e-mail. Você pode acompanhar o seu pedido diretamente em:
+              <br/><br/>
+              <a href="https://rastreamento.correios.com.br/app/index.php" target="_blank" rel="noopener noreferrer">📦 rastreamento.correios.com.br</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Trocas ── -->
+      <div class="faq-section" id="trocas">
+        <div class="faq-section-header">
+          <span class="faq-section-icon">🔄</span>
+          <span class="faq-section-title">Trocas & Devoluções</span>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Posso trocar ou devolver um produto?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Sim! Aceitamos trocas e devoluções em até <strong>7 dias corridos</strong> após o recebimento, conforme o Código de Defesa do Consumidor. O produto deve estar sem uso e na embalagem original.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>O produto chegou danificado, e agora?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Entre em contato <strong>imediatamente</strong> pelo e-mail <a href="mailto:glins.store.cardgame@gmail.com">glins.store.cardgame@gmail.com</a> com fotos do produto e da embalagem. Resolveremos o problema o mais rápido possível! 🛡️
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Conta ── -->
+      <div class="faq-section" id="conta">
+        <div class="faq-section-header">
+          <span class="faq-section-icon">👤</span>
+          <span class="faq-section-title">Minha Conta</span>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Preciso criar uma conta para comprar?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Sim! O cadastro é necessário para finalizar pedidos e acompanhar seu histórico de compras. O processo é rápido e gratuito. <a href="/pages/register.html">Criar conta agora →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Esqueci minha senha, o que faço?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Na tela de login, clique em <strong>"Esqueci minha senha"</strong> e você receberá um e-mail com as instruções para redefiní-la. Caso tenha dificuldades, entre em contato conosco.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Meus dados ficam seguros?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Sim! Seus dados pessoais são armazenados com segurança e <strong>nunca são compartilhados com terceiros</strong>. Utilizamos criptografia para proteger todas as suas informações.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Contato ── -->
+      <div class="faq-section" id="contato">
+        <div class="faq-section-header">
+          <span class="faq-section-icon">📬</span>
+          <span class="faq-section-title">Contato & Atendimento</span>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Qual o horário de atendimento?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Respondemos em até <strong>24 horas</strong> nos dias úteis. Fazemos o máximo para responder o mais rápido possível! ✦
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>Como falo com vocês?</span>
+            <span class="faq-chevron">▼</span>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              📧 <strong>E-mail:</strong> <a href="mailto:glins.store.cardgame@gmail.com">glins.store.cardgame@gmail.com</a><br/>
+              💬 <strong>WhatsApp:</strong> Em breve...<br/><br/>
+              Ou clique em <strong>"Contato"</strong> no rodapé da página para abrir nossa central de atendimento.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CTA ── -->
+      <div class="faq-cta">
+        <div class="icon">📬</div>
+        <h3>Ainda tem dúvidas?</h3>
+        <p>Nossa guilda está pronta para ajudar você.<br/>Entre em contato e responderemos em até 24 horas.</p>
+        <button class="btn btn-primary btn-lg" onclick="openContactModal()">✉️ Falar com a Guilda</button>
+        <div class="ornament">✦ ✦ ✦</div>
+      </div>
+
     </div>
-    <span class="construction-badge">🔨 Em Construção</span>
-    <div class="ornament">✦ ✦ ✦</div>
-    <a href="/index.html" class="btn btn-outline">← Voltar ao Início</a>
   </div>
 </div>
 
@@ -205,20 +577,17 @@
     position: relative;
     box-shadow: 0 0 40px rgba(201,162,39,0.15);
   " onclick="event.stopPropagation()">
-
     <button onclick="closeContactModal()" style="
       position: absolute; top: 14px; right: 18px;
       background: none; border: none;
       color: var(--text-muted); font-size: 1.3rem;
       cursor: pointer; transition: var(--transition);
     " onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">✕</button>
-
     <div style="font-size: 2rem; margin-bottom: 10px;">📬</div>
     <h2 style="font-family: var(--font-title); color: var(--primary); font-size: 1.4rem; margin-bottom: 6px;">Fale Conosco</h2>
     <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 28px; line-height: 1.6;">
       Escolha o melhor canal para entrar em contato com a guilda.
     </p>
-
     <div style="display: flex; flex-direction: column; gap: 14px;">
       <a href="mailto:glins.store.cardgame@gmail.com" style="
         display: flex; align-items: center; gap: 14px;
@@ -237,7 +606,6 @@
           <div style="font-size: 0.88rem; color: var(--text-muted);">glins.store.cardgame@gmail.com</div>
         </div>
       </a>
-
       <div style="
         display: flex; align-items: center; gap: 14px;
         padding: 14px 18px;
@@ -254,7 +622,6 @@
         </div>
       </div>
     </div>
-
     <div style="margin-top: 24px; color: var(--text-muted); font-size: 0.78rem; letter-spacing: 0.05em;">
       ✦ Respondemos em até 24h ✦
     </div>
@@ -265,6 +632,39 @@
 <script src="/assets/js/utils.js"></script>
 <script src="/assets/js/navbar.js"></script>
 <script>
+  // ── Accordion ──
+  function toggleFaq(el) {
+    const item = el.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+
+    // Fecha todos
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+
+    // Abre o clicado (se estava fechado)
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // ── Nav lateral ──
+  function setNavActive(el) {
+    document.querySelectorAll('.faq-nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // ── Highlight nav ao scrollar ──
+  const sections = document.querySelectorAll('.faq-section');
+  const navItems = document.querySelectorAll('.faq-nav-item');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 120) current = s.id;
+    });
+    navItems.forEach(n => {
+      n.classList.toggle('active', n.getAttribute('href') === `#${current}`);
+    });
+  });
+
+  // ── Modal ──
   function openContactModal() {
     const m = document.getElementById('contact-modal');
     m.style.display = 'flex';
