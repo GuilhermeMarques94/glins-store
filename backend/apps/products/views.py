@@ -105,10 +105,17 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
         return [IsAuthenticated()]
 
     def get_queryset(self):
-        return (Product.objects
-                .filter(is_active=True)
-                .select_related('category')
-                .prefetch_related('images'))
+            # Admin vê todos (inclusive inativos), público só vê ativos
+            user = self.request.user
+            if user and user.is_authenticated and (user.is_staff or getattr(user, 'is_admin', False)):
+                return (Product.objects
+                        .all()
+                        .select_related('category')
+                        .prefetch_related('images'))
+            return (Product.objects
+                    .filter(is_active=True)
+                    .select_related('category')
+                    .prefetch_related('images'))
 
 
 # ── Imagens do Produto ────────────────────────────────────────────────────────
