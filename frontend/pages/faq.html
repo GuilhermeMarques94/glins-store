@@ -35,7 +35,6 @@
       line-height: 1.7;
     }
 
-    /* ── Layout ── */
     .faq-layout {
       display: grid;
       grid-template-columns: 220px 1fr;
@@ -44,7 +43,6 @@
       align-items: start;
     }
 
-    /* ── Navegação lateral ── */
     .faq-nav {
       position: sticky;
       top: 80px;
@@ -81,7 +79,6 @@
       border-left: 2px solid var(--primary);
     }
 
-    /* ── Seções ── */
     .faq-section {
       margin-bottom: 48px;
       scroll-margin-top: 100px;
@@ -94,9 +91,7 @@
       padding-bottom: 14px;
       border-bottom: 1px solid var(--border);
     }
-    .faq-section-icon {
-      font-size: 1.6rem;
-    }
+    .faq-section-icon { font-size: 1.6rem; }
     .faq-section-title {
       font-family: var(--font-title);
       font-size: 1.1rem;
@@ -104,7 +99,6 @@
       letter-spacing: 0.05em;
     }
 
-    /* ── Accordion ── */
     .faq-item {
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -112,9 +106,7 @@
       overflow: hidden;
       transition: var(--transition);
     }
-    .faq-item:hover {
-      border-color: var(--primary-dark);
-    }
+    .faq-item:hover { border-color: var(--primary-dark); }
     .faq-item.open {
       border-color: var(--primary-dark);
       box-shadow: 0 0 20px rgba(201,162,39,0.08);
@@ -136,18 +128,14 @@
       flex: 1;
       line-height: 1.5;
     }
-    .faq-item.open .faq-question span {
-      color: var(--primary);
-    }
+    .faq-item.open .faq-question span { color: var(--primary); }
     .faq-chevron {
       color: var(--primary-dark);
       font-size: 0.8rem;
       transition: transform 0.3s ease;
       flex-shrink: 0;
     }
-    .faq-item.open .faq-chevron {
-      transform: rotate(180deg);
-    }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
     .faq-answer {
       max-height: 0;
       overflow: hidden;
@@ -164,15 +152,9 @@
       max-height: 400px;
       padding: 16px 0;
     }
-    .faq-answer a {
-      color: var(--primary);
-      text-decoration: underline;
-    }
-    .faq-answer a:hover {
-      color: var(--text-light);
-    }
+    .faq-answer a { color: var(--primary); text-decoration: underline; }
+    .faq-answer a:hover { color: var(--text-light); }
 
-    /* ── CTA contato ── */
     .faq-cta {
       text-align: center;
       padding: 48px 24px;
@@ -201,7 +183,6 @@
       margin-top: 20px;
     }
 
-    /* Footer */
     footer {
       border-top: 1px solid var(--border);
       padding: 40px 0 24px;
@@ -261,7 +242,6 @@
           <span class="faq-section-icon">📦</span>
           <span class="faq-section-title">Produtos</span>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Quais produtos vocês vendem?</span>
@@ -273,7 +253,6 @@
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>E a qualidade dos produtos?</span>
@@ -285,7 +264,6 @@
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Os produtos exibidos estão em estoque?</span>
@@ -297,7 +275,6 @@
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Vocês aceitam encomendas de itens fora do catálogo?</span>
@@ -305,7 +282,7 @@
           </div>
           <div class="faq-answer">
             <div class="faq-answer-inner">
-              Entre em contato pelo e-mail <a href="mailto:glins.store.cardgame@gmail.com">glins.store.cardgame@gmail.com</a> ou via Whatsapp e verificamos a disponibilidade para você, nobre aventureiro!
+              Entre em contato pelo e-mail <a href="mailto:glins.store.cardgame@gmail.com">glins.store.cardgame@gmail.com</a> ou via <a href="https://wa.me/5534996341474" target="_blank" rel="noopener noreferrer">WhatsApp</a> e verificamos a disponibilidade para você, nobre aventureiro!
             </div>
           </div>
         </div>
@@ -317,7 +294,6 @@
           <span class="faq-section-icon">💳</span>
           <span class="faq-section-title">Pagamentos</span>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Quais formas de pagamento são aceitas?</span>
@@ -329,7 +305,6 @@
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>O pagamento é seguro?</span>
@@ -341,7 +316,6 @@
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Quando meu pagamento é confirmado?</span>
@@ -361,7 +335,6 @@
           <span class="faq-section-icon">🚚</span>
           <span class="faq-section-title">Entrega & Retirada</span>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Vocês fazem entrega?</span>
@@ -373,7 +346,6 @@
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Posso retirar meu pedido pessoalmente?</span>
@@ -381,11 +353,10 @@
           </div>
           <div class="faq-answer">
             <div class="faq-answer-inner">
-              Sim! 🏰 Oferecemos retirada <strong>presencial em Uberlândia - MG</strong>, sem nenhum custo de frete. O local e horário de retirada serão combinados via e-mail ou Whatsapp após a confirmação do pagamento.
+              Sim! 🏰 Oferecemos retirada <strong>presencial em Uberlândia - MG</strong>, sem nenhum custo de frete. O local e horário de retirada serão combinados via e-mail ou WhatsApp após a confirmação do pagamento.
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Como rastreio meu pedido?</span>
@@ -407,7 +378,6 @@
           <span class="faq-section-icon">🔄</span>
           <span class="faq-section-title">Trocas & Devoluções</span>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Posso trocar ou devolver um produto?</span>
@@ -419,7 +389,6 @@
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>O produto chegou danificado, e agora?</span>
@@ -439,7 +408,6 @@
           <span class="faq-section-icon">👤</span>
           <span class="faq-section-title">Minha Conta</span>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Preciso criar uma conta para comprar?</span>
@@ -451,7 +419,6 @@
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Esqueci minha senha, o que faço?</span>
@@ -463,7 +430,6 @@
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Meus dados ficam seguros?</span>
@@ -483,7 +449,6 @@
           <span class="faq-section-icon">📬</span>
           <span class="faq-section-title">Contato & Atendimento</span>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Qual o horário de atendimento?</span>
@@ -495,7 +460,6 @@
             </div>
           </div>
         </div>
-
         <div class="faq-item">
           <div class="faq-question" onclick="toggleFaq(this)">
             <span>Como falo com vocês?</span>
@@ -504,7 +468,7 @@
           <div class="faq-answer">
             <div class="faq-answer-inner">
               📧 <strong>E-mail:</strong> <a href="mailto:glins.store.cardgame@gmail.com">glins.store.cardgame@gmail.com</a><br/>
-              💬 <strong>WhatsApp:</strong> Em breve...<br/><br/>
+              💬 <strong>WhatsApp:</strong> <a href="https://wa.me/5534996341474" target="_blank" rel="noopener noreferrer">(34) 99634-1474</a><br/><br/>
               Ou clique em <strong>"Contato"</strong> no rodapé da página para abrir nossa central de atendimento.
             </div>
           </div>
@@ -577,18 +541,23 @@
     position: relative;
     box-shadow: 0 0 40px rgba(201,162,39,0.15);
   " onclick="event.stopPropagation()">
+
     <button onclick="closeContactModal()" style="
       position: absolute; top: 14px; right: 18px;
       background: none; border: none;
       color: var(--text-muted); font-size: 1.3rem;
       cursor: pointer; transition: var(--transition);
     " onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">✕</button>
+
     <div style="font-size: 2rem; margin-bottom: 10px;">📬</div>
     <h2 style="font-family: var(--font-title); color: var(--primary); font-size: 1.4rem; margin-bottom: 6px;">Fale Conosco</h2>
     <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 28px; line-height: 1.6;">
       Escolha o melhor canal para entrar em contato com a guilda.
     </p>
+
     <div style="display: flex; flex-direction: column; gap: 14px;">
+
+      <!-- E-mail -->
       <a href="mailto:glins.store.cardgame@gmail.com" style="
         display: flex; align-items: center; gap: 14px;
         padding: 14px 18px;
@@ -606,23 +575,28 @@
           <div style="font-size: 0.88rem; color: var(--text-muted);">glins.store.cardgame@gmail.com</div>
         </div>
       </a>
-      <div style="
+
+      <!-- WhatsApp -->
+      <a href="https://wa.me/5534996341474" target="_blank" rel="noopener noreferrer" style="
         display: flex; align-items: center; gap: 14px;
         padding: 14px 18px;
         background: var(--bg-surface);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        opacity: 0.5;
-        cursor: not-allowed;
-      ">
+        text-decoration: none;
+        transition: var(--transition);
+        color: var(--text-light);
+      " onmouseover="this.style.borderColor='var(--primary)'; this.style.boxShadow='var(--shadow-gold)'"
+         onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
         <span style="font-size: 1.8rem;">💬</span>
         <div style="text-align: left;">
           <div style="font-family: var(--font-title); font-size: 0.78rem; color: var(--primary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px;">WhatsApp</div>
           <div style="font-size: 0.88rem; color: var(--text-muted);">(34) 99634-1474</div>
         </div>
-        </div>
-      </div>
+      </a>
+
     </div>
+
     <div style="margin-top: 24px; color: var(--text-muted); font-size: 0.78rem; letter-spacing: 0.05em;">
       ✦ Respondemos em até 24h ✦
     </div>
@@ -633,25 +607,18 @@
 <script src="/assets/js/utils.js"></script>
 <script src="/assets/js/navbar.js"></script>
 <script>
-  // ── Accordion ──
   function toggleFaq(el) {
     const item = el.closest('.faq-item');
     const isOpen = item.classList.contains('open');
-
-    // Fecha todos
     document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-
-    // Abre o clicado (se estava fechado)
     if (!isOpen) item.classList.add('open');
   }
 
-  // ── Nav lateral ──
   function setNavActive(el) {
     document.querySelectorAll('.faq-nav-item').forEach(i => i.classList.remove('active'));
     el.classList.add('active');
   }
 
-  // ── Highlight nav ao scrollar ──
   const sections = document.querySelectorAll('.faq-section');
   const navItems = document.querySelectorAll('.faq-nav-item');
 
@@ -665,7 +632,6 @@
     });
   });
 
-  // ── Modal ──
   function openContactModal() {
     const m = document.getElementById('contact-modal');
     m.style.display = 'flex';
