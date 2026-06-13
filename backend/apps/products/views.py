@@ -73,7 +73,7 @@ class ProductListView(generics.ListCreateAPIView):
         qs = (Product.objects
               .filter(is_active=True)
               .select_related('category')
-              .prefetch_related('images'))   # ← prefetch das imagens
+              .prefetch_related('images'))
 
         category  = self.request.query_params.get('category')
         min_price = self.request.query_params.get('min_price')
@@ -92,8 +92,17 @@ class ProductListView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        name = serializer.validated_data.get('name', '')
-        serializer.save(slug=slugify(name))
+        name      = serializer.validated_data.get('name', '')
+        base_slug = slugify(name)
+        slug      = base_slug
+
+        # Garante slug único mesmo que já exista produto com o mesmo nome
+        counter = 1
+        while Product.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+
+        serializer.save(slug=slug)
 
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -105,17 +114,17 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
         return [IsAuthenticated()]
 
     def get_queryset(self):
-            # Admin vê todos (inclusive inativos), público só vê ativos
-            user = self.request.user
-            if user and user.is_authenticated and (user.is_staff or getattr(user, 'is_admin', False)):
-                return (Product.objects
-                        .all()
-                        .select_related('category')
-                        .prefetch_related('images'))
+        # Admin vê todos (inclusive inativos), público só vê ativos
+        user = self.request.user
+        if user and user.is_authenticated and (user.is_staff or getattr(user, 'is_admin', False)):
             return (Product.objects
-                    .filter(is_active=True)
+                    .all()
                     .select_related('category')
                     .prefetch_related('images'))
+        return (Product.objects
+                .filter(is_active=True)
+                .select_related('category')
+                .prefetch_related('images'))
 
 
 # ── Imagens do Produto ────────────────────────────────────────────────────────
