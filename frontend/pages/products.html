@@ -49,6 +49,24 @@
     .cat-filter-item:hover  { background: rgba(201,162,39,0.08); color: var(--primary); }
     .cat-filter-item.active { background: rgba(201,162,39,0.12); color: var(--primary); border-left: 2px solid var(--primary); }
 
+    /* Scroll nas categorias dinâmicas */
+    #cat-filters {
+      max-height: 320px; /* ~8 itens visíveis */
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-dark) transparent;
+    }
+    #cat-filters::-webkit-scrollbar {
+      width: 4px;
+    }
+    #cat-filters::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #cat-filters::-webkit-scrollbar-thumb {
+      background: var(--primary-dark);
+      border-radius: 4px;
+    }
+
     /* Toolbar */
     .products-toolbar {
       display: flex; align-items: center;
@@ -104,11 +122,14 @@
 
       <div class="filter-section">
         <label>📂 Categoria</label>
-        <div id="cat-filters">
-          <div class="cat-filter-item active" data-slug="" onclick="setCategory('')">
-            <span>🏰 Todos</span>
-          </div>
+
+        <!-- "Todos" fica FORA do scroll, sempre visível -->
+        <div class="cat-filter-item active" data-slug="" onclick="setCategory('')">
+          <span>🏰 Todos</span>
         </div>
+
+        <!-- Categorias dinâmicas com scroll -->
+        <div id="cat-filters"></div>
       </div>
 
       <div class="filter-section">
@@ -165,7 +186,7 @@
   let currentCategory = new URLSearchParams(location.search).get('category') || '';
   let currentPage     = 1;
   let totalCount      = 0;
-  const PAGE_SIZE     = 20; // deve bater com o page_size do backend
+  const PAGE_SIZE     = 20;
 
   // ════════════════════════════════
   //  CATEGORIAS
@@ -174,7 +195,7 @@
     const el = document.getElementById('cat-filters');
     try {
       const res  = await API.categories.list();
-      const cats = res.results ?? res;
+      const cats = (res.results ?? res).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
       cats.forEach(c => {
         const item = document.createElement('div');
         item.className = `cat-filter-item ${currentCategory === c.slug ? 'active' : ''}`;
@@ -188,7 +209,8 @@
 
   function setCategory(slug) {
     currentCategory = slug;
-    currentPage     = 1; // volta pra página 1 ao trocar categoria
+    currentPage     = 1;
+    // Atualiza active em todos — incluindo o "Todos" que está fora do #cat-filters
     document.querySelectorAll('.cat-filter-item').forEach(el => {
       el.classList.toggle('active', el.dataset.slug === slug);
     });
@@ -232,7 +254,6 @@
       grid.innerHTML = products.map(p => productCard(p)).join('');
       renderPagination(totalCount);
 
-      // Scroll suave pro topo da grid ao trocar de página
       grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     } catch (_) {
@@ -253,11 +274,9 @@
     const pages = getPageRange(currentPage, totalPages);
     let html    = '';
 
-    // Botão anterior
     html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''}
               onclick="applyFilters(${currentPage - 1})">← Anterior</button>`;
 
-    // Números de página com reticências
     pages.forEach(p => {
       if (p === '...') {
         html += `<span class="page-btn" style="cursor:default;opacity:0.4">…</span>`;
@@ -267,14 +286,12 @@
       }
     });
 
-    // Botão próxima
     html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''}
               onclick="applyFilters(${currentPage + 1})">Próxima →</button>`;
 
     container.innerHTML = html;
   }
 
-  // Gera intervalo inteligente: [1, ..., 4, 5, 6, ..., 12]
   function getPageRange(current, total) {
     if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
 
@@ -297,10 +314,10 @@
   //  LIMPAR FILTROS
   // ════════════════════════════════
   function clearFilters() {
-    document.getElementById('searchInput').value    = '';
-    document.getElementById('minPrice').value        = '';
-    document.getElementById('maxPrice').value        = '';
-    document.getElementById('inStockOnly').checked   = false;
+    document.getElementById('searchInput').value  = '';
+    document.getElementById('minPrice').value      = '';
+    document.getElementById('maxPrice').value      = '';
+    document.getElementById('inStockOnly').checked = false;
     setCategory('');
   }
 
@@ -343,7 +360,6 @@
     }
   }
 
-  // Enter na busca → volta pra página 1
   document.getElementById('searchInput')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') applyFilters(1);
   });
