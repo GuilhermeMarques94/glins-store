@@ -234,9 +234,6 @@
             <span class="order-id">Pedido #${o.id}</span>
             ${statusBadge(o.status)}
           </div>
-          <div class="order-items-preview">
-            ${o.items.map(i => `${i.name} × ${i.quantity}`).join(' · ')}
-          </div>
           ${o.tracking_code
             ? `<div class="mt-1" style="font-size:0.82rem;color:var(--text-muted)">
                  📦 Rastreio: <strong>${o.tracking_code}</strong>
