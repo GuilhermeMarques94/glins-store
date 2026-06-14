@@ -19,13 +19,40 @@
     .profile-nav a:hover, .profile-nav a.active { background: rgba(201,162,39,0.1); color: var(--primary); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .order-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; transition: var(--transition); }
-    .order-card:hover { border-color: var(--border-gold); }
+
+    /* Order cards */
+    .order-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; transition: var(--transition); cursor: pointer; }
+    .order-card:hover { border-color: var(--border-gold); transform: translateY(-1px); }
     .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .order-id { font-family: var(--font-title); font-size: 0.9rem; }
-    .order-items-list { font-size: 0.85rem; color: var(--text-muted); }
+    .order-items-preview { font-size: 0.85rem; color: var(--text-muted); }
     .order-total { font-family: var(--font-title); color: var(--primary); margin-top: 8px; }
+    .order-hint { margin-top: 8px; font-size: 0.78rem; color: var(--primary); opacity: 0.7; }
+
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: var(--radius); padding: 32px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; position: relative; }
+    .modal h2 { margin-bottom: 24px; font-size: 1.2rem; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; line-height: 1; }
+    .modal-close:hover { color: var(--danger); }
+
+    /* Order detail */
+    .order-items-list { margin: 16px 0; }
+    .order-item-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .order-item-row:last-child { border-bottom: none; }
+    .order-item-row img { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border); flex-shrink: 0; }
+    .order-item-info { flex: 1; }
+    .order-item-info strong { display: block; font-size: 0.88rem; }
+    .order-item-info span { font-size: 0.8rem; color: var(--text-muted); }
+    .order-summary { background: var(--bg-surface); border-radius: var(--radius); padding: 16px; margin: 16px 0; }
+    .order-summary-row { display: flex; justify-content: space-between; font-size: 0.88rem; padding: 4px 0; color: var(--text-muted); }
+    .order-summary-row.total { font-family: var(--font-title); color: var(--primary); font-size: 1rem; padding-top: 10px; border-top: 1px solid var(--border); margin-top: 6px; }
+    .product-thumb-placeholder { width: 56px; height: 56px; background: var(--bg-surface); border-radius: var(--radius); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .info-label { font-size: 0.72rem; color: var(--primary); font-family: var(--font-title); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+    .tracking-box { background: rgba(201,162,39,0.08); border: 1px solid var(--border-gold); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; font-size: 0.88rem; }
+
     @media (max-width: 768px) {
       .profile-layout { grid-template-columns: 1fr; }
       .grid-2 { grid-template-columns: 1fr; }
@@ -34,6 +61,7 @@
 </head>
 <body>
 <div id="toast-container"></div>
+<div id="modal-container"></div>
 
 <div class="page-wrap">
   <div class="container">
@@ -56,6 +84,7 @@
 
       <!-- Conteúdo -->
       <div>
+
         <!-- Pedidos -->
         <div id="tab-orders" class="tab-content active">
           <h2 class="mb-3">📋 Meus Pedidos</h2>
@@ -153,6 +182,7 @@
 
   let userData = null;
 
+  // ── Navegação entre abas ──────────────────────
   function showTab(tab, el) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.profile-nav a').forEach(a => a.classList.remove('active'));
@@ -160,6 +190,15 @@
     el?.classList.add('active');
   }
 
+  // ── Helper ────────────────────────────────────
+  function toArray(response) {
+    if (!response) return [];
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response.results)) return response.results;
+    return [];
+  }
+
+  // ── Init ──────────────────────────────────────
   async function init() {
     userData = await API.auth.profile();
     initViaCEP('aZipcode', 'aStreet', 'aCity', 'aState', 'aNumber');
@@ -176,28 +215,35 @@
     loadOrders();
   }
 
+  // ── Pedidos (lista) ───────────────────────────
   async function loadOrders() {
     const el = document.getElementById('orders-list');
     try {
       const orders = await API.orders.list();
       if (!orders.length) {
-        el.innerHTML = `<div class="text-muted text-center" style="padding:40px">
-          Você ainda não fez nenhum pedido.
-          <br/><a href="/pages/products.html" class="btn btn-primary mt-2">⚔️ Explorar Produtos</a>
-        </div>`;
+        el.innerHTML = `
+          <div class="text-muted text-center" style="padding:40px">
+            Você ainda não fez nenhum pedido.
+            <br/><a href="/pages/products.html" class="btn btn-primary mt-2">⚔️ Explorar Produtos</a>
+          </div>`;
         return;
       }
       el.innerHTML = orders.map(o => `
-        <div class="order-card">
+        <div class="order-card" onclick="openOrderModal(${o.id})">
           <div class="order-header">
             <span class="order-id">Pedido #${o.id}</span>
             ${statusBadge(o.status)}
           </div>
-          <div class="order-items-list">
+          <div class="order-items-preview">
             ${o.items.map(i => `${i.name} × ${i.quantity}`).join(' · ')}
           </div>
-          ${o.tracking_code ? `<div class="mt-1" style="font-size:0.82rem;color:var(--text-muted)">📦 Rastreio: <strong>${o.tracking_code}</strong></div>` : ''}
+          ${o.tracking_code
+            ? `<div class="mt-1" style="font-size:0.82rem;color:var(--text-muted)">
+                 📦 Rastreio: <strong>${o.tracking_code}</strong>
+               </div>`
+            : ''}
           <div class="order-total">${formatPrice(o.total)} · ${formatDate(o.created_at)}</div>
+          <div class="order-hint">🔍 Clique para ver detalhes</div>
         </div>
       `).join('');
     } catch (_) {
@@ -205,6 +251,108 @@
     }
   }
 
+  // ── Modal: fechar ─────────────────────────────
+  function closeModal() {
+    document.getElementById('modal-container').innerHTML = '';
+  }
+
+  document.getElementById('modal-container').addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay')) closeModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ── Modal: detalhe do pedido ──────────────────
+  async function openOrderModal(id) {
+    closeModal();
+
+    const container = document.getElementById('modal-container');
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <h2>📋 Pedido <span style="color:var(--primary)">#${id}</span></h2>
+        <div id="orderDetail"><div class="loader" style="margin:20px auto"></div></div>
+      </div>`;
+    container.appendChild(modal);
+
+    try {
+      const o = await API.orders.detail(id);
+      const items = toArray(o.items || o.order_items);
+
+      document.getElementById('orderDetail').innerHTML = `
+
+        ${o.tracking_code ? `
+          <div class="tracking-box">
+            🚚 Código de rastreio: <strong>${o.tracking_code}</strong>
+          </div>` : ''}
+
+        <div class="info-label">🛍️ Itens do Pedido</div>
+        <div class="order-items-list">
+          ${items.length ? items.map(item => {
+            const name  = item.product_name || item.name || item.product?.name || `Produto #${item.product}`;
+            const img   = item.product_image || item.image || item.product?.image_url || null;
+            const price = parseFloat(item.price || item.unit_price || 0);
+            const qty   = item.quantity || 1;
+            return `
+              <div class="order-item-row">
+                ${img
+                  ? `<img src="${img}" alt="${name}" onerror="this.style.opacity='0.3'"/>`
+                  : `<div class="product-thumb-placeholder">🏺</div>`}
+                <div class="order-item-info">
+                  <strong>${name}</strong>
+                  <span>Qtd: ${qty} × ${formatPrice(price)}</span>
+                </div>
+                <strong style="white-space:nowrap">${formatPrice(qty * price)}</strong>
+              </div>`;
+          }).join('')
+          : '<p class="text-muted" style="padding:12px 0">Sem itens registrados.</p>'}
+        </div>
+
+        <div class="order-summary">
+          <div class="order-summary-row">
+            <span>Subtotal</span>
+            <span>${formatPrice(o.subtotal || o.total)}</span>
+          </div>
+          ${o.shipping_cost ? `
+            <div class="order-summary-row">
+              <span>🚚 Frete</span>
+              <span>${formatPrice(o.shipping_cost)}</span>
+            </div>` : ''}
+          ${o.discount ? `
+            <div class="order-summary-row">
+              <span>🏷️ Desconto</span>
+              <span>-${formatPrice(o.discount)}</span>
+            </div>` : ''}
+          <div class="order-summary-row total">
+            <span>Total</span>
+            <span>${formatPrice(o.total)}</span>
+          </div>
+        </div>
+
+        ${o.street ? `
+          <div class="info-label">📍 Endereço de Entrega</div>
+          <div style="font-size:0.88rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
+            ${o.street}, ${o.number}${o.complement ? ` — ${o.complement}` : ''}<br/>
+            ${o.city} / ${o.state} &nbsp;·&nbsp; CEP: ${o.zipcode}
+          </div>` : ''}
+
+        <div style="text-align:right">
+          <button class="btn btn-outline" onclick="closeModal()">Fechar</button>
+        </div>`;
+
+    } catch (e) {
+      document.getElementById('orderDetail').innerHTML =
+        `<p class="text-muted text-center" style="padding:20px">
+           Erro ao carregar detalhes do pedido.
+         </p>`;
+    }
+  }
+
+  // ── Salvar dados pessoais ─────────────────────
   document.getElementById('profileForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -216,7 +364,8 @@
     } catch (_) { showToast('Erro ao salvar', 'error'); }
   });
 
-document.getElementById('addressForm').addEventListener('submit', async (e) => {
+  // ── Salvar endereço ───────────────────────────
+  document.getElementById('addressForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
       await API.auth.updateProfile({
@@ -230,11 +379,12 @@ document.getElementById('addressForm').addEventListener('submit', async (e) => {
         state:      document.getElementById('aState').value,
       });
       showToast('Endereço salvo! ✅', 'success');
-    } catch (err) { 
-      showToast(err?.error || 'Erro ao salvar endereço', 'error'); 
+    } catch (err) {
+      showToast(err?.error || 'Erro ao salvar endereço', 'error');
     }
   });
 
+  // ── Alterar senha ─────────────────────────────
   document.getElementById('passwordForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (document.getElementById('newPwd').value !== document.getElementById('newPwd2').value) {
