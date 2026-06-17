@@ -71,13 +71,6 @@
     .admin-main { padding: 32px; background: var(--bg-surface); }
     .admin-header { margin-bottom: 28px; }
     .admin-header h1 { font-size: 1.6rem; margin-bottom: 4px; }
-    .flex-between {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
 
     /* Filtros */
     .filter-bar {
@@ -138,81 +131,80 @@
     }
     .modal-close:hover { color: var(--danger); }
 
-    /* Detalhes pedido */
-    .order-info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 20px;
+    /* Info cliente */
+    .customer-info {
+      background: var(--bg-surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
     }
-    .order-info-item label {
-      display: block;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 4px;
-    }
-    .order-info-item span {
-      font-size: 0.92rem;
-      font-weight: 500;
-      color: var(--text-light);
-    }
-
-    .order-items-title {
-      font-family: var(--font-title);
-      font-size: 0.78rem;
+    .customer-info p { margin: 4px 0; color: var(--text-muted); }
+    .customer-info strong { color: var(--text-light); }
+    .info-label {
+      font-size: 0.72rem;
       color: var(--primary);
+      font-family: var(--font-title);
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
-    .order-items-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
+
+    /* Itens */
+    .order-items-list { margin: 12px 0 16px; }
     .order-item-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-item-row:last-child { border-bottom: none; }
+    .order-item-row img {
+      width: 48px; height: 48px;
+      object-fit: cover;
       border-radius: var(--radius);
-      padding: 10px 14px;
-      gap: 10px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
     }
-    .order-item-row .item-name {
-      flex: 1;
-      font-size: 0.88rem;
-    }
-    .order-item-row .item-qty {
-      color: var(--text-muted);
-      font-size: 0.82rem;
-      white-space: nowrap;
-    }
-    .order-item-row .item-price {
-      font-weight: 600;
-      color: var(--primary);
-      white-space: nowrap;
+    .order-item-info { flex: 1; }
+    .order-item-info strong { display: block; font-size: 0.88rem; }
+    .order-item-info span { font-size: 0.8rem; color: var(--text-muted); }
+    .product-thumb-placeholder {
+      width: 48px; height: 48px;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
     }
 
-    .order-total-row {
+    /* Resumo */
+    .order-summary {
+      background: var(--bg-surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin: 16px 0;
+    }
+    .order-summary-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
+      font-size: 0.88rem;
+      padding: 4px 0;
+      color: var(--text-muted);
+    }
+    .order-summary-row.total {
+      font-family: var(--font-title);
+      color: var(--primary);
+      font-size: 1rem;
+      padding-top: 10px;
       border-top: 1px solid var(--border);
-      margin-top: 4px;
+      margin-top: 6px;
     }
-    .order-total-row span { color: var(--text-muted); }
-    .order-total-row strong { font-size: 1.1rem; color: var(--primary); }
 
-    .status-select-wrap {
-      display: flex; gap: 10px; align-items: flex-end; margin-top: 16px;
-    }
-    .status-select-wrap .form-group { margin: 0; flex: 1; }
+    /* Grid form */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
     @media (max-width: 900px) {
       .admin-layout { grid-template-columns: 1fr; }
@@ -231,7 +223,7 @@
         border-right: none;
         border-bottom-color: var(--primary);
       }
-      .order-info-grid { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -265,14 +257,14 @@
     <div class="filter-bar">
       <input type="text" class="form-control" id="orderSearch"
              placeholder="🔍 Buscar por cliente ou #ID..."
-             oninput="debounceSearch()"/>
-      <select class="form-control" id="orderStatusFilter" onchange="applyFilters()">
+             oninput="filterOrders()"/>
+      <select class="form-control" id="orderStatusFilter" onchange="loadOrders()">
         <option value="">Todos os status</option>
         <option value="pending">⏳ Aguardando pagamento</option>
-        <option value="paid">💳 Pago</option>
-        <option value="processing">⚙️ Em processamento</option>
+        <option value="paid">✅ Pago</option>
+        <option value="preparing">🔨 Preparando</option>
         <option value="shipped">🚚 Enviado</option>
-        <option value="delivered">✅ Entregue</option>
+        <option value="delivered">📦 Entregue</option>
         <option value="cancelled">❌ Cancelado</option>
       </select>
     </div>
@@ -284,6 +276,7 @@
             <tr>
               <th>#</th>
               <th>Cliente</th>
+              <th>E-mail</th>
               <th>Itens</th>
               <th>Total</th>
               <th>Status</th>
@@ -293,7 +286,7 @@
           </thead>
           <tbody id="orders-table">
             <tr>
-              <td colspan="7" class="text-center">
+              <td colspan="8" class="text-center">
                 <div class="loader"></div>
               </td>
             </tr>
@@ -316,10 +309,10 @@
   // ════════════════════════════════════════
   //  ESTADO
   // ════════════════════════════════════════
+  let allOrders        = [];
   let orderCurrentPage = 1;
   let orderTotalCount  = 0;
   const ORDERS_PER_PAGE = 20;
-  let searchDebounceTimer = null;
 
   // ════════════════════════════════════════
   //  MODAL
@@ -360,6 +353,13 @@
     return `#${order.id}`;
   }
 
+  function getClientEmail(order) {
+    if (order.user?.email)     return order.user.email;
+    if (order.customer_email)  return order.customer_email;
+    if (order.customer?.email) return order.customer.email;
+    return '—';
+  }
+
   function formatDate(dt) {
     if (!dt) return '—';
     return new Date(dt).toLocaleDateString('pt-BR', {
@@ -368,74 +368,58 @@
     });
   }
 
-  const STATUS_LABELS = {
-    pending:    { label: 'Aguardando',    badge: 'badge-gold' },
-    paid:       { label: 'Pago',          badge: 'badge-success' },
-    processing: { label: 'Processando',   badge: 'badge-gold' },
-    shipped:    { label: 'Enviado',       badge: 'badge-info' },
-    delivered:  { label: 'Entregue',      badge: 'badge-success' },
-    cancelled:  { label: 'Cancelado',     badge: 'badge-danger' },
-  };
-
-  function renderStatus(status) {
-    const s = STATUS_LABELS[status] || { label: status || '—', badge: 'badge-muted' };
-    return `<span class="badge ${s.badge}">${s.label}</span>`;
-  }
-
-  // ════════════════════════════════════════
-  //  BUSCA / FILTROS
-  // ════════════════════════════════════════
-  function debounceSearch() {
-    clearTimeout(searchDebounceTimer);
-    searchDebounceTimer = setTimeout(() => {
-      orderCurrentPage = 1;
-      loadOrders(1);
-    }, 400);
-  }
-
-  function applyFilters() {
-    orderCurrentPage = 1;
-    loadOrders(1);
-  }
-
   // ════════════════════════════════════════
   //  CARREGAR PEDIDOS
   // ════════════════════════════════════════
-  async function loadOrders(page = null) {
-    if (page !== null) orderCurrentPage = page;
-
+  async function loadOrders() {
     const tb = document.getElementById('orders-table');
-    tb.innerHTML = '<tr><td colspan="7" class="text-center"><div class="loader"></div></td></tr>';
+    tb.innerHTML = '<tr><td colspan="8" class="text-center"><div class="loader"></div></td></tr>';
     document.getElementById('orders-pagination').innerHTML = '';
 
-    const search = document.getElementById('orderSearch')?.value?.trim()  || '';
-    const status = document.getElementById('orderStatusFilter')?.value    || '';
-
-    const params = { page: orderCurrentPage };
-    if (search) params.search = search;
-    if (status) params.status = status;
+    const filter = document.getElementById('orderStatusFilter')?.value || '';
 
     try {
-      const rawOrders = await API.orders.adminList(params);
+      const rawOrders = await API.orders.adminList(filter ? { status: filter } : {});
 
-      let orders = [];
       if (rawOrders && typeof rawOrders === 'object' && 'results' in rawOrders) {
-        orders          = rawOrders.results;
+        allOrders       = rawOrders.results;
         orderTotalCount = rawOrders.count;
       } else {
-        orders          = toArray(rawOrders);
-        orderTotalCount = orders.length;
+        allOrders       = toArray(rawOrders);
+        orderTotalCount = allOrders.length;
       }
 
-      renderOrders(orders);
-      renderPagination();
+      // aplicar busca local se houver texto
+      const search = document.getElementById('orderSearch')?.value?.trim().toLowerCase() || '';
+      const filtered = search ? allOrders.filter(o =>
+        getClientName(o).toLowerCase().includes(search) ||
+        getClientEmail(o).toLowerCase().includes(search) ||
+        String(o.id).includes(search)
+      ) : allOrders;
+
+      renderOrders(filtered);
+      renderPagination(filtered.length);
 
     } catch (e) {
       console.error('[Pedidos]', e);
-      tb.innerHTML = `<tr><td colspan="7" class="text-muted text-center" style="padding:20px">
+      tb.innerHTML = `<tr><td colspan="8" class="text-muted text-center" style="padding:20px">
         ❌ Erro ao carregar pedidos: ${e?.detail || e?.message || ''}
       </td></tr>`;
     }
+  }
+
+  // ════════════════════════════════════════
+  //  FILTRO LOCAL (busca por texto)
+  // ════════════════════════════════════════
+  function filterOrders() {
+    const search = document.getElementById('orderSearch').value.toLowerCase();
+    const filtered = allOrders.filter(o =>
+      getClientName(o).toLowerCase().includes(search) ||
+      getClientEmail(o).toLowerCase().includes(search) ||
+      String(o.id).includes(search)
+    );
+    renderOrders(filtered);
+    renderPagination(filtered.length);
   }
 
   // ════════════════════════════════════════
@@ -444,27 +428,33 @@
   function renderOrders(orders) {
     const tb = document.getElementById('orders-table');
     if (!orders.length) {
-      tb.innerHTML = '<tr><td colspan="7" class="text-muted text-center" style="padding:20px">Nenhum pedido encontrado.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="8" class="text-muted text-center" style="padding:20px">Nenhum pedido encontrado.</td></tr>';
       return;
     }
-    tb.innerHTML = orders.map(o => {
-      const itemCount = o.items?.length ?? o.order_items?.length ?? '—';
+
+    // paginação local
+    const start = (orderCurrentPage - 1) * ORDERS_PER_PAGE;
+    const page  = orders.slice(start, start + ORDERS_PER_PAGE);
+
+    tb.innerHTML = page.map(o => {
+      const itemCount = o.items?.length ?? o.order_items?.length ?? o.item_count ?? o.items_count ?? '—';
       return `
         <tr>
           <td><strong>#${o.id}</strong></td>
           <td>${getClientName(o)}</td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">${getClientEmail(o)}</td>
           <td>
-            <span class="badge badge-muted">${itemCount} item${itemCount !== 1 ? 's' : ''}</span>
+            <span class="badge badge-gold">${itemCount} ${itemCount === 1 ? 'item' : 'itens'}</span>
           </td>
           <td><strong>${formatPrice(o.total)}</strong></td>
-          <td>${renderStatus(o.status)}</td>
+          <td>${statusBadge(o.status)}</td>
           <td style="white-space:nowrap;font-size:0.8rem;color:var(--text-muted)">
             ${formatDate(o.created_at)}
           </td>
           <td>
             <button class="btn btn-outline btn-sm"
                     onclick="openOrderModal(${o.id})"
-                    title="Ver detalhes">👁️</button>
+                    title="Ver detalhes">🔍 Detalhes</button>
           </td>
         </tr>`;
     }).join('');
@@ -473,15 +463,15 @@
   // ════════════════════════════════════════
   //  PAGINAÇÃO
   // ════════════════════════════════════════
-  function renderPagination() {
+  function renderPagination(total) {
     const container  = document.getElementById('orders-pagination');
-    const totalPages = Math.ceil(orderTotalCount / ORDERS_PER_PAGE);
+    const totalPages = Math.ceil(total / ORDERS_PER_PAGE);
     const start      = (orderCurrentPage - 1) * ORDERS_PER_PAGE + 1;
-    const end        = Math.min(orderCurrentPage * ORDERS_PER_PAGE, orderTotalCount);
+    const end        = Math.min(orderCurrentPage * ORDERS_PER_PAGE, total);
 
     if (totalPages <= 1) {
       container.innerHTML = `<span class="text-muted" style="font-size:0.82rem">
-        ${orderTotalCount} pedido${orderTotalCount !== 1 ? 's' : ''} encontrado${orderTotalCount !== 1 ? 's' : ''}
+        ${total} pedido${total !== 1 ? 's' : ''} encontrado${total !== 1 ? 's' : ''}
       </span>`;
       return;
     }
@@ -501,21 +491,26 @@
 
     container.innerHTML = `
       <span class="text-muted" style="font-size:0.82rem">
-        Exibindo <strong>${start}–${end}</strong> de <strong>${orderTotalCount}</strong> pedidos
+        Exibindo <strong>${start}–${end}</strong> de <strong>${total}</strong> pedidos
       </span>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <button ${btnStyle(false)} onclick="loadOrders(1)"
+        <button ${btnStyle(false)} onclick="goPage(1)"
                 ${orderCurrentPage === 1 ? 'disabled' : ''}>«</button>
-        <button ${btnStyle(false)} onclick="loadOrders(${orderCurrentPage - 1})"
+        <button ${btnStyle(false)} onclick="goPage(${orderCurrentPage - 1})"
                 ${orderCurrentPage === 1 ? 'disabled' : ''}>‹</button>
         ${pages.map(p => `
           <button ${btnStyle(p === orderCurrentPage)}
-                  onclick="loadOrders(${p})">${p}</button>`).join('')}
-        <button ${btnStyle(false)} onclick="loadOrders(${orderCurrentPage + 1})"
+                  onclick="goPage(${p})">${p}</button>`).join('')}
+        <button ${btnStyle(false)} onclick="goPage(${orderCurrentPage + 1})"
                 ${orderCurrentPage === totalPages ? 'disabled' : ''}>›</button>
-        <button ${btnStyle(false)} onclick="loadOrders(${totalPages})"
+        <button ${btnStyle(false)} onclick="goPage(${totalPages})"
                 ${orderCurrentPage === totalPages ? 'disabled' : ''}>»</button>
       </div>`;
+  }
+
+  function goPage(p) {
+    orderCurrentPage = p;
+    filterOrders();
   }
 
   // ════════════════════════════════════════
@@ -527,11 +522,11 @@
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.innerHTML = `
-      <div class="modal">
+      <div class="modal" style="max-width:560px">
         <button class="modal-close" onclick="closeModal()">✕</button>
         <h2>📋 Pedido <span style="color:var(--primary)">#${id}</span></h2>
-        <div id="order-detail-content">
-          <div class="loader"></div>
+        <div id="orderDetail">
+          <div class="loader" style="margin:20px auto"></div>
         </div>
       </div>`;
 
@@ -539,82 +534,153 @@
 
     try {
       const o = await API.orders.adminDetail(id);
+      const items = toArray(o.items || o.order_items);
 
-      const items = o.items || o.order_items || [];
-      const addr  = o.shipping_address;
-      const addrStr = addr
-        ? (typeof addr === 'string'
-            ? addr
-            : `${addr.street || ''}, ${addr.city || ''} — ${addr.state || ''}`.trim().replace(/^,|,$/g, ''))
-        : '—';
+      // ── Endereço: tenta campos diretos primeiro, depois objeto aninhado ──
+      let addrHtml = '';
+      if (o.street) {
+        addrHtml = `
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+            <div class="info-label" style="margin-bottom:6px">📍 Endereço de Entrega</div>
+            <p>${o.street}, ${o.number || 's/n'}${o.complement ? ` — ${o.complement}` : ''}</p>
+            <p>${o.city || ''} / ${o.state || ''}&nbsp;·&nbsp; CEP: ${o.zipcode || o.zip_code || '—'}</p>
+          </div>`;
+      } else if (o.shipping_address && typeof o.shipping_address === 'object') {
+        const a = o.shipping_address;
+        const line1 = [a.street, a.number].filter(Boolean).join(', ');
+        const line2 = [a.city, a.state].filter(Boolean).join(' / ');
+        if (line1 || line2) {
+          addrHtml = `
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+              <div class="info-label" style="margin-bottom:6px">📍 Endereço de Entrega</div>
+              ${line1 ? `<p>${line1}${a.complement ? ` — ${a.complement}` : ''}</p>` : ''}
+              ${line2 ? `<p>${line2}${a.zipcode || a.zip_code ? `&nbsp;·&nbsp; CEP: ${a.zipcode || a.zip_code}` : ''}</p>` : ''}
+            </div>`;
+        }
+      } else if (typeof o.shipping_address === 'string' && o.shipping_address) {
+        addrHtml = `
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+            <div class="info-label" style="margin-bottom:6px">📍 Endereço de Entrega</div>
+            <p>${o.shipping_address}</p>
+          </div>`;
+      }
 
-      document.getElementById('order-detail-content').innerHTML = `
-        <div class="order-info-grid">
-          <div class="order-info-item">
-            <label>Cliente</label>
-            <span>${getClientName(o)}</span>
-          </div>
-          <div class="order-info-item">
-            <label>E-mail</label>
-            <span>${o.user?.email || o.customer?.email || '—'}</span>
-          </div>
-          <div class="order-info-item">
-            <label>Data do pedido</label>
-            <span>${formatDate(o.created_at)}</span>
-          </div>
-          <div class="order-info-item">
-            <label>Status atual</label>
-            <span>${renderStatus(o.status)}</span>
-          </div>
-          <div class="order-info-item" style="grid-column:1/-1">
-            <label>Endereço de entrega</label>
-            <span>${addrStr}</span>
-          </div>
+      document.getElementById('orderDetail').innerHTML = `
+
+        <!-- Cliente -->
+        <div class="customer-info">
+          <div class="info-label">👤 Cliente</div>
+          <p><strong>${getClientName(o)}</strong></p>
+          <p>📧 ${getClientEmail(o)}</p>
+          ${addrHtml}
+          ${o.tracking_code
+            ? `<p style="margin-top:8px">🚚 Rastreio: <strong>${o.tracking_code}</strong></p>`
+            : ''}
         </div>
 
-        <div class="order-items-title">Itens do pedido</div>
+        <!-- Itens -->
+        <div class="info-label">🛍️ Itens do Pedido</div>
         <div class="order-items-list">
           ${items.length
             ? items.map(item => {
-                const name     = item.product_name || item.product?.name || `Produto #${item.product}`;
-                const qty      = item.quantity;
-                const price    = item.unit_price ?? item.price ?? 0;
-                const subtotal = parseFloat(price) * parseInt(qty);
+                const name  = item.product_name || item.name || item.product?.name || `Produto #${item.product}`;
+                const img   = item.product_image || item.image || item.image_url ||
+                              item.product?.image_url || item.product?.image || null;
+                const price = parseFloat(item.unit_price ?? item.price ?? 0);
+                const qty   = parseInt(item.quantity) || 1;
                 return `
                   <div class="order-item-row">
-                    <span class="item-name">${name}</span>
-                    <span class="item-qty">× ${qty}</span>
-                    <span class="item-price">${formatPrice(subtotal)}</span>
+                    ${img
+                      ? `<img src="${img}" alt="${name}"
+                               onerror="this.style.display='none';this.nextSibling.style.display='flex'"/>
+                         <div class="product-thumb-placeholder" style="display:none">🏺</div>`
+                      : `<div class="product-thumb-placeholder">🏺</div>`}
+                    <div class="order-item-info">
+                      <strong>${name}</strong>
+                      <span>Qtd: ${qty} × ${formatPrice(price)}</span>
+                    </div>
+                    <strong>${formatPrice(qty * price)}</strong>
                   </div>`;
               }).join('')
-            : '<p class="text-muted" style="font-size:0.85rem">Nenhum item encontrado.</p>'}
+            : '<p class="text-muted" style="font-size:0.85rem;padding:8px 0">Sem itens registrados.</p>'}
         </div>
 
-        <div class="order-total-row">
-          <span>Total do pedido</span>
-          <strong>${formatPrice(o.total)}</strong>
-        </div>
-
-        <div class="status-select-wrap">
-          <div class="form-group">
-            <label>Atualizar status</label>
-            <select id="newStatus" class="form-control">
-              <option value="pending"    ${o.status === 'pending'    ? 'selected' : ''}>⏳ Aguardando pagamento</option>
-              <option value="paid"       ${o.status === 'paid'       ? 'selected' : ''}>💳 Pago</option>
-              <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>⚙️ Em processamento</option>
-              <option value="shipped"    ${o.status === 'shipped'    ? 'selected' : ''}>🚚 Enviado</option>
-              <option value="delivered"  ${o.status === 'delivered'  ? 'selected' : ''}>✅ Entregue</option>
-              <option value="cancelled"  ${o.status === 'cancelled'  ? 'selected' : ''}>❌ Cancelado</option>
-            </select>
+        <!-- Resumo financeiro -->
+        <div class="order-summary">
+          <div class="order-summary-row">
+            <span>Subtotal</span>
+            <span>${formatPrice(o.subtotal || o.total)}</span>
           </div>
-          <button class="btn btn-primary" onclick="updateOrderStatus(${id})">
-            💾 Salvar
-          </button>
-        </div>`;
+          ${o.shipping_cost
+            ? `<div class="order-summary-row">
+                 <span>🚚 Frete</span>
+                 <span>${formatPrice(o.shipping_cost)}</span>
+               </div>` : ''}
+          ${o.discount
+            ? `<div class="order-summary-row">
+                 <span>🏷️ Desconto</span>
+                 <span>-${formatPrice(o.discount)}</span>
+               </div>` : ''}
+          <div class="order-summary-row total">
+            <span>Total</span>
+            <span>${formatPrice(o.total)}</span>
+          </div>
+        </div>
+
+        <!-- Atualizar pedido -->
+        <div class="info-label" style="margin-top:16px">⚙️ Atualizar Pedido</div>
+        <form id="orderForm">
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Status</label>
+              <select id="oStatus" class="form-control">
+                <option value="pending"   ${o.status === 'pending'   ? 'selected' : ''}>⏳ Aguardando</option>
+                <option value="paid"      ${o.status === 'paid'      ? 'selected' : ''}>✅ Pago</option>
+                <option value="preparing" ${o.status === 'preparing' ? 'selected' : ''}>🔨 Preparando</option>
+                <option value="shipped"   ${o.status === 'shipped'   ? 'selected' : ''}>🚚 Enviado</option>
+                <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>📦 Entregue</option>
+                <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>❌ Cancelado</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Código de Rastreio</label>
+              <input type="text" id="oTracking" class="form-control"
+                     placeholder="AA000000000BR"
+                     value="${o.tracking_code || ''}"/>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button type="submit" class="btn btn-primary">💾 Salvar alterações</button>
+            <button type="button" class="btn btn-outline" onclick="closeModal()">Fechar</button>
+          </div>
+        </form>`;
+
+      // submit do form
+      document.getElementById('orderForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled    = true;
+        btn.textContent = '⏳ Salvando...';
+
+        try {
+          await API.orders.adminUpdate(id, {
+            status:        document.getElementById('oStatus').value,
+            tracking_code: document.getElementById('oTracking').value,
+          });
+          showToast('✅ Pedido atualizado!', 'success');
+          closeModal();
+          loadOrders();
+        } catch (err) {
+          console.error('[Salvar Pedido]', err);
+          showToast(err?.detail || 'Erro ao atualizar pedido', 'error');
+          btn.disabled    = false;
+          btn.textContent = '💾 Salvar alterações';
+        }
+      });
 
     } catch (e) {
-      console.error('[Detalhe Pedido]', e);
-      document.getElementById('order-detail-content').innerHTML =
+      console.error('[Order Modal]', e);
+      document.getElementById('orderDetail').innerHTML =
         `<p class="text-muted text-center" style="padding:20px">
           ❌ Erro ao carregar pedido: ${e?.detail || e?.message || ''}
         </p>`;
@@ -622,27 +688,9 @@
   }
 
   // ════════════════════════════════════════
-  //  ATUALIZAR STATUS
-  // ════════════════════════════════════════
-  async function updateOrderStatus(id) {
-    const newStatus = document.getElementById('newStatus')?.value;
-    if (!newStatus) return;
-
-    try {
-      await API.orders.updateStatus(id, { status: newStatus });
-      showToast('✅ Status atualizado com sucesso!', 'success');
-      closeModal();
-      loadOrders(orderCurrentPage);
-    } catch (e) {
-      console.error('[Update Status]', e);
-      showToast(e?.detail || 'Erro ao atualizar status', 'error');
-    }
-  }
-
-  // ════════════════════════════════════════
   //  INIT
   // ════════════════════════════════════════
-  loadOrders(1);
+  loadOrders();
 </script>
 </body>
 </html>
