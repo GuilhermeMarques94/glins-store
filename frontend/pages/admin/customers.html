@@ -1,887 +1,641 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Clientes — Glins Store Admin</title>
-  <link rel="stylesheet" href="../../assets/css/admin.css" />
+  <link rel="stylesheet" href="/assets/css/global.css"/>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f1117;
-      color: #e2e8f0;
-      display: flex;
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
       min-height: 100vh;
     }
-
-    /* ── Sidebar ── */
-    .sidebar {
-      width: 240px;
-      background: #1a1d2e;
-      border-right: 1px solid #2d3148;
+    .admin-sidebar {
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
-      padding: 24px 0;
-      position: fixed;
-      top: 0; left: 0;
-      height: 100vh;
-      z-index: 100;
     }
-
-    .sidebar-logo {
-      padding: 0 24px 28px;
-      border-bottom: 1px solid #2d3148;
-      font-size: 20px;
-      font-weight: 700;
-      color: #a78bfa;
-      letter-spacing: 1px;
+    .sidebar-brand {
+      font-family: var(--font-title);
+      font-size: 1rem;
+      color: var(--primary);
+      letter-spacing: 0.1em;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
     }
-
-    .sidebar-logo span { color: #fff; }
-    .sidebar-nav { padding: 20px 12px; flex: 1; }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 14px;
-      border-radius: 10px;
-      color: #94a3b8;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all .2s;
-      margin-bottom: 4px;
+    .sidebar-brand span {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
-
-    .nav-item:hover  { background: #252840; color: #e2e8f0; }
-    .nav-item.active { background: #312e81; color: #a78bfa; }
-    .nav-item .icon  { font-size: 18px; width: 22px; text-align: center; }
-
-    /* ── Main ── */
-    .main { margin-left: 240px; flex: 1; padding: 32px; min-height: 100vh; }
-
-    .page-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .page-title { font-size: 26px; font-weight: 700; color: #fff; }
-    .page-title span { color: #a78bfa; }
-
-    /* ── Toolbar ── */
-    .toolbar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
-
-    .search-box {
-      display: flex;
-      align-items: center;
-      background: #1a1d2e;
-      border: 1px solid #2d3148;
-      border-radius: 10px;
-      padding: 0 14px;
-      flex: 1;
-      min-width: 220px;
-      max-width: 400px;
-    }
-
-    .search-box input {
-      background: none;
-      border: none;
-      outline: none;
-      color: #e2e8f0;
-      font-size: 14px;
-      padding: 11px 8px;
-      flex: 1;
-    }
-
-    .search-box input::placeholder { color: #64748b; }
-    .search-box .search-icon { color: #64748b; font-size: 16px; }
-
-    .filter-select {
-      background: #1a1d2e;
-      border: 1px solid #2d3148;
-      border-radius: 10px;
-      color: #e2e8f0;
-      font-size: 14px;
-      padding: 11px 16px;
-      outline: none;
-      cursor: pointer;
-    }
-
-    .filter-select option { background: #1a1d2e; }
-
-    /* ── Stats ── */
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 16px;
-      margin-bottom: 28px;
-    }
-
-    .stat-card {
-      background: #1a1d2e;
-      border: 1px solid #2d3148;
-      border-radius: 14px;
-      padding: 20px;
-      text-align: center;
-    }
-
-    .stat-card .stat-value { font-size: 28px; font-weight: 700; color: #a78bfa; }
-    .stat-card .stat-label {
-      font-size: 12px;
-      color: #64748b;
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-    }
-
-    /* ── Tabela ── */
-    .table-wrap {
-      background: #1a1d2e;
-      border: 1px solid #2d3148;
-      border-radius: 16px;
-      overflow: hidden;
-    }
-
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-
-    thead th {
-      background: #252840;
-      color: #94a3b8;
-      font-weight: 600;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      padding: 14px 18px;
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    tbody tr { border-top: 1px solid #23263a; transition: background .15s; }
-    tbody tr:hover { background: #20233a; }
-    tbody td { padding: 14px 18px; vertical-align: middle; }
-
-    /* ── Avatar ── */
-    .avatar {
-      width: 38px; height: 38px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #7c3aed, #a78bfa);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 15px;
-      color: #fff;
-      flex-shrink: 0;
-    }
-
-    .client-info { display: flex; align-items: center; gap: 12px; }
-    .client-name  { font-weight: 600; color: #e2e8f0; }
-    .client-email { font-size: 12px; color: #64748b; margin-top: 2px; }
-
-    /* ── Badges ── */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .badge-admin    { background: #312e81; color: #a78bfa; }
-    .badge-active   { background: #14532d; color: #4ade80; }
-    .badge-inactive { background: #3b1a1a; color: #f87171; }
-
-    /* ── Botões ação ── */
-    .btn-action {
-      background: none;
-      border: 1px solid #2d3148;
-      border-radius: 8px;
-      color: #94a3b8;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all .2s;
-      margin-right: 4px;
-    }
-
-    .btn-action:hover          { background: #252840; color: #e2e8f0; border-color: #4c4f7a; }
-    .btn-action.btn-edit:hover { border-color: #a78bfa; color: #a78bfa; }
-    .btn-action.btn-del:hover  { border-color: #f87171; color: #f87171; }
-
-    /* ── Paginação ── */
-    .pagination {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px;
-      border-top: 1px solid #23263a;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .pagination-info { font-size: 13px; color: #64748b; }
-    .pagination-btns { display: flex; gap: 6px; }
-
-    .page-btn {
-      background: #252840;
-      border: 1px solid #2d3148;
-      border-radius: 8px;
-      color: #94a3b8;
-      padding: 7px 13px;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all .2s;
-    }
-
-    .page-btn:hover    { background: #312e81; color: #a78bfa; border-color: #4c4f7a; }
-    .page-btn.active   { background: #312e81; color: #a78bfa; border-color: #7c3aed; }
-    .page-btn:disabled { opacity: .4; cursor: not-allowed; }
-
-    /* ── Empty/loading ── */
-    .empty-state, .loading-state { padding: 60px 20px; text-align: center; color: #64748b; }
-    .empty-state .icon   { font-size: 48px; margin-bottom: 12px; }
-    .loading-state .spin { font-size: 32px; animation: spin 1s linear infinite; display: inline-block; }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Modal ── */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.7);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .25s;
-    }
-
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-
-    .modal {
-      background: #1a1d2e;
-      border: 1px solid #2d3148;
-      border-radius: 18px;
-      width: 100%;
-      max-width: 520px;
-      padding: 32px;
-      transform: translateY(20px);
-      transition: transform .25s;
-    }
-
-    .modal-overlay.open .modal { transform: translateY(0); }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-
-    .modal-title { font-size: 18px; font-weight: 700; color: #fff; }
-
-    .btn-close {
-      background: none;
-      border: none;
-      color: #64748b;
-      font-size: 22px;
-      cursor: pointer;
-      line-height: 1;
-      padding: 4px;
-      border-radius: 6px;
-      transition: color .2s;
-    }
-
-    .btn-close:hover { color: #e2e8f0; }
-
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group.full { grid-column: 1 / -1; }
-
-    .form-group label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-    }
-
-    .form-group input,
-    .form-group select {
-      background: #0f1117;
-      border: 1px solid #2d3148;
-      border-radius: 10px;
-      color: #e2e8f0;
-      font-size: 14px;
-      padding: 11px 14px;
-      outline: none;
-      transition: border-color .2s;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus { border-color: #7c3aed; }
-
-    .form-group select option { background: #1a1d2e; }
-
-    .modal-footer {
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-      margin-top: 28px;
-    }
-
-    .btn {
-      padding: 11px 24px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      transition: all .2s;
-    }
-
-    .btn-ghost { background: transparent; border: 1px solid #2d3148; color: #94a3b8; }
-    .btn-ghost:hover { background: #252840; color: #e2e8f0; }
-
-    .btn-primary { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff; }
-    .btn-primary:hover { background: linear-gradient(135deg, #6d28d9, #5b21b6); transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-
-    /* ── Toast ── */
-    .toast {
-      position: fixed;
-      bottom: 28px; right: 28px;
-      background: #1a1d2e;
-      border: 1px solid #2d3148;
-      border-radius: 12px;
-      padding: 14px 20px;
-      font-size: 14px;
-      color: #e2e8f0;
+    .admin-nav { flex: 1; }
+    .admin-nav a {
       display: flex;
       align-items: center;
       gap: 10px;
-      z-index: 9999;
-      transform: translateY(20px);
-      opacity: 0;
-      transition: all .3s;
-      min-width: 260px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.4);
+      padding: 11px 20px;
+      color: var(--text-light);
+      font-size: 0.88rem;
+      transition: var(--transition);
+      border-right: 2px solid transparent;
+    }
+    .admin-nav a:hover,
+    .admin-nav a.active {
+      background: rgba(201,162,39,0.08);
+      color: var(--primary);
+      border-right-color: var(--primary);
+    }
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .sidebar-footer a {
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-footer a:hover { color: var(--primary); }
+
+    .admin-main { padding: 32px; background: var(--bg-surface); }
+    .admin-header { margin-bottom: 28px; }
+    .admin-header h1 { font-size: 1.6rem; margin-bottom: 4px; }
+    .flex-between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
-    .toast.show  { transform: translateY(0); opacity: 1; }
-    .toast.ok    { border-color: #4ade80; }
-    .toast.error { border-color: #f87171; }
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary-dark), transparent);
+    }
+    .stat-card .stat-value {
+      font-family: var(--font-title);
+      font-size: 1.6rem;
+      color: var(--primary);
+    }
+    .stat-card .stat-label {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      margin-top: 4px;
+    }
 
-    /* ── Modal confirmação ── */
-    .confirm-modal { max-width: 380px; text-align: center; }
-    .confirm-modal .confirm-icon { font-size: 44px; margin-bottom: 12px; }
-    .confirm-modal .confirm-text { color: #94a3b8; font-size: 14px; margin-top: 8px; }
+    /* Filtros */
+    .filter-bar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-bar input,
+    .filter-bar select { flex: 1; min-width: 140px; }
 
-    /* ── Responsivo ── */
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); transition: transform .3s; }
-      .sidebar.open { transform: translateX(0); }
-      .main { margin-left: 0; padding: 20px 16px; }
-      .form-grid { grid-template-columns: 1fr; }
-      thead th:nth-child(3),
-      thead th:nth-child(4),
-      tbody td:nth-child(3),
-      tbody td:nth-child(4) { display: none; }
+    /* Tabela */
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      font-family: var(--font-title);
+      font-size: 0.75rem;
+      color: var(--primary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(201,162,39,0.03); }
+
+    /* Avatar */
+    .avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: #000;
+      flex-shrink: 0;
+    }
+    .client-info { display: flex; align-items: center; gap: 12px; }
+    .client-name  { font-weight: 600; }
+    .client-email { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* Paginação */
+    #customers-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal h2 { margin-bottom: 24px; font-size: 1.2rem; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none;
+      color: var(--text-muted); font-size: 1.4rem;
+      cursor: pointer; line-height: 1;
+    }
+    .modal-close:hover { color: var(--danger); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    @media (max-width: 900px) {
+      .admin-layout { grid-template-columns: 1fr; }
+      .admin-sidebar {
+        height: auto; position: static;
+        flex-direction: row; flex-wrap: wrap; padding: 12px;
+      }
+      .sidebar-brand { border-bottom: none; padding-bottom: 0; }
+      .admin-nav { display: flex; flex-wrap: wrap; }
+      .admin-nav a {
+        padding: 8px 12px;
+        border-right: none;
+        border-bottom: 2px solid transparent;
+      }
+      .admin-nav a.active {
+        border-right: none;
+        border-bottom-color: var(--primary);
+      }
+      .grid-2 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
+<div id="toast-container"></div>
+<div id="modal-container"></div>
 
-<!-- ══════════════ SIDEBAR ══════════════ -->
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo">GLINS <span>STORE</span></div>
-  <nav class="sidebar-nav">
-    <a href="dashboard.html"  class="nav-item"><span class="icon">📊</span> Dashboard</a>
-    <a href="products.html"   class="nav-item"><span class="icon">📦</span> Produtos</a>
-    <a href="orders.html"     class="nav-item"><span class="icon">🛒</span> Pedidos</a>
-    <a href="customers.html"  class="nav-item active"><span class="icon">👥</span> Clientes</a>
-    <a href="categories.html" class="nav-item"><span class="icon">🏷️</span> Categorias</a>
-  </nav>
-</aside>
-
-<!-- ══════════════ MAIN ══════════════ -->
-<main class="main">
-
-  <div class="page-header">
-    <div>
-      <h1 class="page-title">👥 <span>Clientes</span></h1>
-      <p style="color:#64748b;font-size:13px;margin-top:4px;">Gerencie todos os clientes cadastrados</p>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      👑 GLINS STORE
+      <span>Painel Administrativo</span>
     </div>
-  </div>
-
-  <!-- Stats -->
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total</div></div>
-    <div class="stat-card"><div class="stat-value" id="statActive">—</div><div class="stat-label">Ativos</div></div>
-    <div class="stat-card"><div class="stat-value" id="statAdmin">—</div><div class="stat-label">Admins</div></div>
-    <div class="stat-card"><div class="stat-value" id="statNew">—</div><div class="stat-label">Novos (30d)</div></div>
-  </div>
-
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="Buscar por nome, e-mail ou telefone..." />
+    <nav class="admin-nav">
+      <a href="/pages/admin/dashboard.html">📊 Dashboard</a>
+      <a href="/pages/admin/products.html">📦 Produtos</a>
+      <a href="/pages/admin/categories.html">📂 Categorias</a>
+      <a href="/pages/admin/orders.html">📋 Pedidos</a>
+      <a href="/pages/admin/customers.html" class="active">👥 Clientes</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/index.html">← Voltar à Loja</a>
     </div>
-    <select class="filter-select" id="filterRole">
-      <option value="">Todos os perfis</option>
-      <option value="admin">Apenas admins</option>
-      <option value="user">Apenas clientes</option>
-    </select>
-    <select class="filter-select" id="filterStatus">
-      <option value="">Todos os status</option>
-      <option value="active">Ativos</option>
-      <option value="inactive">Inativos</option>
-    </select>
-  </div>
+  </aside>
 
-  <!-- Tabela -->
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Telefone</th>
-          <th>Perfil</th>
-          <th>Status</th>
-          <th>Cadastro</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody">
-        <tr>
-          <td colspan="6">
-            <div class="loading-state">
-              <div class="spin">⚙️</div>
-              <p style="margin-top:12px">Carregando clientes...</p>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="pagination" id="pagination" style="display:none">
-      <span class="pagination-info" id="paginationInfo"></span>
-      <div class="pagination-btns" id="paginationBtns"></div>
-    </div>
-  </div>
-</main>
-
-<!-- ══════════════ MODAL EDIÇÃO ══════════════ -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 class="modal-title">✏️ Editar Cliente</h2>
-      <button class="btn-close" onclick="closeModal()">✕</button>
-    </div>
-
-    <!-- Avatar preview -->
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
-      <div class="avatar" id="modalAvatar" style="width:52px;height:52px;font-size:20px;">?</div>
+  <main class="admin-main">
+    <div class="admin-header flex-between">
       <div>
-        <div id="modalClientName"  style="font-weight:700;color:#e2e8f0;font-size:16px;">—</div>
-        <div id="modalClientEmail" style="font-size:12px;color:#64748b;margin-top:2px;">—</div>
+        <h1>👥 Clientes</h1>
+        <p class="text-muted">Gerencie todos os clientes cadastrados</p>
       </div>
     </div>
 
-    <form id="editForm" onsubmit="submitEdit(event)">
-      <input type="hidden" id="editId" />
-      <div class="form-grid">
-
-        <!-- ✅ Campo único "name" — modelo não usa first/last_name -->
-        <div class="form-group full">
-          <label>Nome completo</label>
-          <input type="text" id="editName" placeholder="Nome completo" />
-        </div>
-
-        <div class="form-group full">
-          <label>E-mail</label>
-          <input type="email" id="editEmail" placeholder="email@exemplo.com" disabled
-            style="opacity:.5;cursor:not-allowed;" title="E-mail não pode ser alterado" />
-        </div>
-
-        <div class="form-group">
-          <label>Telefone</label>
-          <input type="text" id="editPhone" placeholder="(xx) xxxxx-xxxx" />
-        </div>
-
-        <div class="form-group">
-          <label>Perfil</label>
-          <select id="editIsAdmin">
-            <option value="false">Cliente</option>
-            <option value="true">Admin</option>
-          </select>
-        </div>
-
-        <div class="form-group full">
-          <label>Status</label>
-          <select id="editIsActive">
-            <option value="true">Ativo</option>
-            <option value="false">Inativo</option>
-          </select>
-        </div>
-
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-label">Total de clientes</div>
       </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-        <button type="submit" class="btn btn-primary" id="btnSave">💾 Salvar alterações</button>
+      <div class="stat-card">
+        <div class="stat-value" id="statActive">—</div>
+        <div class="stat-label">Ativos</div>
       </div>
-    </form>
-  </div>
-</div>
-
-<!-- ══════════════ MODAL CONFIRMAÇÃO DELETE ══════════════ -->
-<div class="modal-overlay" id="deleteModal">
-  <div class="modal confirm-modal">
-    <div class="confirm-icon">🗑️</div>
-    <h2 class="modal-title">Excluir cliente?</h2>
-    <p class="confirm-text">Esta ação é irreversível. O cliente e todos os seus dados serão removidos permanentemente.</p>
-    <div class="modal-footer" style="justify-content:center;margin-top:24px;">
-      <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
-      <button class="btn btn-primary" id="btnConfirmDelete"
-        style="background:linear-gradient(135deg,#dc2626,#b91c1c)">Excluir</button>
+      <div class="stat-card">
+        <div class="stat-value" id="statAdmin">—</div>
+        <div class="stat-label">Admins</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statNew">—</div>
+        <div class="stat-label">Novos (30d)</div>
+      </div>
     </div>
-  </div>
+
+    <!-- Filtros -->
+    <div class="filter-bar">
+      <input type="text" class="form-control" id="searchInput"
+             placeholder="🔍 Buscar por nome, e-mail ou telefone..."
+             oninput="debounceSearch()"/>
+      <select class="form-control" id="filterRole" onchange="applyFilters()">
+        <option value="user">Apenas clientes</option>
+        <option value="">Todos os perfis</option>
+        <option value="admin">Apenas admins</option>
+      </select>
+      <select class="form-control" id="filterStatus" onchange="applyFilters()">
+        <option value="">Todos os status</option>
+        <option value="active">Ativos</option>
+        <option value="inactive">Inativos</option>
+      </select>
+    </div>
+
+    <!-- Tabela -->
+    <div class="card">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Telefone</th>
+              <th>Perfil</th>
+              <th>Status</th>
+              <th>Cadastro</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="6" class="text-center"><div class="loader"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="customers-pagination"></div>
+    </div>
+  </main>
 </div>
 
-<!-- ══════════════ TOAST ══════════════ -->
-<div class="toast" id="toast"></div>
-
-<!-- ══════════════ SCRIPTS ══════════════ -->
-<script src="../../assets/js/api.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
 <script>
-/* ─────────────────────────────────────────
-   ESTADO
-───────────────────────────────────────── */
-let allCustomers   = [];
-let filtered       = [];
-let currentPage    = 1;
-const PER_PAGE     = 12;
-let deleteTargetId = null;
+  if (!requireAdmin()) {}
 
-/* ─────────────────────────────────────────
-   INIT
-───────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  if (!Auth.isAdmin()) {
-    window.location.href = '../login.html';
-    return;
+  // ════════════════════════════════════════
+  //  ESTADO
+  // ════════════════════════════════════════
+  let allCustomers    = [];
+  let filtered        = [];
+  let currentPage     = 1;
+  const PER_PAGE      = 20;
+  let searchDebounce  = null;
+
+  // ════════════════════════════════════════
+  //  MODAL
+  // ════════════════════════════════════════
+  function closeModal() {
+    document.getElementById('modal-container').innerHTML = '';
   }
+  document.getElementById('modal-container').addEventListener('click', e => {
+    if (e.target.classList.contains('modal-overlay')) closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ════════════════════════════════════════
+  //  INIT
+  // ════════════════════════════════════════
   loadCustomers();
 
-  let debounce;
-  document.getElementById('searchInput').addEventListener('input', () => {
-    clearTimeout(debounce);
-    debounce = setTimeout(applyFilters, 300);
-  });
-  document.getElementById('filterRole').addEventListener('change', applyFilters);
-  document.getElementById('filterStatus').addEventListener('change', applyFilters);
-});
-
-/* ─────────────────────────────────────────
-   CARREGAR CLIENTES
-───────────────────────────────────────── */
-async function loadCustomers() {
-  try {
-    const res    = await API.users.list();
-    allCustomers = res.results ?? res ?? [];
-    updateStats();
-    applyFilters();
-  } catch (e) {
-    console.error(e);
-    showEmptyState('Erro ao carregar clientes. Verifique a API.');
-  }
-}
-
-/* ─────────────────────────────────────────
-   STATS
-───────────────────────────────────────── */
-function updateStats() {
-  const total  = allCustomers.length;
-  const active = allCustomers.filter(u => u.is_active !== false).length;
-  const admins = allCustomers.filter(u => u.is_admin || u.is_staff).length;
-
-  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const newOnes = allCustomers.filter(u => {
-    const d = u.created_at ?? u.date_joined;
-    return d && new Date(d).getTime() > thirtyDaysAgo;
-  }).length;
-
-  document.getElementById('statTotal').textContent  = total;
-  document.getElementById('statActive').textContent = active;
-  document.getElementById('statAdmin').textContent  = admins;
-  document.getElementById('statNew').textContent    = newOnes;
-}
-
-/* ─────────────────────────────────────────
-   FILTROS
-───────────────────────────────────────── */
-function applyFilters() {
-  const q      = document.getElementById('searchInput').value.trim().toLowerCase();
-  const role   = document.getElementById('filterRole').value;
-  const status = document.getElementById('filterStatus').value;
-
-  filtered = allCustomers.filter(u => {
-    const name  = getFullName(u).toLowerCase();
-    const email = (u.email ?? '').toLowerCase();
-    const phone = (u.phone ?? '').toLowerCase();
-
-    if (q && !name.includes(q) && !email.includes(q) && !phone.includes(q)) return false;
-    if (role === 'admin' && !(u.is_admin || u.is_staff))  return false;
-    if (role === 'user'  &&  (u.is_admin || u.is_staff))  return false;
-    if (status === 'active'   && u.is_active === false)   return false;
-    if (status === 'inactive' && u.is_active !== false)   return false;
-
-    return true;
-  });
-
-  currentPage = 1;
-  renderTable();
-}
-
-/* ─────────────────────────────────────────
-   TABELA
-───────────────────────────────────────── */
-function renderTable() {
-  const tbody = document.getElementById('tableBody');
-  const pg    = document.getElementById('pagination');
-
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="6">
-      <div class="empty-state">
-        <div class="icon">👤</div>
-        <p>Nenhum cliente encontrado</p>
-      </div>
-    </td></tr>`;
-    pg.style.display = 'none';
-    return;
+  function debounceSearch() {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => {
+      currentPage = 1;
+      applyFilters();
+    }, 300);
   }
 
-  const total = filtered.length;
-  const pages = Math.ceil(total / PER_PAGE);
-  const start = (currentPage - 1) * PER_PAGE;
-  const slice = filtered.slice(start, start + PER_PAGE);
+  // ════════════════════════════════════════
+  //  CARREGAR
+  // ════════════════════════════════════════
+  async function loadCustomers() {
+    try {
+      const res    = await API.users.list();
+      allCustomers = res.results ?? res ?? [];
+      updateStats();
+      applyFilters();
+    } catch (e) {
+      console.error(e);
+      document.getElementById('tableBody').innerHTML =
+        `<tr><td colspan="6" class="text-muted text-center" style="padding:20px">
+          ❌ Erro ao carregar clientes. Verifique a API.
+        </td></tr>`;
+    }
+  }
 
-  tbody.innerHTML = slice.map(u => {
-    const name     = getFullName(u);
-    const initials = getInitials(name);
-    const email    = u.email ?? '—';
-    const phone    = u.phone || '—';
-    const isAdmin  = u.is_admin || u.is_staff;
-    const active   = u.is_active !== false;
-    const joined   = formatDate(u.created_at ?? u.date_joined);
+  // ════════════════════════════════════════
+  //  STATS
+  // ════════════════════════════════════════
+  function updateStats() {
+    const total  = allCustomers.length;
+    const active = allCustomers.filter(u => u.is_active !== false).length;
+    const admins = allCustomers.filter(u => u.is_admin || u.is_staff).length;
+    const ago30  = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const newOnes = allCustomers.filter(u => {
+      const d = u.created_at ?? u.date_joined;
+      return d && new Date(d).getTime() > ago30;
+    }).length;
 
-    return `
-      <tr>
-        <td>
-          <div class="client-info">
-            <div class="avatar">${initials}</div>
-            <div>
-              <div class="client-name">${name}</div>
-              <div class="client-email">${email}</div>
+    document.getElementById('statTotal').textContent  = total;
+    document.getElementById('statActive').textContent = active;
+    document.getElementById('statAdmin').textContent  = admins;
+    document.getElementById('statNew').textContent    = newOnes;
+  }
+
+  // ════════════════════════════════════════
+  //  FILTROS
+  // ════════════════════════════════════════
+  function applyFilters() {
+    const q      = document.getElementById('searchInput').value.trim().toLowerCase();
+    const role   = document.getElementById('filterRole').value;
+    const status = document.getElementById('filterStatus').value;
+
+    filtered = allCustomers.filter(u => {
+      const name  = getFullName(u).toLowerCase();
+      const email = (u.email ?? '').toLowerCase();
+      const phone = (u.phone ?? '').toLowerCase();
+
+      if (q && !name.includes(q) && !email.includes(q) && !phone.includes(q)) return false;
+      if (role === 'admin' && !(u.is_admin || u.is_staff))  return false;
+      if (role === 'user'  &&  (u.is_admin || u.is_staff))  return false;
+      if (status === 'active'   && u.is_active === false)   return false;
+      if (status === 'inactive' && u.is_active !== false)   return false;
+
+      return true;
+    });
+
+    currentPage = 1;
+    renderTable();
+  }
+
+  // ════════════════════════════════════════
+  //  TABELA
+  // ════════════════════════════════════════
+  function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    const pg    = document.getElementById('customers-pagination');
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-muted text-center" style="padding:20px">
+        Nenhum cliente encontrado.
+      </td></tr>`;
+      pg.innerHTML = '';
+      return;
+    }
+
+    const total = filtered.length;
+    const pages = Math.ceil(total / PER_PAGE);
+    const start = (currentPage - 1) * PER_PAGE;
+    const slice = filtered.slice(start, start + PER_PAGE);
+
+    tbody.innerHTML = slice.map(u => {
+      const name    = getFullName(u);
+      const email   = u.email ?? '—';
+      const phone   = u.phone || '—';
+      const isAdmin = u.is_admin || u.is_staff;
+      const active  = u.is_active !== false;
+      const joined  = formatDate(u.created_at ?? u.date_joined);
+
+      return `
+        <tr>
+          <td>
+            <div class="client-info">
+              <div class="avatar">${getInitials(name)}</div>
+              <div>
+                <div class="client-name">${name}</div>
+                <div class="client-email">${email}</div>
+              </div>
+            </div>
+          </td>
+          <td>${phone}</td>
+          <td>
+            ${isAdmin
+              ? '<span class="badge badge-gold">⭐ Admin</span>'
+              : '<span class="text-muted" style="font-size:0.82rem">Cliente</span>'}
+          </td>
+          <td>
+            ${active
+              ? '<span class="badge badge-success">● Ativo</span>'
+              : '<span class="badge badge-muted">● Inativo</span>'}
+          </td>
+          <td class="text-muted" style="font-size:0.82rem">${joined}</td>
+          <td>
+            <button class="btn btn-outline btn-sm"
+                    onclick="openEdit(${u.id})" title="Editar">✏️ Editar</button>
+          </td>
+        </tr>`;
+    }).join('');
+
+    // Paginação
+    if (pages <= 1) {
+      pg.innerHTML = `<span class="text-muted" style="font-size:0.82rem">
+        ${total} cliente${total !== 1 ? 's' : ''} encontrado${total !== 1 ? 's' : ''}
+      </span>`;
+      return;
+    }
+
+    const end   = Math.min(start + PER_PAGE, total);
+    const delta = 2;
+    const pageNums = [];
+    for (let i = Math.max(1, currentPage - delta); i <= Math.min(pages, currentPage + delta); i++) {
+      pageNums.push(i);
+    }
+
+    const btnStyle = (active) =>
+      `style="padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:0.82rem;
+              border:1px solid ${active ? 'var(--primary)' : 'var(--border)'};
+              background:${active ? 'var(--primary)' : 'transparent'};
+              color:${active ? '#000' : 'var(--text-light)'}"`;
+
+    pg.innerHTML = `
+      <span class="text-muted" style="font-size:0.82rem">
+        Exibindo <strong>${start + 1}–${end}</strong> de <strong>${total}</strong> clientes
+      </span>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button ${btnStyle(false)} onclick="goPage(1)"
+                ${currentPage === 1 ? 'disabled' : ''}>«</button>
+        <button ${btnStyle(false)} onclick="goPage(${currentPage - 1})"
+                ${currentPage === 1 ? 'disabled' : ''}>‹</button>
+        ${pageNums.map(p => `
+          <button ${btnStyle(p === currentPage)}
+                  onclick="goPage(${p})">${p}</button>`).join('')}
+        <button ${btnStyle(false)} onclick="goPage(${currentPage + 1})"
+                ${currentPage === pages ? 'disabled' : ''}>›</button>
+        <button ${btnStyle(false)} onclick="goPage(${pages})"
+                ${currentPage === pages ? 'disabled' : ''}>»</button>
+      </div>`;
+  }
+
+  function goPage(p) {
+    currentPage = p;
+    renderTable();
+  }
+
+  // ════════════════════════════════════════
+  //  MODAL EDIÇÃO
+  // ════════════════════════════════════════
+  function openEdit(id) {
+    const u = allCustomers.find(c => c.id === id);
+    if (!u) return;
+
+    const name = getFullName(u);
+    closeModal();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <h2>✏️ Editar Cliente</h2>
+
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
+          <div class="avatar" style="width:48px;height:48px;font-size:18px;">${getInitials(name)}</div>
+          <div>
+            <div style="font-weight:700">${name}</div>
+            <div style="font-size:0.78rem;color:var(--text-muted)">${u.email ?? '—'}</div>
+          </div>
+        </div>
+
+        <form id="editForm" onsubmit="submitEdit(event, ${id})">
+          <div class="form-group">
+            <label>Nome completo</label>
+            <input type="text" id="editName" class="form-control"
+                   value="${u.name ?? ''}" placeholder="Nome completo"/>
+          </div>
+          <div class="form-group" style="margin-top:14px">
+            <label>E-mail</label>
+            <input type="email" id="editEmail" class="form-control"
+                   value="${u.email ?? ''}" disabled
+                   style="opacity:.5;cursor:not-allowed"
+                   title="E-mail não pode ser alterado"/>
+          </div>
+          <div class="grid-2" style="margin-top:14px">
+            <div class="form-group">
+              <label>Telefone</label>
+              <input type="text" id="editPhone" class="form-control"
+                     value="${u.phone ?? ''}" placeholder="(xx) xxxxx-xxxx"/>
+            </div>
+            <div class="form-group">
+              <label>Perfil</label>
+              <select id="editIsAdmin" class="form-control">
+                <option value="false" ${!(u.is_admin || u.is_staff) ? 'selected' : ''}>Cliente</option>
+                <option value="true"  ${ (u.is_admin || u.is_staff) ? 'selected' : ''}>Admin</option>
+              </select>
             </div>
           </div>
-        </td>
-        <td>${phone}</td>
-        <td>
-          ${isAdmin
-            ? '<span class="badge badge-admin">⭐ Admin</span>'
-            : '<span style="color:#64748b;font-size:13px;">Cliente</span>'}
-        </td>
-        <td>
-          ${active
-            ? '<span class="badge badge-active">● Ativo</span>'
-            : '<span class="badge badge-inactive">● Inativo</span>'}
-        </td>
-        <td style="color:#64748b;font-size:13px;">${joined}</td>
-        <td>
-          <button class="btn-action btn-edit" onclick="openEdit(${u.id})">✏️ Editar</button>
-          <button class="btn-action btn-del"  onclick="openDelete(${u.id})">🗑️</button>
-        </td>
-      </tr>`;
-  }).join('');
+          <div class="form-group" style="margin-top:14px">
+            <label>Status</label>
+            <select id="editIsActive" class="form-control">
+              <option value="true"  ${u.is_active !== false ? 'selected' : ''}>Ativo</option>
+              <option value="false" ${u.is_active === false ? 'selected' : ''}>Inativo</option>
+            </select>
+          </div>
+          <div class="flex gap-2 mt-2" style="margin-top:24px">
+            <button type="submit" class="btn btn-primary" id="btnSave">💾 Salvar alterações</button>
+            <button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+          </div>
+        </form>
+      </div>`;
 
-  pg.style.display = 'flex';
-  document.getElementById('paginationInfo').textContent =
-    `Exibindo ${start + 1}–${Math.min(start + PER_PAGE, total)} de ${total} clientes`;
-
-  const btns = document.getElementById('paginationBtns');
-  btns.innerHTML = '';
-
-  const prev = mkPageBtn('‹', currentPage > 1, () => { currentPage--; renderTable(); });
-  prev.disabled = currentPage === 1;
-  btns.appendChild(prev);
-
-  const maxBtn = Math.min(pages, 7);
-  for (let i = 1; i <= maxBtn; i++) {
-    const b = mkPageBtn(i, true, () => { currentPage = i; renderTable(); });
-    if (i === currentPage) b.classList.add('active');
-    btns.appendChild(b);
+    document.getElementById('modal-container').appendChild(overlay);
   }
 
-  const next = mkPageBtn('›', currentPage < pages, () => { currentPage++; renderTable(); });
-  next.disabled = currentPage === pages;
-  btns.appendChild(next);
-}
+  async function submitEdit(e, id) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSave');
+    btn.disabled    = true;
+    btn.textContent = '⏳ Salvando...';
 
-function mkPageBtn(label, enabled, fn) {
-  const b = document.createElement('button');
-  b.className   = 'page-btn';
-  b.textContent = label;
-  if (enabled) b.addEventListener('click', fn);
-  return b;
-}
+    const payload = {
+      name:      document.getElementById('editName').value.trim(),
+      phone:     document.getElementById('editPhone').value.trim(),
+      is_admin:  document.getElementById('editIsAdmin').value === 'true',
+      is_active: document.getElementById('editIsActive').value === 'true',
+    };
 
-function showEmptyState(msg) {
-  document.getElementById('tableBody').innerHTML =
-    `<tr><td colspan="6"><div class="empty-state"><div class="icon">⚠️</div><p>${msg}</p></div></td></tr>`;
-}
-
-/* ─────────────────────────────────────────
-   MODAL EDIÇÃO
-───────────────────────────────────────── */
-function openEdit(id) {
-  const u = allCustomers.find(c => c.id === id);
-  if (!u) return;
-
-  const name = getFullName(u);
-
-  document.getElementById('editId').value                  = u.id;
-  document.getElementById('editName').value                = u.name ?? '';       // ✅ campo correto
-  document.getElementById('editEmail').value               = u.email ?? '';
-  document.getElementById('editPhone').value               = u.phone ?? '';
-  document.getElementById('editIsAdmin').value             = String(!!(u.is_admin || u.is_staff));
-  document.getElementById('editIsActive').value            = String(u.is_active !== false);
-  document.getElementById('modalAvatar').textContent       = getInitials(name);
-  document.getElementById('modalClientName').textContent   = name || 'Sem nome';
-  document.getElementById('modalClientEmail').textContent  = u.email ?? '—';
-
-  document.getElementById('editModal').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('editModal').classList.remove('open');
-}
-
-async function submitEdit(e) {
-  e.preventDefault();
-  const id  = document.getElementById('editId').value;
-  const btn = document.getElementById('btnSave');
-  btn.disabled    = true;
-  btn.textContent = 'Salvando...';
-
-  // ✅ Payload alinhado com AdminUserSerializer
-  const payload = {
-    name:      document.getElementById('editName').value.trim(),
-    phone:     document.getElementById('editPhone').value.trim(),
-    is_admin:  document.getElementById('editIsAdmin').value === 'true',
-    is_active: document.getElementById('editIsActive').value === 'true',
-  };
-
-  try {
-    const updated = await API.users.update(id, payload);
-
-    const idx = allCustomers.findIndex(c => c.id === Number(id));
-    if (idx !== -1) allCustomers[idx] = { ...allCustomers[idx], ...updated ?? payload };
-
-    updateStats();
-    applyFilters();
-    closeModal();
-    showToast('✅ Cliente atualizado com sucesso!', 'ok');
-  } catch (err) {
-    console.error(err);
-    showToast('❌ Erro ao salvar. Tente novamente.', 'error');
-  } finally {
-    btn.disabled    = false;
-    btn.textContent = '💾 Salvar alterações';
+    try {
+      const updated = await API.users.update(id, payload);
+      const idx = allCustomers.findIndex(c => c.id === id);
+      if (idx !== -1) allCustomers[idx] = { ...allCustomers[idx], ...updated ?? payload };
+      updateStats();
+      applyFilters();
+      closeModal();
+      showToast('✅ Cliente atualizado com sucesso!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('❌ Erro ao salvar. Tente novamente.', 'error');
+      btn.disabled    = false;
+      btn.textContent = '💾 Salvar alterações';
+    }
   }
-}
 
-/* ─────────────────────────────────────────
-   MODAL DELETE
-───────────────────────────────────────── */
-function openDelete(id) {
-  deleteTargetId = id;
-  document.getElementById('deleteModal').classList.add('open');
-  document.getElementById('btnConfirmDelete').onclick = confirmDelete;
-}
-
-function closeDeleteModal() {
-  document.getElementById('deleteModal').classList.remove('open');
-  deleteTargetId = null;
-}
-
-async function confirmDelete() {
-  if (!deleteTargetId) return;
-  try {
-    await API.users.delete(deleteTargetId);
-    allCustomers = allCustomers.filter(c => c.id !== deleteTargetId);
-    filtered     = filtered.filter(c => c.id !== deleteTargetId);
-    updateStats();
-    renderTable();
-    closeDeleteModal();
-    showToast('🗑️ Cliente removido.', 'ok');
-  } catch {
-    showToast('❌ Erro ao excluir cliente.', 'error');
+  // ════════════════════════════════════════
+  //  HELPERS
+  // ════════════════════════════════════════
+  function getFullName(u) {
+    return u.name || u.email?.split('@')[0] || 'Sem nome';
   }
-}
 
-/* ─────────────────────────────────────────
-   HELPERS
-───────────────────────────────────────── */
-// ✅ Modelo só tem `name` — sem first/last_name
-function getFullName(u) {
-  return u.name || u.email?.split('@')[0] || 'Sem nome';
-}
+  function getInitials(name) {
+    const parts = name.trim().split(' ').filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
 
-function getInitials(name) {
-  const parts = name.trim().split(' ').filter(Boolean);
-  if (!parts.length) return '?';
-  if (parts.length === 1) return parts[0][0].toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function formatDate(d) {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-/* ─────────────────────────────────────────
-   TOAST
-───────────────────────────────────────── */
-function showToast(msg, type = 'ok') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className   = `toast ${type} show`;
-  setTimeout(() => t.classList.remove('show'), 3500);
-}
-
-/* Fecha modais clicando fora */
-document.getElementById('editModal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
-});
-document.getElementById('deleteModal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeDeleteModal();
-});
+  function formatDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    });
+  }
 </script>
 </body>
 </html>
