@@ -14,6 +14,10 @@ urlpatterns = [
     path('forgot-password/',        views.forgot_password, name='forgot_password'),
     path('reset-password/confirm/', views.reset_password,  name='reset_password'),
 
+    # ── Admin: usuários ──
+    path('users/',      views.AdminUserListView.as_view(),   name='admin_user_list'),
+    path('users/<int:pk>/', views.AdminUserDetailView.as_view(), name='admin_user_detail'),
+
     # ── Temporário ──
     path('setup-admin/',     views.create_superuser_temp,         name='setup_admin'),
 ]

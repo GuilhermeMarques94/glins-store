@@ -86,6 +86,14 @@ const API = {
     resetPassword:   (data) => apiFetch('/auth/reset-password/confirm/', { method: 'POST', body: JSON.stringify(data) }),
   },
 
+    // ── Users (Admin) ──────────────────────
+  users: {
+    list:   (params = {}) => apiFetch('/auth/users/'         + buildQuery(params)),
+    detail: (id)          => apiFetch(`/auth/users/${id}/`),
+    update: (id, data)    => apiFetch(`/auth/users/${id}/`,  { method: 'PATCH',  body: JSON.stringify(data) }),
+    delete: (id)          => apiFetch(`/auth/users/${id}/`,  { method: 'DELETE' }),
+  },
+  
   // ── Products ──────────────────────────
   products: {
     list:      (params = {}) => apiFetch('/products/'            + buildQuery(params)),
@@ -147,3 +155,4 @@ const API = {
     processPayment: (data)        => apiFetch('/orders/payment/process/',     { method: 'POST', body: JSON.stringify(data) }),
   },
 };
+

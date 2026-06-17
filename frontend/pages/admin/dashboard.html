@@ -89,6 +89,10 @@
       position: relative;
       overflow: hidden;
       transition: var(--transition);
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      color: inherit;
     }
     .stat-card:hover {
       border-color: var(--primary-dark);
@@ -181,10 +185,11 @@
       <span>Painel Administrativo</span>
     </div>
     <nav class="admin-nav">
-      <a href="/pages/admin/dashboard.html" class="active">📊 Dashboard</a>
+      <a href="/pages/admin/dashboard.html"  class="active">📊 Dashboard</a>
       <a href="/pages/admin/products.html">📦 Produtos</a>
       <a href="/pages/admin/categories.html">📂 Categorias</a>
       <a href="/pages/admin/orders.html">📋 Pedidos</a>
+      <a href="/pages/admin/customers.html">👥 Clientes</a>
     </nav>
     <div class="sidebar-footer">
       <a href="/index.html">← Voltar à Loja</a>
@@ -276,47 +281,56 @@
     document.getElementById('dashboard-error').style.display = 'none';
 
     try {
-      const [products, rawOrders, rawCats] = await Promise.all([
+      // ✅ Incluído API.users.list() no Promise.all
+      const [products, rawOrders, rawCats, rawUsers] = await Promise.all([
         fetchAllProducts(),
         API.orders.adminList(),
-        API.categories.list()
+        API.categories.list(),
+        API.users.list(),
       ]);
 
       const orders = toArray(rawOrders);
       const cats   = toArray(rawCats);
+      const users  = toArray(rawUsers);  // ✅ clientes
 
       const totalRevenue   = orders
         .filter(o => o.status !== 'cancelled')
         .reduce((s, o) => s + parseFloat(o.total || 0), 0);
       const pendingOrders  = orders.filter(o => o.status === 'pending').length;
       const activeProducts = products.filter(p => p.is_active !== false).length;
+      const totalCustomers = users.length;  // ✅ contagem
 
       document.getElementById('stats-grid').innerHTML = `
-        <div class="stat-card">
+        <a class="stat-card" href="/pages/admin/products.html">
           <div class="stat-icon">📦</div>
           <div class="stat-value">${activeProducts}</div>
           <div class="stat-label">Produtos ativos</div>
-        </div>
-        <div class="stat-card">
+        </a>
+        <a class="stat-card" href="/pages/admin/orders.html">
           <div class="stat-icon">📋</div>
           <div class="stat-value">${orders.length}</div>
           <div class="stat-label">Pedidos totais</div>
-        </div>
-        <div class="stat-card">
+        </a>
+        <a class="stat-card" href="/pages/admin/orders.html">
           <div class="stat-icon">⏳</div>
           <div class="stat-value">${pendingOrders}</div>
           <div class="stat-label">Aguardando pagamento</div>
-        </div>
+        </a>
         <div class="stat-card">
           <div class="stat-icon">💰</div>
           <div class="stat-value">${formatPrice(totalRevenue)}</div>
           <div class="stat-label">Receita total</div>
         </div>
-        <div class="stat-card">
+        <a class="stat-card" href="/pages/admin/categories.html">
           <div class="stat-icon">📂</div>
           <div class="stat-value">${cats.length}</div>
           <div class="stat-label">Categorias</div>
-        </div>`;
+        </a>
+        <a class="stat-card" href="/pages/admin/customers.html">
+          <div class="stat-icon">👥</div>
+          <div class="stat-value">${totalCustomers}</div>
+          <div class="stat-label">Clientes cadastrados</div>
+        </a>`;
 
       const recent = orders.slice(0, 6);
       document.getElementById('recent-orders').innerHTML = recent.length

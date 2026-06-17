@@ -192,3 +192,52 @@ def create_superuser_temp(request):
 
     User.objects.create_superuser(email=email, name=name, password=password)
     return JsonResponse({'message': f'Superusuário {email} criado com sucesso!'})
+
+# ── Admin: gerenciamento de usuários ───────────────────────────────────────
+from rest_framework import filters
+from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView
+from .serializers import AdminUserSerializer
+
+class IsAdminUser(IsAuthenticated):
+    """Permissão: apenas usuários com is_admin=True."""
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) and (
+            request.user.is_admin or request.user.is_staff
+        )
+
+
+class AdminUserListView(ListAPIView):
+    """GET /api/auth/users/ — lista todos os usuários (admin only)."""
+    serializer_class   = AdminUserSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends    = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields      = ['name', 'email', 'phone']
+    ordering_fields    = ['name', 'email', 'created_at']
+    ordering           = ['-created_at']
+
+    def get_queryset(self):
+        qs = User.objects.all()
+
+        # Filtro ?role=admin|user
+        role = self.request.query_params.get('role')
+        if role == 'admin':
+            qs = qs.filter(is_admin=True)
+        elif role == 'user':
+            qs = qs.filter(is_admin=False)
+
+        # Filtro ?status=active|inactive
+        status_filter = self.request.query_params.get('status')
+        if status_filter == 'active':
+            qs = qs.filter(is_active=True)
+        elif status_filter == 'inactive':
+            qs = qs.filter(is_active=False)
+
+        return qs
+
+
+class AdminUserDetailView(RetrieveUpdateDestroyAPIView):
+    """GET/PATCH/DELETE /api/auth/users/<id>/ — detalhe/edição/exclusão (admin only)."""
+    serializer_class   = AdminUserSerializer
+    permission_classes = [IsAdminUser]
+    queryset           = User.objects.all()
+    http_method_names  = ['get', 'patch', 'delete']
