@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Produtos — Glins Store Admin</title>
+  <link rel="stylesheet" href="/assets/css/global.css"/>
+  <style>
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+    .admin-sidebar {
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-brand {
+      font-family: var(--font-title);
+      font-size: 1rem;
+      color: var(--primary);
+      letter-spacing: 0.1em;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .sidebar-brand span {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .admin-nav { flex: 1; }
+    .admin-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 20px;
+      color: var(--text-light);
+      font-size: 0.88rem;
+      transition: var(--transition);
+      border-right: 2px solid transparent;
+    }
+    .admin-nav a:hover,
+    .admin-nav a.active {
+      background: rgba(201,162,39,0.08);
+      color: var(--primary);
+      border-right-color: var(--primary);
+    }
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .sidebar-footer a {
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-footer a:hover { color: var(--primary); }
+
+    .admin-main { padding: 32px; background: var(--bg-surface); }
+    .admin-header { margin-bottom: 28px; }
+    .admin-header h1 { font-size: 1.6rem; margin-bottom: 4px; }
+    .flex-between {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .filter-bar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-bar input,
+    .filter-bar select { flex: 1; min-width: 140px; }
+
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      font-family: var(--font-title);
+      font-size: 0.75rem;
+      color: var(--primary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(201,162,39,0.03); }
+
+    .product-thumb {
+      width: 48px; height: 48px;
+      object-fit: cover;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .product-thumb-placeholder {
+      width: 48px; height: 48px;
+      background: var(--bg-surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal h2 { margin-bottom: 24px; font-size: 1.2rem; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none;
+      color: var(--text-muted); font-size: 1.4rem;
+      cursor: pointer; line-height: 1;
+    }
+    .modal-close:hover { color: var(--danger); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    .image-gallery {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 10px;
+    }
+    .image-gallery-item {
+      position: relative; width: 80px; height: 80px;
+    }
+    .image-gallery-item img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .image-gallery-item .del-img {
+      position: absolute; top: -6px; right: -6px;
+      background: var(--danger); border: none;
+      color: #fff; border-radius: 50%;
+      width: 20px; height: 20px;
+      font-size: 0.7rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .badge-gold { background: rgba(201,162,39,0.15); color: var(--primary); }
+    .stock-low  { color: #e67e22; font-weight: 600; }
+    .stock-zero { color: var(--danger); font-weight: 600; }
+
+    @media (max-width: 900px) {
+      .admin-layout { grid-template-columns: 1fr; }
+      .admin-sidebar {
+        height: auto; position: static;
+        flex-direction: row; flex-wrap: wrap; padding: 12px;
+      }
+      .sidebar-brand { border-bottom: none; padding-bottom: 0; }
+      .admin-nav { display: flex; flex-wrap: wrap; }
+      .admin-nav a {
+        padding: 8px 12px;
+        border-right: none;
+        border-bottom: 2px solid transparent;
+      }
+      .admin-nav a.active {
+        border-right: none;
+        border-bottom-color: var(--primary);
+      }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div id="modal-container"></div>
+
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      👑 GLINS STORE
+      <span>Painel Administrativo</span>
+    </div>
+    <nav class="admin-nav">
+      <a href="/pages/admin/dashboard.html">📊 Dashboard</a>
+      <a href="/pages/admin/products.html" class="active">📦 Produtos</a>
+      <a href="/pages/admin/categories.html">📂 Categorias</a>
+      <a href="/pages/admin/orders.html">📋 Pedidos</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/index.html">← Voltar à Loja</a>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-header flex-between">
+      <div>
+        <h1>📦 Produtos</h1>
+        <p class="text-muted">Gerencie o catálogo da loja</p>
+      </div>
+      <button class="btn btn-primary" onclick="openProductModal()">+ Novo Produto</button>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" class="form-control" id="productSearch"
+             placeholder="🔍 Buscar produto..."
+             oninput="debounceSearch()"/>
+      <select class="form-control" id="productCatFilter" onchange="applyFilters()">
+        <option value="">Todas as categorias</option>
+      </select>
+      <select class="form-control" id="productStatusFilter" onchange="applyFilters()">
+        <option value="">Todos os status</option>
+        <option value="active">✅ Ativos</option>
+        <option value="inactive">❌ Inativos</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Imagem</th><th>Nome</th><th>Categoria</th>
+              <th>Preço</th><th>Estoque</th><th>Status</th><th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="products-table">
+            <tr><td colspan="7" class="text-center"><div class="loader"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="products-pagination"
+           style="display:flex; align-items:center; justify-content:space-between;
+                  flex-wrap:wrap; gap:12px; padding:16px; border-top:1px solid var(--border)">
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script>
+  if (!requireAdmin()) {}
+
+  // ════════════════════════════════════════
+  //  MODAL
+  // ════════════════════════════════════════
+  function closeModal() {
+    document.getElementById('modal-container').innerHTML = '';
+  }
+  document.getElementById('modal-container').addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay')) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ════════════════════════════════════════
+  //  ESTADO
+  // ════════════════════════════════════════
+  let allProducts        = [];
+  let categories         = [];
+  let productCurrentPage = 1;
+  let productTotalCount  = 0;
+  const PRODUCTS_PER_PAGE = 20;
+  let searchDebounceTimer = null;
+
+  // ════════════════════════════════════════
+  //  HELPERS
+  // ════════════════════════════════════════
+  function toArray(response) {
+    if (!response) return [];
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response.results)) return response.results;
+    const keys = Object.keys(response);
+    for (const k of keys) {
+      if (Array.isArray(response[k])) return response[k];
+    }
+    return [];
+  }
+
+  // ════════════════════════════════════════
+  //  BUSCA / FILTROS
+  // ════════════════════════════════════════
+  function debounceSearch() {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      productCurrentPage = 1;
+      loadProducts(1);
+    }, 400);
+  }
+
+  function applyFilters() {
+    productCurrentPage = 1;
+    loadProducts(1);
+  }
+
+  // ════════════════════════════════════════
+  //  CARREGAR PRODUTOS
+  // ════════════════════════════════════════
+  async function loadProducts(page = null) {
+    if (page !== null) productCurrentPage = page;
+
+    const tb = document.getElementById('products-table');
+    tb.innerHTML = '<tr><td colspan="7" class="text-center"><div class="loader"></div></td></tr>';
+    document.getElementById('products-pagination').innerHTML = '';
+
+    const search = document.getElementById('productSearch')?.value?.trim() || '';
+    const cat    = document.getElementById('productCatFilter')?.value   || '';
+    const status = document.getElementById('productStatusFilter')?.value || '';
+
+    const params = { page: productCurrentPage };
+    if (search) params.search   = search;
+    if (cat)    params.category = cat;
+    if (status) params.status   = status;
+
+    try {
+      const rawCats = await API.categories.list();
+      categories    = toArray(rawCats);
+
+      const catFilter     = document.getElementById('productCatFilter');
+      const currentCatVal = catFilter.value;
+      catFilter.innerHTML = '<option value="">Todas as categorias</option>' +
+        categories.map(c => `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`).join('');
+      catFilter.value = currentCatVal;
+
+      const rawProducts = await API.products.adminList(params);
+
+      if (rawProducts && typeof rawProducts === 'object' && 'results' in rawProducts) {
+        allProducts       = rawProducts.results;
+        productTotalCount = rawProducts.count;
+      } else {
+        allProducts       = toArray(rawProducts);
+        productTotalCount = allProducts.length;
+      }
+
+      renderProducts(allProducts);
+      renderPagination();
+
+    } catch (e) {
+      console.error('[Produtos]', e);
+      tb.innerHTML = `<tr><td colspan="7" class="text-muted text-center" style="padding:20px">
+        ❌ Erro: ${e?.detail || e?.message || 'Falha ao carregar produtos'}
+      </td></tr>`;
+    }
+  }
+
+  // ════════════════════════════════════════
+  //  RENDERIZAR TABELA
+  // ════════════════════════════════════════
+  function renderProducts(products) {
+    const tb = document.getElementById('products-table');
+    if (!products.length) {
+      tb.innerHTML = '<tr><td colspan="7" class="text-muted text-center" style="padding:20px">Nenhum produto encontrado.</td></tr>';
+      return;
+    }
+    tb.innerHTML = products.map(p => {
+      const stock      = p.stock ?? p.quantity ?? 0;
+      const stockClass = stock === 0 ? 'badge-danger' : stock <= 5 ? 'badge-gold' : 'badge-success';
+      const thumb      = p.image_url || p.image || p.thumbnail || p.cover_image || null;
+      return `
+        <tr>
+          <td>
+            ${thumb
+              ? `<img class="product-thumb" src="${thumb}" alt="${p.name}"
+                      onerror="this.style.display='none';this.nextSibling.style.display='flex'"/>
+                <div class="product-thumb-placeholder" style="display:none">🏺</div>`
+              : `<div class="product-thumb-placeholder">🏺</div>`}
+          </td>
+          <td>
+            <strong>${p.name}</strong>
+            ${p.description
+              ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;
+                            max-width:200px;overflow:hidden;text-overflow:ellipsis;
+                            white-space:nowrap">${p.description}</div>`
+              : ''}
+          </td>
+          <td>${p.category_name || p.category?.name || '<span class="text-muted">—</span>'}</td>
+          <td><strong>${formatPrice(p.price)}</strong></td>
+          <td><span class="badge ${stockClass}">${stock}</span></td>
+          <td>${p.is_active !== false
+            ? '<span class="badge badge-success">Ativo</span>'
+            : '<span class="badge badge-muted">Inativo</span>'}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-outline btn-sm"
+                    onclick="openProductModal(${p.id})" title="Editar">✏️</button>
+            <button class="btn btn-danger btn-sm"
+                    onclick="deleteProduct(${p.id}, '${(p.name || '').replace(/'/g,"\\'")}')">🗑️</button>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ════════════════════════════════════════
+  //  PAGINAÇÃO
+  // ════════════════════════════════════════
+  function renderPagination() {
+    const container  = document.getElementById('products-pagination');
+    const totalPages = Math.ceil(productTotalCount / PRODUCTS_PER_PAGE);
+    const start      = (productCurrentPage - 1) * PRODUCTS_PER_PAGE + 1;
+    const end        = Math.min(productCurrentPage * PRODUCTS_PER_PAGE, productTotalCount);
+
+    if (totalPages <= 1) {
+      container.innerHTML = `<span class="text-muted" style="font-size:0.82rem">
+        ${productTotalCount} produto${productTotalCount !== 1 ? 's' : ''} encontrado${productTotalCount !== 1 ? 's' : ''}
+      </span>`;
+      return;
+    }
+
+    const pages = [];
+    const delta = 2;
+    for (let i = Math.max(1, productCurrentPage - delta);
+             i <= Math.min(totalPages, productCurrentPage + delta); i++) {
+      pages.push(i);
+    }
+
+    const btnStyle = (active) =>
+      `style="padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:0.82rem;
+              border:1px solid ${active ? 'var(--primary)' : 'var(--border)'};
+              background:${active ? 'var(--primary)' : 'transparent'};
+              color:${active ? '#000' : 'var(--text-light)'}"`;
+
+    container.innerHTML = `
+      <span class="text-muted" style="font-size:0.82rem">
+        Exibindo <strong>${start}–${end}</strong> de <strong>${productTotalCount}</strong> produtos
+      </span>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button ${btnStyle(false)} onclick="loadProducts(1)"
+                ${productCurrentPage === 1 ? 'disabled' : ''}>«</button>
+        <button ${btnStyle(false)} onclick="loadProducts(${productCurrentPage - 1})"
+                ${productCurrentPage === 1 ? 'disabled' : ''}>‹</button>
+        ${pages.map(p => `
+          <button ${btnStyle(p === productCurrentPage)}
+                  onclick="loadProducts(${p})">${p}</button>`).join('')}
+        <button ${btnStyle(false)} onclick="loadProducts(${productCurrentPage + 1})"
+                ${productCurrentPage === totalPages ? 'disabled' : ''}>›</button>
+        <button ${btnStyle(false)} onclick="loadProducts(${totalPages})"
+                ${productCurrentPage === totalPages ? 'disabled' : ''}>»</button>
+      </div>`;
+  }
+
+  // ════════════════════════════════════════
+  //  DELETAR
+  // ════════════════════════════════════════
+  async function deleteProduct(id, name) {
+    if (!confirm(`Deletar o produto "${name}"?\nEsta ação não pode ser desfeita.`)) return;
+    try {
+      await API.products.delete(id);
+      showToast('Produto deletado com sucesso', 'success');
+      loadProducts(productCurrentPage);
+    } catch (_) {
+      showToast('Erro ao deletar produto', 'error');
+    }
+  }
+
+  // ════════════════════════════════════════
+  //  MODAL PRODUTO
+  // ════════════════════════════════════════
+  async function openProductModal(id = null) {
+    const isEdit = id !== null;
+    closeModal();
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <h2>${isEdit ? '✏️ Editar Produto' : '📦 Novo Produto'}</h2>
+        <form id="productForm" autocomplete="off">
+          <div class="form-group">
+            <label>Nome do produto *</label>
+            <input type="text" id="pName" class="form-control" required
+                   placeholder="Ex: Booster Box Pokémon"/>
+          </div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label>Preço (R$) *</label>
+              <input type="number" id="pPrice" class="form-control"
+                     step="0.01" min="0" required placeholder="0,00"/>
+            </div>
+            <div class="form-group">
+              <label>Estoque *</label>
+              <input type="number" id="pStock" class="form-control"
+                     min="0" required placeholder="0"/>
+            </div>
+            <div class="form-group">
+              <label>Ativo</label>
+              <select id="pActive" class="form-control">
+                <option value="true">✅ Ativo</option>
+                <option value="false">❌ Inativo</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="pCategory" class="form-control">
+              <option value="">Sem categoria</option>
+              ${categories.map(c =>
+                `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Descrição</label>
+            <textarea id="pDesc" class="form-control" rows="3"
+                      placeholder="Descreva o produto..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>🖼️ URL da imagem principal</label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <img id="mainImgPreview" src="" alt="Preview"
+                   style="width:52px;height:52px;object-fit:cover;border-radius:var(--radius);
+                          border:1px solid var(--border);display:none;flex-shrink:0"/>
+              <input type="url" id="pImageUrl" class="form-control"
+                     placeholder="https://exemplo.com/imagem.jpg"
+                     oninput="updateMainPreview(this.value)"/>
+            </div>
+          </div>
+
+          ${isEdit ? `
+          <div class="form-group">
+            <label>Imagens adicionais</label>
+            <div class="image-gallery" id="currentImages">
+              <div class="loader"></div>
+            </div>
+          </div>` : ''}
+
+          <div class="form-group">
+            <label>${isEdit ? 'Adicionar imagem extra' : 'Imagem extra (URL)'}</label>
+            <div style="display:flex;gap:10px">
+              <input type="url" id="pNewImageUrl" class="form-control"
+                     placeholder="https://exemplo.com/imagem2.jpg"/>
+              <button type="button" class="btn btn-outline" style="white-space:nowrap"
+                      onclick="addExtraImage(${id})">+ Add</button>
+            </div>
+          </div>
+
+          <div class="flex gap-2 mt-2">
+            <button type="submit" class="btn btn-primary" id="saveProductBtn">
+              ${isEdit ? '💾 Salvar alterações' : '➕ Criar produto'}
+            </button>
+            <button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+          </div>
+        </form>
+      </div>`;
+
+    document.getElementById('modal-container').appendChild(modal);
+
+    if (isEdit) {
+      try {
+        const p = await API.products.detail(id);
+
+        document.getElementById('pName').value     = p.name || '';
+        document.getElementById('pPrice').value    = p.price || '';
+        document.getElementById('pStock').value    = p.stock ?? p.quantity ?? 0;
+        document.getElementById('pDesc').value     = p.description || '';
+        document.getElementById('pActive').value   = p.is_active !== false ? 'true' : 'false';
+        document.getElementById('pCategory').value = p.category?.id || p.category || '';
+
+        if (p.image_url) {
+          document.getElementById('pImageUrl').value = p.image_url;
+          updateMainPreview(p.image_url);
+        }
+
+        const gallery = document.getElementById('currentImages');
+        const imgs    = toArray(p.images);
+        gallery.innerHTML = imgs.length
+          ? imgs.map(img => `
+              <div class="image-gallery-item" id="img-${img.id}">
+                <img src="${img.image_url}" alt="Imagem"
+                     onerror="this.style.opacity='0.3'"/>
+                <button class="del-img"
+                        onclick="deleteProductImage(${id}, ${img.id})"
+                        title="Remover">✕</button>
+              </div>`).join('')
+          : '<span class="text-muted" style="font-size:0.82rem">Nenhuma imagem adicional cadastrada</span>';
+
+      } catch (e) {
+        console.error('[Modal Produto]', e);
+        showToast('Erro ao carregar dados do produto', 'error');
+      }
+    }
+
+    document.getElementById('productForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('saveProductBtn');
+      btn.disabled    = true;
+      btn.textContent = '⏳ Salvando...';
+
+      const data = {
+        name:        document.getElementById('pName').value.trim(),
+        price:       parseFloat(document.getElementById('pPrice').value),
+        stock:       parseInt(document.getElementById('pStock').value),
+        description: document.getElementById('pDesc').value.trim(),
+        category:    document.getElementById('pCategory').value
+                       ? parseInt(document.getElementById('pCategory').value)
+                       : null,
+        is_active:   document.getElementById('pActive').value === 'true',
+        image_url:   document.getElementById('pImageUrl').value.trim() || '',
+      };
+
+      try {
+        if (isEdit) {
+          await API.products.update(id, data);
+        } else {
+          await API.products.create(data);
+        }
+        showToast(isEdit ? '✅ Produto atualizado!' : '✅ Produto criado!', 'success');
+        closeModal();
+        loadProducts(productCurrentPage);
+      } catch (err) {
+        console.error('[Salvar Produto]', err);
+        const msg = err?.name?.[0] || err?.price?.[0] || err?.detail || JSON.stringify(err) || 'Erro ao salvar produto';
+        showToast(msg, 'error');
+        btn.disabled    = false;
+        btn.textContent = isEdit ? '💾 Salvar alterações' : '➕ Criar produto';
+      }
+    });
+  }
+
+  // ════════════════════════════════════════
+  //  PREVIEW IMAGEM
+  // ════════════════════════════════════════
+  function updateMainPreview(url) {
+    const img = document.getElementById('mainImgPreview');
+    if (!img) return;
+    if (url) {
+      img.src           = url;
+      img.style.display = 'block';
+      img.onerror       = () => { img.style.display = 'none'; };
+    } else {
+      img.style.display = 'none';
+    }
+  }
+
+  // ════════════════════════════════════════
+  //  IMAGENS EXTRAS
+  // ════════════════════════════════════════
+  async function addExtraImage(productId) {
+    const input = document.getElementById('pNewImageUrl');
+    const url   = input?.value?.trim();
+    if (!url) { showToast('Digite uma URL de imagem válida', 'warning'); return; }
+
+    if (!productId) {
+      showToast('Salve o produto primeiro para adicionar imagens extras', 'info');
+      return;
+    }
+
+    try {
+      await API.products.addImage(productId, { image_url: url, order: 0 });
+      showToast('✅ Imagem adicionada!', 'success');
+      input.value = '';
+      openProductModal(productId);
+    } catch (e) {
+      console.error('[Add Imagem]', e);
+      showToast(e?.detail || 'Erro ao adicionar imagem', 'error');
+    }
+  }
+
+  async function deleteProductImage(productId, imgId) {
+    if (!confirm('Remover esta imagem?')) return;
+    try {
+      await API.products.deleteImage(productId, imgId);
+      document.getElementById(`img-${imgId}`)?.remove();
+      showToast('Imagem removida', 'success');
+    } catch (_) {
+      showToast('Erro ao remover imagem', 'error');
+    }
+  }
+
+  // ════════════════════════════════════════
+  //  INIT
+  // ════════════════════════════════════════
+  loadProducts(1);
+</script>
+</body>
+</html>
