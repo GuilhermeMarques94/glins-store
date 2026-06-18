@@ -4,7 +4,59 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
-  <title>Glins Store — Loja Nerd Medieval</title>
+  <title>Glins Store — Loja Nerd Medieval | Cards & Colecionáveis</title>
+
+  <!-- ═══ SEO BÁSICO ═══ -->
+  <meta name="description" content="Glins Store — sua loja de cards e produtos colecionáveis. Pokémon, Magic: The Gathering, Yu-Gi-Oh e muito mais. Forjado com honra em Uberlândia, MG."/>
+  <meta name="keywords" content="glins store, cards pokémon, magic the gathering, yu-gi-oh, loja de cards, colecionáveis, booster, deck, loja nerd, uberlândia"/>
+  <meta name="author" content="Glins Store"/>
+  <meta name="robots" content="index, follow"/>
+  <meta name="google-site-verification" content="g_i8WJnauTcyMHvmTpA3NRrT3plTT84diPxwV6eqIuI" />
+<link rel="canonical" href="https://www.glinsstore.com.br/"/>
+  <link rel="canonical" href="https://www.glinsstore.com.br/"/>
+
+  <!-- ═══ OPEN GRAPH (WhatsApp, Facebook, etc.) ═══ -->
+  <meta property="og:type"        content="website"/>
+  <meta property="og:title"       content="Glins Store — Loja Nerd Medieval | Cards & Colecionáveis"/>
+  <meta property="og:description" content="Artefatos, relíquias e tesouros do mundo nerd. Pokémon, Magic, Yu-Gi-Oh e muito mais!"/>
+  <meta property="og:url"         content="https://www.glinsstore.com.br/"/>
+  <meta property="og:image"       content="https://www.glinsstore.com.br/assets/images/og-banner.jpg"/>
+  <meta property="og:locale"      content="pt_BR"/>
+  <meta property="og:site_name"   content="Glins Store"/>
+
+  <!-- ═══ TWITTER CARD ═══ -->
+  <meta name="twitter:card"        content="summary_large_image"/>
+  <meta name="twitter:title"       content="Glins Store — Loja Nerd Medieval"/>
+  <meta name="twitter:description" content="Artefatos, relíquias e tesouros do mundo nerd. Pokémon, Magic, Yu-Gi-Oh e muito mais!"/>
+  <meta name="twitter:image"       content="https://www.glinsstore.com.br/assets/images/og-banner.jpg"/>
+
+  <!-- ═══ SCHEMA.ORG — LOJA ═══ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    "name": "Glins Store",
+    "url": "https://www.glinsstore.com.br",
+    "description": "Loja de cards e produtos colecionáveis — Pokémon, Magic, Yu-Gi-Oh e mais. Forjado com honra em Uberlândia, MG.",
+    "image": "https://www.glinsstore.com.br/assets/images/og-banner.jpg",
+    "priceRange": "$$",
+    "email": "glins.store.cardgame@gmail.com",
+    "telephone": "+55-34-99634-1474",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "BR",
+      "addressLocality": "Uberlândia",
+      "addressRegion": "MG"
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+      "opens": "09:00",
+      "closes": "18:00"
+    }
+  }
+  </script>
+
   <link rel="stylesheet" href="/assets/css/global.css"/>
   <style>
     /* ── Hero ── */
@@ -361,6 +413,7 @@
         </div>
       </a>
 
+    </div>
 
     <div style="margin-top: 24px; color: var(--text-muted); font-size: 0.78rem; letter-spacing: 0.05em;">
       ✦ Respondemos em até 24h ✦
@@ -456,12 +509,11 @@
   loadFeaturedProducts();
 
   function openContactModal() {
-  const m = document.getElementById('contact-modal');
-  m.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
+    const m = document.getElementById('contact-modal');
+    m.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
   }
   function closeContactModal(e) {
-    // Se veio de um clique, só fecha se clicou no overlay (fundo escuro)
     if (e && e.target !== document.getElementById('contact-modal')) return;
     const m = document.getElementById('contact-modal');
     m.style.display = 'none';
@@ -470,7 +522,6 @@
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeContactModal(null);
   });
-
 </script>
 </body>
 </html>

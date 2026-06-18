@@ -1,0 +1,21 @@
+# Glins Store — robots.txt
+
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /pages/products.html
+Allow: /pages/faq.html
+Allow: /assets/css/
+Allow: /assets/images/
+
+# Bloquear páginas privadas
+Disallow: /pages/login.html
+Disallow: /pages/register.html
+Disallow: /pages/cart.html
+Disallow: /pages/checkout.html
+Disallow: /pages/profile.html
+Disallow: /pages/forgot-password.html
+Disallow: /assets/js/
+
+# Sitemap
+Sitemap: https://www.glinsstore.com.br/sitemap.xml

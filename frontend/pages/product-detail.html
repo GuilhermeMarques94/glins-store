@@ -5,6 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
   <title>Produto — Glins Store</title>
+
+  <!-- ═══ SEO BÁSICO (dinâmico via JS após carregar produto) ═══ -->
+  <meta name="description"  content="Confira este produto na Glins Store — sua loja de cards e colecionáveis."/>
+  <meta name="author"       content="Glins Store"/>
+  <meta name="robots"       content="index, follow"/>
+  <link rel="canonical"     href="https://www.glinsstore.com.br/pages/product-detail.html" id="canonical-url"/>
+
+  <!-- ═══ OPEN GRAPH (preenchido via JS) ═══ -->
+  <meta property="og:type"        content="product"/>
+  <meta property="og:site_name"   content="Glins Store"/>
+  <meta property="og:title"       content="Produto — Glins Store"/>
+  <meta property="og:description" content="Confira este produto na Glins Store."/>
+  <meta property="og:image"       content="https://www.glinsstore.com.br/assets/images/og-banner.jpg"/>
+  <meta property="og:url"         content="https://www.glinsstore.com.br/pages/product-detail.html"/>
+  <meta property="og:locale"      content="pt_BR"/>
+
+  <!-- ═══ TWITTER CARD (preenchido via JS) ═══ -->
+  <meta name="twitter:card"        content="summary_large_image"/>
+  <meta name="twitter:title"       content="Produto — Glins Store"/>
+  <meta name="twitter:description" content="Confira este produto na Glins Store."/>
+  <meta name="twitter:image"       content="https://www.glinsstore.com.br/assets/images/og-banner.jpg"/>
+
   <link rel="stylesheet" href="/assets/css/global.css"/>
   <style>
     .page-wrap { padding: 80px 0; min-height: 80vh; }
@@ -266,6 +288,74 @@
     if (e.key === 'ArrowRight') changeImage(1);
   });
 
+
+  // ── SEO Dinâmico ─────────────────────────────────────────────────────────────
+  function updateSEO(p) {
+    const title       = `${p.name} — Glins Store`;
+    const description = p.description
+      ? p.description.slice(0, 155)
+      : `Compre ${p.name} na Glins Store com o melhor preço. ${p.category_name ? 'Categoria: ' + p.category_name + '.' : ''}`;
+    const image = p.image_url || 'https://www.glinsstore.com.br/assets/images/og-banner.jpg';
+    const url   = `https://www.glinsstore.com.br/pages/product-detail.html?id=${p.id}`;
+
+    // <title>
+    document.title = title;
+
+    // Meta description
+    document.querySelector('meta[name="description"]').setAttribute('content', description);
+
+    // Canonical
+    document.getElementById('canonical-url').setAttribute('href', url);
+
+    // Open Graph
+    document.querySelector('meta[property="og:title"]').setAttribute('content', title);
+    document.querySelector('meta[property="og:description"]').setAttribute('content', description);
+    document.querySelector('meta[property="og:image"]').setAttribute('content', image);
+    document.querySelector('meta[property="og:url"]').setAttribute('content', url);
+
+    // Twitter
+    document.querySelector('meta[name="twitter:title"]').setAttribute('content', title);
+    document.querySelector('meta[name="twitter:description"]').setAttribute('content', description);
+    document.querySelector('meta[name="twitter:image"]').setAttribute('content', image);
+
+    // Schema.org Product (JSON-LD dinâmico)
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": p.name,
+      "description": p.description || '',
+      "image": image,
+      "url": url,
+      "brand": {
+        "@type": "Brand",
+        "name": "Glins Store"
+      },
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "BRL",
+        "price": parseFloat(p.price).toFixed(2),
+        "availability": p.in_stock
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+        "url": url,
+        "seller": {
+          "@type": "Organization",
+          "name": "Glins Store"
+        }
+      }
+    };
+
+    // Remove schema anterior se existir (evita duplicar a cada navegação)
+    const oldSchema = document.getElementById('product-schema');
+    if (oldSchema) oldSchema.remove();
+
+    const tag = document.createElement('script');
+    tag.type        = 'application/ld+json';
+    tag.id          = 'product-schema';
+    tag.textContent = JSON.stringify(schema);
+    document.head.appendChild(tag);
+  }
+
   // ── Produto ───────────────────────────────────────────────────────────────
   async function loadProduct() {
     const el = document.getElementById('product-content');
@@ -273,8 +363,8 @@
       const p = await API.products.detail(productId);
       currentProduct = p;
 
-      document.title = `${p.name} — Glins Store`;
       document.getElementById('bread-name').textContent = p.name;
+      updateSEO(p);
 
       const installments = (parseFloat(p.price) / 12).toFixed(2);
 
