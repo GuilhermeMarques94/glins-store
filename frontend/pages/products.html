@@ -392,6 +392,9 @@
           <div class="product-category">${p.category_name || ''}</div>
           <div class="product-name">${p.name}</div>
           <div class="product-price">${formatPrice(p.price)}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">
+            ${p.in_stock ? `<span style="color:var(--success)">● ${p.stock} em estoque</span>` : ''}
+          </div>
           <button class="btn btn-primary btn-sm btn-block"
             onclick="event.stopPropagation(); addToCart(${p.id})"
             ${!p.in_stock ? 'disabled' : ''}>
